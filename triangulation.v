@@ -11,8 +11,8 @@ Unset Printing Implicit Defensive.
 
 Variable R : numDomainType.
 
-Parameter P : finType.
-Parameter T : finType.
+Parameter P : Set.
+Parameter T : Set.
 
 Parameter x_coord : P -> R.
 Parameter y_coord : P -> R.
@@ -52,4 +52,4 @@ Variable u:T.
 Axiom union_TrD : \bigcup_ ( t in Tr ) (finset (vertex t)) = D.
 
 Function get_vertices t :=
-  let vertices := enum (finset (vertex t) in k.
+  let vertices := enum (finset (vertex t)) in vertices.
