@@ -36,8 +36,8 @@ Definition adjacent t1 t2 := #| finset (vertex t1) :&: finset (vertex t2)| = 2 /
 
 Parameter in_circle :  T -> P -> bool.
 
-Definition in_circle t p := let x = x_coord p in
-                            let y = y_coord p in
+(*Definition in_circle t p := let x = x_coord p in
+                            let y = y_coord p in*)
                             
 
 Axiom all_triangles : forall p1, forall p2, forall p3, exists t, vertex t p1 /\ vertex t p2 /\ vertex t p3.
@@ -46,7 +46,10 @@ Axiom truc : forall t1, forall t2, adjacent t1 t2 ->
                                      forall p, p \in vertex t1->in_circle t2 p -> p \in vertex t2.
 
 Axiom triangle_3vertices : forall (t: T), #|vertex t| = 3.
-
+Variable t:T.
+Variable k:T.
+Variable u:T.
 Axiom union_TrD : \bigcup_ ( t in Tr ) (finset (vertex t)) = D.
 
-
+Function get_vertices t :=
+  let vertices := enum (finset (vertex t) in k.
