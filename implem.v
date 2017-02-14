@@ -7,10 +7,11 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Require Import triangulation.
+
 
 Open Local Scope ring_scope.
 
+Require Import triangulation.
 
 Definition orientedSurface := fun (p a b : P) =>
  let M1 := \matrix_( i<3, j<3) if i==@Ordinal 3 0 isT then if j==@Ordinal 3 0 isT then xCoord p
@@ -25,7 +26,7 @@ Definition orientedSurface := fun (p a b : P) =>
   in \det M1.
 
 
-Definition inCircle (p a b c : P) :=
+Definition inCircleDeterminant (p a b c : P) :=
   let M:= \matrix_(i<4, j<4) if i == @Ordinal 4 0 isT then if j==@Ordinal 4 0 isT then
                                      xCoord a
                                          else if j==@Ordinal 4 1 isT  then
@@ -52,15 +53,12 @@ Definition inCircle (p a b c : P) :=
                                          else 1%R
                            else if j== @Ordinal 4 0 isT  then
                                      xCoord p
-                                         else if j== @Ordinal 4 1 isT  then
+                                else if j== @Ordinal 4 1 isT  then
                                      yCoord p
                                          else if j== @Ordinal 4 2 isT  then 
                                      (xCoord p)^+2 + (yCoord p)^+2 
                                          else 1%R
-   in (\det M >0).
-
-Definition inCircleTriangle p t := inCircle p (vertex1 t) (vertex2 t) (vertex3 t).
-
+  in (\det M).
 
 
 
