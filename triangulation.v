@@ -40,10 +40,10 @@ Axiom triangle3Vertices : forall (t:T), injective (vertex t).
 
 Open Local Scope ring_scope.
 Definition vertexSet t := (vertex t) @` 'I_3.
-Check vertexSet.
+
 Definition adjacent t1 t2:= #|` ((vertexSet t1) `&` (vertexSet t2))| = 2 /\ (forall p, interior t1 p -> interior t2 p = false).
 Definition isLeftOf p a b := orientedSurface p a b > 0%R.
-Check Ordinal.
+
 
 Definition vertex1 t := vertex t (@Ordinal 3 0 isT).
 Definition vertex2 t := vertex t (@Ordinal 3 1 isT).
@@ -69,7 +69,7 @@ Definition  Delaunay (Ts:{fset T})  := forall t1 , forall t2,
                           forall p,
                            p \in vertexSet t1-> inCircle t2 p -> p \in vertexSet t2.
 
-
+Definition convexHull (p:P) S := \forall 
 
 
 (*Axiom union_TrD : \bigcup_ ( t in Tr ) (vertex t) = D.
@@ -80,5 +80,7 @@ Definition unionTrD1 (Ts: {fset T}) (Ds : {fset P}) := forall (t:T), t \in Ts ->
 Definition unionTrD2 (Ts: {fset T}) (Ds : {fset P}) := forall (p:P), p \in Ds -> exists (t:T), t \in Ts /\ p \in vertexSet t.
 
 Definition unionTrD Ts Ds := unionTrD1 Ts Ds /\ unionTrD2 Ts Ds.
-                                           
+
+
+
 End Triangulation.
