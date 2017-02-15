@@ -2,6 +2,7 @@ From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq tuple.
 From mathcomp Require Import choice path finset finfun fintype bigop.
 From mathcomp Require Import ssralg ssrnum matrix mxalgebra.
 From mathcomp Require Import finmap.
+From mathcomp Require Import zmodp.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -80,28 +81,35 @@ Definition  Delaunay (Ts:{fset T})  := forall t1 , forall t2,
 
 Definition n := #|`D|.
 
-Definition RCH (x:P) d a := ((xCoord x) == \sum_( i < n ) (a i) * xCoord (d i)) &&
-                                           ((yCoord x) == \sum_( i < n ) (a i) * yCoord (d i )).
+Definition RCH n (x:P) (d:P^n) (a :R^n) := ((xCoord x) == \sum_( i < n ) (a i) * xCoord (d i)) && ((yCoord x) == \sum_( i < n ) (a i) * yCoord (d i)) && (\sum_( i < n ) (a i) == 1) && [forall i : 'I_n, (0 <= (a i))].
 
 
 
-Check RCH.
+(*Definition surfaceConvexHull1 (tr : {fset T}) (d : {fset P}) h :=
+  forall t , forall p, t \in tr -> p \in d -> inTriangleWEdges t p ->  exists a, RCH p (nth p (enum_fset h)) a.
 
-Axiom surfaceConvexHull1 : forall t, forall p, t \in Tr -> inTriangle t p ->  exists a, RCH p (nth p (enum_fset D)) a.
+Definition surfaceConvexHull2 (tr : {fset T}) (d : {fset P}) h :=
+ forall p, p \in d -> exists a, RCH p (nth p (enum_fset h)) a -> #|` [fset t in Tr | inTriangle t p]  | != 0%nat.
 
-Axiom surfaceConvexHull2 :  forall p , exists a, RCH p (nth p (enum_fset D)) a ->
-                                                 exists t, (t \in Tr) && inTriangle t p. 
+
+Definition surfaceCH tr d h := surfaceConvexHull2 tr d h /\ surfaceConvexHull1 tr d h. 
+ *)
+
 
 Definition unionTrD1 (Ts: {fset T}) (Ds : {fset P}) := forall (t:T), t \in Ts -> forall p, p \in vertexSet t -> p \in Ds. 
 
 Definition unionTrD2 (Ts: {fset T}) (Ds : {fset P}) := forall (p:P), p \in Ds -> exists (t:T), t \in Ts /\ p \in vertexSet t.
 
 Definition unionTrD Ts Ds := unionTrD1 Ts Ds /\ unionTrD2 Ts Ds.
+Variable pp : P.
+Variable t:{fset T}.
+Check [finType of t].
 
+Check fun (t : {fset T}) => [exists j : t, inTriangle (val j) pp].
 
-Definition succ k (i : 'I_k) (pr : is_true (0<k)%N): 'I_k := if i.+1 == k then @Ordinal k 0 pr else inord i.+1.
+Definition CH k (h : 'I_k.+1 -> P) (d : {fset P}) := [forall i : 'I_k.+1 , [exists j : d, h i == val j]] /\
+                                                    forall i, forall p, p \in d -> isLeftOfOrOn (h i) ( h (Zp_add i (inZp 1))) p.
 
-Definition CH k (h : 'I_k -> P) (d : {fset P}) := (forall i, exists j, h i == nth pp (enum_fset d) j) /\
-forall i, forall p, p \in d -> isLeftOfOrOn (h i) ( h ((i.+1) mod k)) p.
+Check CH.
 
 End Triangulation.
