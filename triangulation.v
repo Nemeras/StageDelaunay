@@ -12,104 +12,121 @@ Section Triangulation.
 
 Open Scope fset_scope.
 
-Parameter R : numDomainType.
+Variable R : numDomainType.
 
+Variable P : choiceType.
+Variable T : choiceType.
 
-Parameter P : choiceType.
-Parameter T : choiceType.
-
-Parameter xCoord : P -> R.
-Parameter yCoord : P -> R.
+Variable xCoord : P -> R.
+Variable yCoord : P -> R.
 
 
 Axiom not_2points : forall p1, forall p2, xCoord p1 = xCoord p2 -> yCoord p1 != yCoord p2.
 
-Parameter Tr : {fset T}.
-Parameter D : {fset P}.
+Variable Tr : {fset T}.
+Variable D : {fset P}.
 
-Parameter vertex : T -> P^3.
+Variable vertex : T -> P^3.
 
 Variable tt:T.
 
-(*Parameter interior : T -> P -> bool.*)
-(*Parameter surface : T -> P -> bool.*)
-Parameter orientedSurface : P -> P -> P -> R.
+(*Variable interior : T -> P -> bool.*)
+(*Variable surface : T -> P -> bool.*)
+Variable oriented_surface : P -> P -> P -> R.
 
 
-Axiom triangle3Vertices : forall (t:T), injective (vertex t).
+Axiom triangle_3vertices : forall (t:T), injective (vertex t).
 
 
 Open Local Scope ring_scope.
-Definition vertexSet t := (vertex t) @` 'I_3.
+Definition vertex_set t := (vertex t) @` 'I_3.
 
 
-Definition isLeftOf p a b := orientedSurface p a b > 0%R.
-Definition isLeftOfOrOn p a b := orientedSurface p a b >= 0%R.
+Definition is_left_of p a b := oriented_surface p a b > 0%R.
+Definition is_left_or_on_line p a b := oriented_surface p a b >= 0%R.
 
 Definition vertex1 t := vertex t (@Ordinal 3 0 isT).
 Definition vertex2 t := vertex t (@Ordinal 3 1 isT).
 Definition vertex3 t := vertex t (@Ordinal 3 2 isT).
 
-Axiom orientedTriangle : forall t, orientedSurface (vertex1 t) (vertex2 t) (vertex3 t)>0. 
+Axiom oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0. 
 
 
-Definition inTriangle t p := isLeftOf (vertex1 t) (vertex2 t) p &&
-                             isLeftOf p (vertex2 t) (vertex3 t) &&
-                             isLeftOf (vertex1 t) p (vertex3 t).
+Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
+                             is_left_of p (vertex2 t) (vertex3 t) &&
+                             is_left_of (vertex1 t) p (vertex3 t).
 
-Definition inTriangleWEdges t p := isLeftOfOrOn (vertex1 t) (vertex2 t) p &&
-                             isLeftOfOrOn p (vertex2 t) (vertex3 t) &&
-                             isLeftOfOrOn (vertex1 t) p (vertex3 t).
+Definition in_triangle_wedges t p := is_left_or_on_line (vertex1 t) (vertex2 t) p &&
+                             is_left_or_on_line p (vertex2 t) (vertex3 t) &&
+                             is_left_or_on_line (vertex1 t) p (vertex3 t).
 
-Definition adjacent t1 t2:= #|` ((vertexSet t1) `&` (vertexSet t2))| = 2 /\ (forall p, inTriangle t1 p -> inTriangle t2 p = false).
+Definition adjacent t1 t2:= #|` ((vertex_set t1) `&` (vertex_set t2))| = 2.
+(*/\ (forall p, in_triangle t1 p -> in_triangle t2 p = false).*)
 
-Parameter inCircleDeterminant : P -> P -> P -> P -> R.
+Variable in_circle_determinant : P -> P -> P -> P -> R.
 
-Definition inCircle p a b c  := inCircleDeterminant p a b c >0.
-Definition inCircleWithBoundaries p a b c := inCircleDeterminant p a b c >= 0.
+Definition in_circle p a b c  := in_circle_determinant p a b c >0.
+Definition in_circle_wboundaries p a b c := in_circle_determinant p a b c >= 0.
 
-Axiom allTriangles : forall p1, forall p2, forall p3, exists t, p1 \in vertexSet t /\ p2 \in vertexSet t /\ p3 \in vertexSet t.
+Axiom allTriangles : forall p1, forall p2, forall p3, exists t, p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t.
 
-Definition inCircleTriangle p t := inCircle p (vertex1 t) (vertex2 t) (vertex3 t).
- 
+Definition in_circle_triangle p t := in_circle p (vertex1 t) (vertex2 t) (vertex3 t).
 
-Definition  Delaunay (Ts:{fset T})  := forall t1 , forall t2,
+
+Definition nd := #|`D|.
+
+
+(*Definition RCH (x:P) n (d:P^n) (a :R^n) := ((xCoord x) == \sum_( i < n ) (a i) * xCoord (d i)) && ((yCoord x) == \sum_( i < n ) (a i) * yCoord (d i)) && (\sum_( i < n ) (a i) == 1) && [forall i : 'I_n, (0 <= (a i))].*)
+
+Definition hull (d: {fset P}) (x : P) := exists (a : d -> R), 
+  ((xCoord x) == \sum_ i  (a i) * xCoord (val i)) && 
+ ((yCoord x) == \sum_ i (a i) * yCoord (val i)) &&
+ (\sum_ i (a i) == 1) && [forall i, (0 <= (a i))].
+
+Definition encompassed x h := ucycle (is_left_or_on_line x) h.
+
+Definition all_left_of (d : {fset P}) x y  := [forall p : d, is_left_or_on_line x y (val p)].
+
+Open Local Scope nat_scope.
+
+Definition CH (s : seq P) (d : {fset P}) := ((seq_fset s) `<=` d) /\
+                                            (forall x, encompassed x s) /\
+                                            (#|`d| >= 2 -> (size s) >= 2).
+
+Hypothesis encompassed_ch : forall d : {fset P}, forall x, hull d x <-> forall h,  (CH h d  -> encompassed x h).
+
+Definition union_trD1 (Ts: {fset T}) (Ds : {fset P}) :=
+forall (t:T), t \in Ts -> forall p, p \in vertex_set t -> p \in Ds. 
+
+Definition union_trD2 (Ts: {fset T}) (Ds : {fset P}) :=
+forall (p:P), p \in Ds -> exists (t:T), t \in Ts /\ p \in vertex_set t.
+
+Definition union_trD Ts Ds := union_trD1 Ts Ds /\ union_trD2 Ts Ds.
+
+Variable mkCH : {fset P} -> seq P. 
+
+
+Definition covers_hull (tr : {fset T}) (d : {fset P}) :=
+forall p : P, hull d p -> exists t, (t \in tr) /\ (in_triangle_wedges t p).
+
+Definition covers_vertices (tr : {fset T}) (d : {fset P}) :=
+forall p : P, p \in d -> exists t, (t \in tr) /\ (p \in vertex_set t).
+
+
+Definition no_cover_intersection (tr : {fset T}) (d : {fset P}) :=
+  forall t1, forall t2, forall p, p \in vertex_set t1 -> in_triangle t2 p -> false.
+
+Definition regular (Ts:{fset T})  := forall t1 , forall t2,
       t1 \in Ts -> t2 \in Ts ->
-                          adjacent t1 t2 ->
-                          forall p,
-                           p \in vertexSet t1-> inCircleTriangle p t2 -> p \in vertexSet t2.
+                         forall p, p \in vertex_set t1-> in_circle_triangle p t2 -> false.
 
-Definition n := #|`D|.
+Definition no_point_on_segment (Ts : {fset T}) (d : {fset P}) :=
+  forall t1, forall t2,forall p, p \in vertex_set t1 -> in_triangle_wedges t2 p ->
+                         ((adjacent t1 t2 )/\(p \in vertex_set t2)).
 
-Definition RCH n (x:P) (d:P^n) (a :R^n) := ((xCoord x) == \sum_( i < n ) (a i) * xCoord (d i)) && ((yCoord x) == \sum_( i < n ) (a i) * yCoord (d i)) && (\sum_( i < n ) (a i) == 1) && [forall i : 'I_n, (0 <= (a i))].
+Definition triangulation tr d := covers_hull tr d /\ covers_vertices tr d /\
+                                 no_cover_intersection tr d /\ no_point_on_segment tr d.
 
-
-
-(*Definition surfaceConvexHull1 (tr : {fset T}) (d : {fset P}) h :=
-  forall t , forall p, t \in tr -> p \in d -> inTriangleWEdges t p ->  exists a, RCH p (nth p (enum_fset h)) a.
-
-Definition surfaceConvexHull2 (tr : {fset T}) (d : {fset P}) h :=
- forall p, p \in d -> exists a, RCH p (nth p (enum_fset h)) a -> #|` [fset t in Tr | inTriangle t p]  | != 0%nat.
-
-
-Definition surfaceCH tr d h := surfaceConvexHull2 tr d h /\ surfaceConvexHull1 tr d h. 
- *)
-
-
-Definition unionTrD1 (Ts: {fset T}) (Ds : {fset P}) := forall (t:T), t \in Ts -> forall p, p \in vertexSet t -> p \in Ds. 
-
-Definition unionTrD2 (Ts: {fset T}) (Ds : {fset P}) := forall (p:P), p \in Ds -> exists (t:T), t \in Ts /\ p \in vertexSet t.
-
-Definition unionTrD Ts Ds := unionTrD1 Ts Ds /\ unionTrD2 Ts Ds.
-Variable pp : P.
-Variable t:{fset T}.
-Check [finType of t].
-
-Check fun (t : {fset T}) => [exists j : t, inTriangle (val j) pp].
-
-Definition CH k (h : 'I_k.+1 -> P) (d : {fset P}) := [forall i : 'I_k.+1 , [exists j : d, h i == val j]] /\
-                                                    forall i, forall p, p \in d -> isLeftOfOrOn (h i) ( h (Zp_add i (inZp 1))) p.
-
-Check CH.
+Definition delaunay tr d := triangulation tr d /\ regular tr.
 
 End Triangulation.
