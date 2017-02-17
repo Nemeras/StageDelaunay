@@ -28,7 +28,6 @@ Variable D : {fset P}.
 
 Variable vertex : T -> P^3.
 
-Variable tt:T.
 
 (*Variable interior : T -> P -> bool.*)
 (*Variable surface : T -> P -> bool.*)
@@ -37,9 +36,19 @@ Variable oriented_surface : P -> P -> P -> R.
 
 Axiom triangle_3vertices : forall (t:T), injective (vertex t).
 
-
 Open Local Scope ring_scope.
 Definition vertex_set t := (vertex t) @` 'I_3.
+
+Variable vertices_to_triangle : P -> P -> P -> T.
+
+Hypothesis vertices_to_triangle_correct :
+  forall p1, forall p2, forall p3, forall t, vertices_to_triangle p1 p2 p3 == t <->
+  (p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t).
+                                                                 
+
+Axiom not_2_triangles : forall (t1 : T), forall (t2 : T), t1 == t2 <-> (vertex_set t1 == vertex_set t2).
+
+
 
 
 Definition is_left_of p a b := oriented_surface p a b > 0%R.
@@ -105,6 +114,7 @@ Definition union_trD Ts Ds := union_trD1 Ts Ds /\ union_trD2 Ts Ds.
 
 Variable mkCH : {fset P} -> seq P. 
 
+Hypothesis mkCH_correct : forall d, CH (mkCH d) d. 
 
 Definition covers_hull (tr : {fset T}) (d : {fset P}) :=
 forall p : P, hull d p -> exists t, (t \in tr) /\ (in_triangle_wedges t p).
@@ -121,8 +131,7 @@ Definition regular (Ts:{fset T})  := forall t1 , forall t2,
                          forall p, p \in vertex_set t1-> in_circle_triangle p t2 -> false.
 
 Definition no_point_on_segment (Ts : {fset T}) (d : {fset P}) :=
-  forall t1, forall t2,forall p, p \in vertex_set t1 -> in_triangle_wedges t2 p ->
-                         ((adjacent t1 t2 )/\(p \in vertex_set t2)).
+  forall t1, forall t2,forall p, p \in vertex_set t1 -> in_triangle_wedges t2 p -> p \in vertex_set t2.
 
 Definition triangulation tr d := covers_hull tr d /\ covers_vertices tr d /\
                                  no_cover_intersection tr d /\ no_point_on_segment tr d.
