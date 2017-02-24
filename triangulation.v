@@ -183,19 +183,10 @@ Definition flip_edge tr t1 t2 p1 p2 :=
   let new_t2 := vertices_to_triangle p31 p32 p2 in
   new_t1 |` (new_t2 |` ((tr `\ t1) `\ t2)).
 
-Lemma hull_add_point : forall p, forall d, hull d p -> forall p0, (hull (p |` d ) p0) -> hull d p0.
+Lemma hull_add_point p d: hull d p -> forall q, hull (p |` d ) q -> hull d q.
 Proof.
-  intros.
-  unfold hull in H0.
-  destruct H0 as [a H0].
-  destruct H0 as [Hx H0].
-  destruct H0 as [Hy H0].
-  destruct H0 as [Hsum Hpos].
-  unfold hull in H. 
-  destruct H as [b H].
-  destruct H as [Hbx H].
-  destruct H as [Hby H].
-  destruct H as [Hbsum Hbpos].
+  move => [a [a_x [a_y [asum apos]]]] q [b [b_x [b_y [bsum bpos]]]].
+
   
   
 (*   intros.
