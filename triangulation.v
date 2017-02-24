@@ -227,35 +227,46 @@ exists c; split.
       by case/negP: npd; rewrite -[p]/(val p') -(eqP hv) {hv}; case: i.
     congr (c _ * _).
   by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
-(* stopped here. *)
+  (* stopped here. *)
+pose F := fun i => c' i * xCoord (val i).
+have reindexation : \sum_(i | i !=p') (F i) = \sum_(i | h i != p') F (h i) by rewrite (reindex h).
+rewrite -reindexation.
+have separation : \sum_i ((a i) * xCoord (val i)) = (a p') *(xCoord p) + 
+                                                    \sum_(i | i != p') ((a i) * xCoord (val i)) 
+by rewrite (bigD1 p').
+rewrite (eqP a_x) separation.
+rewrite (eqP b_x).
+rewrite big_distrr => /=.
 
-rewrite -reindex. 
-  Check (val_inj  _ _ abs).
-rewrite /=.
-rewrite (eqP a_x).
 
-      case /fset0Pn : (Hbnonempty) => p1 p_in_d.
-      have truc := bij_on_codom (@fincl_inj _ _ _ H) (FSetSub p_in_d).
-      
-      Check truc.
-      suff x : d.
-      Check truc x.
-      Check bij_on_image.
-      Check fset0.
-      case H3 : (d == fset0).
-      
-      have quelconque : {on [pred i | val i != p], bijective h}.
-      Check bij_on_codom.
-      move => i.
-      Check fset1U1.
-      
-      Check bigD1.
-      
-      admit.
-      split.
-      admit.
-      split;trivial.
-      admit.
+pose b' := fun i =>  if i==p' then 0 else b (insubd [` p1_in_d] (val i)).
+rewrite (eq_big _ (fun i : d => (a p') * (b' (h i) * xCoord (val (h i)))) (reindex_h)); last first.
+  move =>i _;rewrite /b'.
+  case hv : (h i == p').
+    by case/negP:npd; rewrite -[p]/(val p') -(eqP hv) {hv}; case: i.
+  congr (_ * _).
+  congr (b _ * _ ).
+  by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
+pose F' := fun i => a p' * (b' i * xCoord (val i) ).  
+have reindexation2 : \sum_(i | i != p') (F' i) = 
+                     \sum_(i | h i != p') (F' (h i)) by rewrite (reindex h).
+rewrite -reindexation2.
+rewrite -big_split => /=.
+have eq_f_f' : forall i, i != p' -> F' i + a i * xCoord (fsval i) = F i.
+  move => i => nip ; rewrite /F /F' /c'/b' => /=.
+  case abs :(i==p');first by rewrite abs in nip.
+  rewrite /c.
+  have -> :(fincl dpd (insubd  [` p1_in_d] (fsval i)) = i).
+  destruct abs.
+  apply/val_inj => /= ; rewrite val_insubd  => /=.
+  have i_d : (fsval i = p) \/ (fsval i \in d) by  apply /fset1UP.
+  case i_d => valip.
+  rewrite valip.
+  case abs:(p \in d);first by [].
+  
+Check npd.
+  simpl.
+
       
 (*   intros.
     rewrite encompassed_ch.
