@@ -8,6 +8,8 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Import GRing.Theory Num.Theory.
+
 Section Triangulation.
 
 Open Scope fset_scope.
@@ -183,34 +185,55 @@ Definition flip_edge tr t1 t2 p1 p2 :=
   let new_t2 := vertices_to_triangle p31 p32 p2 in
   new_t1 |` (new_t2 |` ((tr `\ t1) `\ t2)).
 
-Lemma hull_add_point p d: hull d p -> forall q, hull (p |` d ) q -> hull d q.
-Proof.
-  move => [a [a_x [a_y [asum [apos dne]]]]] q [b [b_x [b_y [bsum [bpos _]]]]].
+Open Local Scope ring_scope.
 
-  assert (fsubset d (p |` d)).
-  apply fsubsetU1.
-  assert (fsubset [fset p] (p |` d)).
-  apply fsubsetUl.
-  Check fsetsubE.
-  assert (p \in [fset p]).
-  exact:fset11.
-  (*assert (p1:    [fset p ]).*)
-  set p' := FSetSub (fset1U1 p d).
-  pose c:= (fun (i : d) => (a (fincl H i)) + (a p') * (b i)).
-  assert (forall i, c i >= 0).
-  intro; unfold c.
-  assert (0 <= a (fincl H i)).
-  by apply Hpos.
-  assert (0 <= a (fincl H0 [` H1])).
-    by apply Hpos.
-    assert (0 <= b i).
-      by apply Hbpos.
-      apply Num.Theory.addr_ge0;trivial.
-      by apply Num.Theory.mulr_ge0.
-      unfold hull.
-      exists c.
-      split.
-      have h := fun i => fincl H i.
+Lemma hull_add_point p d: p \notin d -> hull d p ->
+   forall q, hull (p |` d ) q -> hull d q.
+Proof.
+move => npd [b [b_x [b_y [bsum [bpos dne]]]]] q [a [a_x [a_y [asum [apos _]]]]].
+have dpd : d `<=` (p |` d) by exact: fsubsetU1.
+have ppd : [fset p] `<=` (p |` d) by exact: fsubsetUl.
+have pp : p \in [fset p] by exact:fset11.
+case /fset0Pn : dne => p1 p1_in_d.
+set p' := FSetSub (fset1U1 p d).
+pose c := (fun (i : d) => (a (fincl dpd i)) + (a p') * (b i)).
+have cpos : forall i, 0 <= c i.
+  by   move => i; apply: addr_ge0 => //; apply: mulr_ge0.  
+set h := fun i => fincl dpd i.
+(* maybe start of useless part. *)
+have codomh_np': {subset codom h <= [pred i | i != p']}.
+  move => j /codomP [w Pw]; rewrite Pw.
+  apply/negP => /eqP jeqp'; case /negP: npd.
+  by rewrite -[p]/(val p') -jeqp' {Pw jeqp'}; case: w.
+(* end of potentially useless part. *)
+have np'_codomh: {subset [pred i | i != p'] <= codom h}.
+  move => [j Pj]; case/fset1UP: (Pj).
+    move => abs.  move : Pj. rewrite abs => Pp.
+    by case/negP; apply/eqP; apply /val_inj.
+  by move => jd _;  apply/codomP; exists [` jd ]; apply /val_inj.
+have bijh : {on [pred i | i != p'], bijective h}.
+  apply/(subon_bij np'_codomh)/bij_on_codom; last by exact: [` p1_in_d].
+  by exact: fincl_inj.
+exists c; split.
+  have reindex_h: xpredT =1 (fun x => [pred i : p |` d | i != p'] (h x)).
+    move => [j pj]; symmetry; apply/negP => /eqP abs.
+    by case: npd; rewrite -[p]/(val p') -abs /= pj.
+  pose c' := fun i : p |` d =>
+             if (i == p') then 0 else c (insubd [` p1_in_d] (val i)).
+  rewrite (eq_big _ (fun i : d => c' (h i) * xCoord (val (h i))) (reindex_h));
+    last first.
+    move => i _; rewrite /c'.
+    case hv : (h i == p').
+      by case/negP: npd; rewrite -[p]/(val p') -(eqP hv) {hv}; case: i.
+    congr (c _ * _).
+  by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
+(* stopped here. *)
+
+rewrite -reindex. 
+  Check (val_inj  _ _ abs).
+rewrite /=.
+rewrite (eqP a_x).
+
       case /fset0Pn : (Hbnonempty) => p1 p_in_d.
       have truc := bij_on_codom (@fincl_inj _ _ _ H) (FSetSub p_in_d).
       
