@@ -102,7 +102,7 @@ Definition nd := #|`D|.
 Definition hull (d: {fset P}) (x : P) := exists (a : d -> R), 
   ((xCoord x) == \sum_ i  (a i) * xCoord (val i)) /\ 
  ((yCoord x) == \sum_ i (a i) * yCoord (val i)) /\
- (\sum_ i (a i) == 1) /\ [forall i, (0 <= (a i))].
+ (\sum_ i (a i) == 1) /\ (forall i, (0 <= (a i))) /\ (d != fset0).
 
 Definition encompassed x h := ucycle (is_left_or_on_line x) h.
 
@@ -185,10 +185,55 @@ Definition flip_edge tr t1 t2 p1 p2 :=
 
 Lemma hull_add_point p d: hull d p -> forall q, hull (p |` d ) q -> hull d q.
 Proof.
-  move => [a [a_x [a_y [asum apos]]]] q [b [b_x [b_y [bsum bpos]]]].
+  move => [a [a_x [a_y [asum [apos dne]]]]] q [b [b_x [b_y [bsum [bpos _]]]]].
 
-  
-  
+  assert (fsubset d (p |` d)).
+  apply fsubsetU1.
+  assert (fsubset [fset p] (p |` d)).
+  apply fsubsetUl.
+  Check fsetsubE.
+  assert (p \in [fset p]).
+  exact:fset11.
+  (*assert (p1:    [fset p ]).*)
+  set p' := FSetSub (fset1U1 p d).
+  pose c:= (fun (i : d) => (a (fincl H i)) + (a p') * (b i)).
+  assert (forall i, c i >= 0).
+  intro; unfold c.
+  assert (0 <= a (fincl H i)).
+  by apply Hpos.
+  assert (0 <= a (fincl H0 [` H1])).
+    by apply Hpos.
+    assert (0 <= b i).
+      by apply Hbpos.
+      apply Num.Theory.addr_ge0;trivial.
+      by apply Num.Theory.mulr_ge0.
+      unfold hull.
+      exists c.
+      split.
+      have h := fun i => fincl H i.
+      case /fset0Pn : (Hbnonempty) => p1 p_in_d.
+      have truc := bij_on_codom (@fincl_inj _ _ _ H) (FSetSub p_in_d).
+      
+      Check truc.
+      suff x : d.
+      Check truc x.
+      Check bij_on_image.
+      Check fset0.
+      case H3 : (d == fset0).
+      
+      have quelconque : {on [pred i | val i != p], bijective h}.
+      Check bij_on_codom.
+      move => i.
+      Check fset1U1.
+      
+      Check bigD1.
+      
+      admit.
+      split.
+      admit.
+      split;trivial.
+      admit.
+      
 (*   intros.
     rewrite encompassed_ch.
     intros.
