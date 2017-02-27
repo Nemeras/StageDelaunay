@@ -117,7 +117,8 @@ Definition CH (s : seq P) (d : {fset P}) := ((seq_fset s) `<=` d) /\
                                             (#|`d| >= 2 -> (size s) >= 2) /\
                                             (#|`d| = 1 -> (size s) = 1).
 
-Hypothesis encompassed_ch : forall d : {fset P}, forall x, hull d x = forall h,  (CH h d  -> encompassed x h).
+Hypothesis encompassed_ch : forall d : {fset P}, forall x, 0 < #|`d| -> hull d x = forall h,  (CH h d  -> encompassed x h).
+
 
 Definition union_trD1 (Ts: {fset T}) (Ds : {fset P}) :=
 forall (t:T), t \in Ts -> forall p, p \in vertex_set t -> p \in Ds. 
@@ -139,7 +140,7 @@ forall p : P, p \in d -> exists t, (t \in tr) /\ (p \in vertex_set t).
 
 
 Definition no_cover_intersection (tr : {fset T}) (d : {fset P}) :=
-  forall t1, forall t2, forall p, p \in vertex_set t1 -> in_triangle t2 p -> false.
+  forall t1, forall t2, t1 \in tr -> t2 \in tr ->  forall p, p \in vertex_set t1 -> in_triangle t2 p -> false.
 
 Definition regular (Ts:{fset T})  := forall t1 , forall t2,
       t1 \in Ts -> t2 \in Ts ->
@@ -187,6 +188,9 @@ Definition flip_edge tr t1 t2 p1 p2 :=
 
 Open Local Scope ring_scope.
 
+
+
+
 Lemma hull_add_point p d: p \notin d -> hull d p ->
    forall q, hull (p |` d ) q -> hull d q.
 Proof.
@@ -194,7 +198,7 @@ move => npd [b [b_x [b_y [bsum [bpos dne]]]]] q [a [a_x [a_y [asum [apos _]]]]].
 have dpd : d `<=` (p |` d) by exact: fsubsetU1.
 have ppd : [fset p] `<=` (p |` d) by exact: fsubsetUl.
 have pp : p \in [fset p] by exact:fset11.
-case /fset0Pn : dne => p1 p1_in_d.
+case /fset0Pn : (dne) => p1 p1_in_d.
 set p' := FSetSub (fset1U1 p d).
 pose c := (fun (i : d) => (a (fincl dpd i)) + (a p') * (b i)).
 have cpos : forall i, 0 <= c i.
@@ -218,45 +222,60 @@ have reindex_h: xpredT =1 (fun x => h x != p').
   move => [j pj]; symmetry; apply/negP => /eqP abs.
   by case: npd; rewrite -[p]/(val p') -abs /= pj.
   pose c' := fun i : p |` d => c (insubd [` p1_in_d] (val i)).
-exists c; split.
-  rewrite (eq_big _ (fun i : d => c' (h i) * xCoord (val (h i))) (reindex_h));
+  have fun_d_p_coord : forall f,  f p == \sum_i b i * f (val i) ->
+                             f q == \sum_i a i * f (val i) ->
+                             f q == \sum_i c i * f (val i).
+
+
+
+move => f f_b f_a.  
+
+  rewrite (eq_big _ (fun i : d => c' (h i) * f (val (h i))) (reindex_h));
     first last.
     move => i _; rewrite /c'.
     case hv : (h i == p').
       by case/negP: npd; rewrite -[p]/(val p') -(eqP hv) {hv}; case: i.
     congr (c _ * _).
     by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
-  set F := fun i => c' i * xCoord (val i).
+  set F := fun i => c' i * f (val i).
   rewrite -(@reindex _ _ _ _ _ h (fun x => x != p') F) /F /c' /c {F c' cpos c}
    //=.
   rewrite (eq_bigr
              (fun i => a (fincl dpd (insubd [` p1_in_d] (val i))) *
-                xCoord (val i) +
+                f (val i) +
                 a p' * (b (insubd [` p1_in_d] (val i)) *
-                xCoord (val i)))); last by move => i inp; rewrite mulrDl mulrA.
+                f (val i)))); last by move => i inp; rewrite mulrDl mulrA.
   rewrite big_split /= addrC -(big_distrr (a p')) /=.
   set vp := (X in _ == _ * X + _).
-  have vp_eq : vp = xCoord p.
-    rewrite (eqP b_x).
+  have vp_eq : vp = f p.
+    rewrite (eqP f_b).
     rewrite (eq_big _ (fun i : d => b (insubd [` p1_in_d] (val (h i))) *
-               xCoord (val (h i))) (reindex_h)); first last.
+               f(val (h i))) (reindex_h)); first last.
       move => [i ip] _ /=; congr (b _ * _).
       by  apply /val_inj; rewrite val_insubd ip.
     by apply: reindex.
-  rewrite vp_eq (eqP a_x) (bigD1 p') //=; apply/eqP; congr (_ + _).
+  rewrite vp_eq (eqP f_a) (bigD1 p') //=; apply/eqP; congr (_ + _).
   apply: eq_bigr; move => [i ip] inp; congr (a _ * _); rewrite /=.
   apply val_inj => /=; rewrite val_insubd.
   case/fset1UP: (ip); last by move => ->.
   by move => abs; case/negP: inp; apply/eqP/val_inj => /=.
-split; first admit.
+exists c; split; first by apply:fun_d_p_coord.
+split; first by apply:fun_d_p_coord.
 split.
   rewrite big_split /= addrC -big_distrr /= (eqP bsum) mulr1.
   rewrite (eq_big (fun i => true && (h i != p'))(fun i => a (h i))(reindex_h));
     last by [].
   rewrite -(@reindex _ _ _ _ _ h (fun x => x != p') a bijh).
   rewrite -(@bigD1 _ _ _ _ _ xpredT) //.
-(* stopped here. *)
+  (* stopped here. *)
 
+split;last by [].
+move => i.
+rewrite /c.
+apply:addr_ge0 => //=.
+by apply:mulr_ge0 => //=.
+Qed.
+(* useless part from here
 Search "big" "distr".
 have t := (big_split (GRing.add_comoid R) (index_enum (fset_sub_finType (p |` d))) (fun x : fset_sub_finType (p |` d) => x != p')
             (fun i => a (fincl dpd (insubd [` p1_in_d] (fsval i))))
@@ -306,7 +325,7 @@ have eq_f_f' : forall i, i != p' -> F' i + a i * xCoord (fsval i) = F i.
   
 Check npd.
   simpl.
-
+*)
       
 (*   intros.
     rewrite encompassed_ch.
@@ -381,36 +400,38 @@ Check npd.
                   unfold ucycle in H8.
                   rewrite HeqS in H8.
                   simpl in H8.*)
-    Qed.
+
+
+
    Lemma hull_from_triangle :
   forall d, forall tr, forall t, forall p, triangulation tr d -> t \in tr -> in_triangle t p -> hull d p.
   Proof.
-    intros.
-    
-    unfold triangulation in H.    
-    destruct H as [H H'].
-    unfold covers_hull in H.
-    Admitted.
-    (*apply H.
-    exists t.
-    apply in_triangle_imply_w_edges in H1.
-    by rewrite H0 H1.
-Qed.*)
+move => d tr t p tr_d t_tr intp.
+rewrite /triangulation in tr_d.
+move:tr_d =>[covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]].   
+rewrite /covers_hull in covh_tr_d.
+rewrite /hull.
+Admitted.
+
 
   Theorem triangulation_split_triangle:
   forall tr, forall t , forall p, forall d, triangulation tr d -> t \in tr -> in_triangle t p ->
                       triangulation (split_triangle tr t p) (p |` d).
-    intros.
-    assert(triangulation_tr_d := H).
-    unfold triangulation in H.
-    unfold triangulation.
-  split.
-  unfold covers_hull.
-  intros.
-  destruct H as [covers_hull_trd H].
-  unfold covers_hull in covers_hull_trd.
-  assert (p0 = p \/ p0 != p).
-  admit.
+ move => tr t p d tr_d t_tr intp.
+rewrite /triangulation in tr_d.
+rewrite /triangulation.
+split.
+  rewrite /covers_hull.
+  move => q hull_pdq.
+  move:tr_d => [covh_tr_d [covv_tr_d [ncv_tr_d nps_tr_d]]].
+  case p_q:(p==q).
+  rewrite /split_triangle.
+  rewrite /covers_hull in covh_tr_d.
+  
+
+  rewrite /split_triangle_aux.
+  
+(*
   destruct H3.
   rewrite H3.
   exists (vertices_to_triangle (vertex1 t) (vertex2 t) p).
@@ -468,6 +489,6 @@ Qed.*)
     
     apply /fsetD1P;split;trivial.
     by apply /fsetUP; rewrite H7; right.
-
+*)
     
 End Triangulation.
