@@ -214,23 +214,63 @@ have np'_codomh: {subset [pred i | i != p'] <= codom h}.
 have bijh : {on [pred i | i != p'], bijective h}.
   apply/(subon_bij np'_codomh)/bij_on_codom; last by exact: [` p1_in_d].
   by exact: fincl_inj.
+have reindex_h: xpredT =1 (fun x => h x != p').
+  move => [j pj]; symmetry; apply/negP => /eqP abs.
+  by case: npd; rewrite -[p]/(val p') -abs /= pj.
+  pose c' := fun i : p |` d => c (insubd [` p1_in_d] (val i)).
 exists c; split.
-  have reindex_h: xpredT =1 (fun x => [pred i : p |` d | i != p'] (h x)).
-    move => [j pj]; symmetry; apply/negP => /eqP abs.
-    by case: npd; rewrite -[p]/(val p') -abs /= pj.
-  pose c' := fun i : p |` d =>
-             if (i == p') then 0 else c (insubd [` p1_in_d] (val i)).
   rewrite (eq_big _ (fun i : d => c' (h i) * xCoord (val (h i))) (reindex_h));
-    last first.
+    first last.
     move => i _; rewrite /c'.
     case hv : (h i == p').
       by case/negP: npd; rewrite -[p]/(val p') -(eqP hv) {hv}; case: i.
     congr (c _ * _).
-  by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
-  (* stopped here. *)
-pose F := fun i => c' i * xCoord (val i).
-have reindexation : \sum_(i | i !=p') (F i) = \sum_(i | h i != p') F (h i) by rewrite (reindex h).
-rewrite -reindexation.
+    by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
+  set F := fun i => c' i * xCoord (val i).
+  rewrite -(@reindex _ _ _ _ _ h (fun x => x != p') F) /F /c' /c {F c' cpos c}
+   //=.
+  rewrite (eq_bigr
+             (fun i => a (fincl dpd (insubd [` p1_in_d] (val i))) *
+                xCoord (val i) +
+                a p' * (b (insubd [` p1_in_d] (val i)) *
+                xCoord (val i)))); last by move => i inp; rewrite mulrDl mulrA.
+  rewrite big_split /= addrC -(big_distrr (a p')) /=.
+  set vp := (X in _ == _ * X + _).
+  have vp_eq : vp = xCoord p.
+    rewrite (eqP b_x).
+    rewrite (eq_big _ (fun i : d => b (insubd [` p1_in_d] (val (h i))) *
+               xCoord (val (h i))) (reindex_h)); first last.
+      move => [i ip] _ /=; congr (b _ * _).
+      by  apply /val_inj; rewrite val_insubd ip.
+    by apply: reindex.
+  rewrite vp_eq (eqP a_x) (bigD1 p') //=; apply/eqP; congr (_ + _).
+  apply: eq_bigr; move => [i ip] inp; congr (a _ * _); rewrite /=.
+  apply val_inj => /=; rewrite val_insubd.
+  case/fset1UP: (ip); last by move => ->.
+  by move => abs; case/negP: inp; apply/eqP/val_inj => /=.
+split; first admit.
+split.
+  rewrite big_split /= addrC -big_distrr /= (eqP bsum) mulr1.
+  rewrite (eq_big (fun i => true && (h i != p'))(fun i => a (h i))(reindex_h));
+    last by [].
+  rewrite -(@reindex _ _ _ _ _ h (fun x => x != p') a bijh).
+  rewrite -(@bigD1 _ _ _ _ _ xpredT) //.
+(* stopped here. *)
+
+Search "big" "distr".
+have t := (big_split (GRing.add_comoid R) (index_enum (fset_sub_finType (p |` d))) (fun x : fset_sub_finType (p |` d) => x != p')
+            (fun i => a (fincl dpd (insubd [` p1_in_d] (fsval i))))
+            (fun i => a p' * b (insubd [` p1_in_d] (fsval i)))).
+simpl in t.
+rewrite [X in _ == X]t.
+move => ->.
+set u := BigOp.bigop.
+
+  rewrite [X in _ == X].
+            .
+              (fun i => a (fincl dpd (insubd [` p1_in_d] (val i))) +
+                        a p' * b (insubd [` p1_in_d] (val i)))).
+Search "mkcond".
 have separation : \sum_i ((a i) * xCoord (val i)) = (a p') *(xCoord p) + 
                                                     \sum_(i | i != p') ((a i) * xCoord (val i)) 
 by rewrite (bigD1 p').
