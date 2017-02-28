@@ -140,14 +140,14 @@ forall p : P, p \in d -> exists t, (t \in tr) /\ (p \in vertex_set t).
 
 
 Definition no_cover_intersection (tr : {fset T}) (d : {fset P}) :=
-  forall t1, forall t2, t1 \in tr -> t2 \in tr ->  forall p, p \in vertex_set t1 -> in_triangle t2 p -> false.
+  forall t1, forall t2, t1 \in tr -> t2 \in tr ->  forall p, in_triangle t1 p -> in_triangle t2 p -> t1 = t2.
 
 Definition regular (Ts:{fset T})  := forall t1 , forall t2,
       t1 \in Ts -> t2 \in Ts ->
                          forall p, p \in vertex_set t1-> in_circle_triangle p t2 -> false.
 
-Definition no_point_on_segment (Ts : {fset T}) (d : {fset P}) :=
-  forall t1, forall t2,forall p, p \in vertex_set t1 -> in_triangle_w_edges t2 p -> p \in vertex_set t2.
+Definition no_point_on_segment (tr : {fset T}) (d : {fset P}) :=
+  forall t1, forall t2,t1 \in tr -> t2 \in tr -> forall p, p \in vertex_set t1 -> in_triangle_w_edges t2 p -> p \in vertex_set t2.
 
 Definition triangulation tr d := covers_hull tr d /\ covers_vertices tr d /\
                                  no_cover_intersection tr d /\ no_point_on_segment tr d.
@@ -408,7 +408,7 @@ Check npd.
   Proof.
 move => d tr t p tr_d t_tr intp.
 rewrite /triangulation in tr_d.
-move:tr_d =>[covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]].   
+move:tr_d =>[covh_tr_d [covv_tr_d nps_tr_d]].   
 rewrite /covers_hull in covh_tr_d.
 rewrite /hull.
 Admitted.
@@ -423,7 +423,7 @@ rewrite /triangulation.
 split.
   rewrite /covers_hull.
   move => q hull_pdq.
-  move:tr_d => [covh_tr_d [covv_tr_d [ncv_tr_d nps_tr_d]]].
+  move:tr_d => [covh_tr_d [covv_tr_d nps_tr_d]].
   case p_q:(p==q).
   rewrite /split_triangle.
   rewrite /covers_hull in covh_tr_d.
@@ -490,5 +490,27 @@ split.
     apply /fsetD1P;split;trivial.
     by apply /fsetUP; rewrite H7; right.
 *)
-    
+  Admitted.
+
+  Theorem flip_edge_triangulation : forall tr, forall d, triangulation tr d -> forall t1, forall t2, t1 != t2 -> t1 \in tr-> t2 \in tr ->
+                                    forall p1, forall p2, p1 \in vertex_set t1 -> p1 \in vertex_set t1 ->
+                                    p2 \in vertex_set t1 -> p2 \in vertex_set t2 ->
+                                    triangulation (flip_edge tr t1 t2 p1 p2) d.
+Proof.
+  move => tr d tr_d t1 t2 t1_not_t2 t1_tr t2_tr p1 p2 p1_t1 p1_t2 p2_t1 p2_t2.
+
+  rewrite /triangulation in tr_d.
+  move:tr_d =>[covh_tr_d [covv_tr_d nps_tr_d]].  
+
+  rewrite /triangulation.
+  split.
+    rewrite /covers_hull.
+    move => p => hull_d_p.
+    rewrite /covers_hull in covh_tr_d.
+    have exists_t_covh : exists t, t \in tr /\ in_triangle_w_edges t p by apply covh_tr_d.
+    move :exists_t_covh => [t [t_tr t_intwe]].
+    exists t.
+    split;trivial.
+    case t_t1_t2 :((t==t1) || (t==t2)).
+
 End Triangulation.
