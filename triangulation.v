@@ -509,8 +509,14 @@ Proof.
     rewrite /covers_hull in covh_tr_d.
     have exists_t_covh : exists t, t \in tr /\ in_triangle_w_edges t p by apply covh_tr_d.
     move :exists_t_covh => [t [t_tr t_intwe]].
+    case t_t1_t2:((t==t1) || (t==t2)).
+    move:t_t1_t2 => /orP t_t1_t2.
+    destruct t_t1_t2.
+    (*there should be a better way to do that in ssreflect.*)
+      admit.
+      admit.
+    move:t_t1_t2 => /norP [t_t1 t_t2].
     exists t.
-    split;trivial.
-    case t_t1_t2 :((t==t1) || (t==t2)).
-
+    split;trivial;rewrite /flip_edge.
+    
 End Triangulation.
