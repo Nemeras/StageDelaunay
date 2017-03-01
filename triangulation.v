@@ -65,9 +65,14 @@ Proof.
   by intro;unfold is_left_or_on_line; rewrite oriented_surface_x_x_x.
 Qed.
 
-Definition vertex1 t := vertex t (@Ordinal 3 0 isT).
-Definition vertex2 t := vertex t (@Ordinal 3 1 isT).
-Definition vertex3 t := vertex t (@Ordinal 3 2 isT).
+Definition ord30 := @Ordinal 3 0 isT.
+Definition ord31 := @Ordinal 3 1 isT.
+Definition ord32 := @Ordinal 3 2 isT.
+
+
+Definition vertex1 t := vertex t ord30.
+Definition vertex2 t := vertex t ord31.
+Definition vertex3 t := vertex t ord32.
 
 Axiom oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0. 
 
@@ -117,7 +122,8 @@ Definition CH (s : seq P) (d : {fset P}) := ((seq_fset s) `<=` d) /\
                                             (#|`d| >= 2 -> (size s) >= 2) /\
                                             (#|`d| = 1 -> (size s) = 1).
 
-Hypothesis encompassed_ch : forall d : {fset P}, forall x, 0 < #|`d| -> hull d x = forall h,  (CH h d  -> encompassed x h).
+Hypothesis encompassed_ch : forall d : {fset P}, forall x, 0 < #|`d| -> hull d x = forall h,
+                                  (CH h d  -> encompassed x h).
 
 
 Definition union_trD1 (Ts: {fset T}) (Ds : {fset P}) :=
@@ -140,14 +146,16 @@ forall p : P, p \in d -> exists t, (t \in tr) /\ (p \in vertex_set t).
 
 
 Definition no_cover_intersection (tr : {fset T}) (d : {fset P}) :=
-  forall t1, forall t2, t1 \in tr -> t2 \in tr ->  forall p, in_triangle t1 p -> in_triangle t2 p -> t1 = t2.
+  forall t1, forall t2, t1 \in tr -> t2 \in tr ->  
+  forall p, in_triangle t1 p -> in_triangle t2 p -> t1 = t2.
 
 Definition regular (Ts:{fset T})  := forall t1 , forall t2,
       t1 \in Ts -> t2 \in Ts ->
-                         forall p, p \in vertex_set t1-> in_circle_triangle p t2 -> false.
+      forall p, p \in vertex_set t1-> in_circle_triangle p t2 -> false.
 
 Definition no_point_on_segment (tr : {fset T}) (d : {fset P}) :=
-  forall t1, forall t2,t1 \in tr -> t2 \in tr -> forall p, p \in vertex_set t1 -> in_triangle_w_edges t2 p -> p \in vertex_set t2.
+  forall t1, forall t2,t1 \in tr -> t2 \in tr -> forall p, p \in vertex_set t1 ->
+  in_triangle_w_edges t2 p -> p \in vertex_set t2.
 
 Definition triangulation tr d := covers_hull tr d /\ covers_vertices tr d /\
                                  no_cover_intersection tr d /\ no_point_on_segment tr d.
@@ -168,9 +176,9 @@ Definition split_triangle_aux t p :=
 Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
 Check split_triangle.
-Hypothesis three_triangles_cover_one :
-  forall t, forall p, in_triangle_w_edges t p ->
-            forall p0, exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0).
+(*Hypothesis three_triangles_cover_one :
+  forall t, forall p, in_triangle t p ->
+            forall p0, in_triangle t p0 ->exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0).*)
 
 Definition get_third_vertex t p1 p2 :=
   if (vertex1 t == p1) || (vertex1 t == p2) then
@@ -267,7 +275,6 @@ split.
     last by [].
   rewrite -(@reindex _ _ _ _ _ h (fun x => x != p') a bijh).
   rewrite -(@bigD1 _ _ _ _ _ xpredT) //.
-  (* stopped here. *)
 
 split;last by [].
 move => i.
@@ -275,132 +282,12 @@ rewrite /c.
 apply:addr_ge0 => //=.
 by apply:mulr_ge0 => //=.
 Qed.
-(* useless part from here
-Search "big" "distr".
-have t := (big_split (GRing.add_comoid R) (index_enum (fset_sub_finType (p |` d))) (fun x : fset_sub_finType (p |` d) => x != p')
-            (fun i => a (fincl dpd (insubd [` p1_in_d] (fsval i))))
-            (fun i => a p' * b (insubd [` p1_in_d] (fsval i)))).
-simpl in t.
-rewrite [X in _ == X]t.
-move => ->.
-set u := BigOp.bigop.
-
-  rewrite [X in _ == X].
-            .
-              (fun i => a (fincl dpd (insubd [` p1_in_d] (val i))) +
-                        a p' * b (insubd [` p1_in_d] (val i)))).
-Search "mkcond".
-have separation : \sum_i ((a i) * xCoord (val i)) = (a p') *(xCoord p) + 
-                                                    \sum_(i | i != p') ((a i) * xCoord (val i)) 
-by rewrite (bigD1 p').
-rewrite (eqP a_x) separation.
-rewrite (eqP b_x).
-rewrite big_distrr => /=.
 
 
-pose b' := fun i =>  if i==p' then 0 else b (insubd [` p1_in_d] (val i)).
-rewrite (eq_big _ (fun i : d => (a p') * (b' (h i) * xCoord (val (h i)))) (reindex_h)); last first.
-  move =>i _;rewrite /b'.
-  case hv : (h i == p').
-    by case/negP:npd; rewrite -[p]/(val p') -(eqP hv) {hv}; case: i.
-  congr (_ * _).
-  congr (b _ * _ ).
-  by apply/val_inj; rewrite val_insubd /= {hv}; case: i  => /= i' ->.
-pose F' := fun i => a p' * (b' i * xCoord (val i) ).  
-have reindexation2 : \sum_(i | i != p') (F' i) = 
-                     \sum_(i | h i != p') (F' (h i)) by rewrite (reindex h).
-rewrite -reindexation2.
-rewrite -big_split => /=.
-have eq_f_f' : forall i, i != p' -> F' i + a i * xCoord (fsval i) = F i.
-  move => i => nip ; rewrite /F /F' /c'/b' => /=.
-  case abs :(i==p');first by rewrite abs in nip.
-  rewrite /c.
-  have -> :(fincl dpd (insubd  [` p1_in_d] (fsval i)) = i).
-  destruct abs.
-  apply/val_inj => /= ; rewrite val_insubd  => /=.
-  have i_d : (fsval i = p) \/ (fsval i \in d) by  apply /fset1UP.
-  case i_d => valip.
-  rewrite valip.
-  case abs:(p \in d);first by [].
-  
-Check npd.
-  simpl.
-*)
-      
-(*   intros.
-    rewrite encompassed_ch.
-    intros.
-    rewrite encompassed_ch in H0.
-    apply H0.
-    assert (CH_h_d := H1).
-    unfold CH.
-    unfold CH in H1.
-    destruct H1.
-    split.
-    assert (d `<=` p |` d).
-    exact:fsubsetU1.
-    apply/fsubset_trans.
-    apply H1. trivial.
-    destruct H2.
-    split.
-    intros.
-    assert (x=p \/ x \in d).
-      by apply /fset1UP.
-      destruct H5.
-      rewrite encompassed_ch in H.
-      rewrite H5.
-        by apply H.
-          by apply H2.
-          split.
-          rewrite encompassed_ch in H.    
-          intro.
-          assert (#|` d| = 1%N \/ #|` d|>1%N).
-          admit.
-          destruct H5.
-          assert (exists x, d = [fset x]).
-            by apply /cardfs1P; rewrite H5.
-            destruct H6.
-            remember [:: x] as S.
-            assert (CH S d).
-            unfold CH.
-            split.
-            rewrite HeqS.
-            rewrite H6.
-            exact:fsubset_refl.
-            split.
-            rewrite H6.
-            intros.
-            assert (x0 = x).
-            by apply /fset1P.
-            rewrite H8.
-            unfold encompassed.
-       (*     unfold is_left_or_on_line.*)
-            rewrite HeqS.
-            unfold ucycle.
-            assert (uniq [:: x]).
-              by [].
-              rewrite H9.
-              simpl.
-              by rewrite is_left_or_on_line_x_x_x.
-            rewrite H5.
-            split.
-            intro.
-            rewrite ltnn in H7.
-            trivial.
-              by assert false.
-              intro.
-                by rewrite HeqS.
-                assert (encompassed p S).
-                  by apply H.
-                  unfold CH in H7.
-                  destruct H7.
-                  destruct H9.
-                  destruct H10.
-                  unfold encompassed in H8.
-                  unfold ucycle in H8.
-                  rewrite HeqS in H8.
-                  simpl in H8.*)
-
+Hypothesis in_triangle_barycentre : forall t, forall p, in_triangle_w_edges t p <-> 
+              exists a : 'I_3 -> R, ((forall i, (a i) > 0%R) /\ \sum_i a i = 1 /\
+              xCoord p = \sum_i ((a i)*xCoord (vertex t i)) /\
+              yCoord p = \sum_i ((a i)*yCoord (vertex t i))). 
 
 
    Lemma hull_from_triangle :
@@ -411,7 +298,27 @@ rewrite /triangulation in tr_d.
 move:tr_d =>[covh_tr_d [covv_tr_d nps_tr_d]].   
 rewrite /covers_hull in covh_tr_d.
 rewrite /hull.
+
+have inwetp : in_triangle_w_edges t p by apply:in_triangle_imply_w_edges.
+move:inwetp => /in_triangle_barycentre [a [apos [aun [a_x a_y]]]].
+
+have fun_sum_ord3 : forall f, f p = \sum_i ((a i)*(f (vertex t i))) ->
+                         f p = (a ord30)*(f (vertex t ord30))+
+                               (a ord31)*(f (vertex t ord31))+
+                               (a ord32)*(f (vertex t ord32)). 
+  move => f f_p. 
+  rewrite f_p.
+  rewrite (bigD1 ord30) => //=.
+  rewrite (bigD1 ord31) => //=.
+  assert (forall i, ((i != ord30) && (i != ord31)) = (i == ord32)).
+  have imply_ord : (forall i, (i != ord30) -> (i != ord31) -> (i = ord32)). 
+  by move => [[|[|[|j]]] pi]; move => * //=; apply val_inj.
+  move =>[i pi].
+
+  
+  
 Admitted.
+
 
 
   Theorem triangulation_split_triangle:
@@ -431,69 +338,13 @@ split.
 
   rewrite /split_triangle_aux.
   
-(*
-  destruct H3.
-  rewrite H3.
-  exists (vertices_to_triangle (vertex1 t) (vertex2 t) p).
-  trivial.
-  split.
-  unfold split_triangle.
-  unfold split_triangle_aux.
-  assert (vertices_to_triangle (vertex1 t) (vertex2 t) p
-    \in vertices_to_triangle (vertex1 t) (vertex2 t) p
-        |` [fset vertices_to_triangle p (vertex2 t) (vertex3 t); vertices_to_triangle 
-                                                                   (vertex1 t) p 
-                                                                   (vertex3 t)]).
-  apply fset1U1.
-  by apply /fsetUP;rewrite H4;left.
 
-
-  assert (((vertex1 t) \in vertex_set (vertices_to_triangle (vertex1 t) (vertex2 t) p)) /\
-          (vertex2 t \in vertex_set (vertices_to_triangle (vertex1 t) (vertex2 t) p)) /\
-          p \in vertex_set (vertices_to_triangle (vertex1 t) (vertex2 t) p)).
-    by apply vertices_to_triangle_correct.
-    by destruct H4;destruct H4; destruct H5; destruct H4; apply in_triangle_vertex_correct.
-
-    assert (hull d p).
-    Check hull_from_triangle.
-    apply hull_from_triangle with tr t; trivial.
-    assert (hull d p0).
-
-    
-    admit.
-
-    
-    apply covers_hull_trd in H4.
-    destruct H4 as [t1 H4]; destruct H4.
-    assert (t1 = t \/ t1 !=t).
-    admit.
-
-    destruct H6.
-    assert (in_triangle_w_edges t p0).
-    rewrite <- H6;trivial.
-    assert (in_triangle_w_edges t p) as intwe. by apply in_triangle_imply_w_edges.
-    assert (exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0)).
-    by apply three_triangles_cover_one.
-    destruct H8 as [x H8].
-    destruct H8 as [H8 H9].
-    exists x.
-    split;trivial.
-    unfold split_triangle.
-    by apply /fsetUP; rewrite H8; left.
-
-
-    exists t1.
-    split; trivial.
-    unfold split_triangle.
-    assert (t1 \in (tr `\ t)).
-    
-    apply /fsetD1P;split;trivial.
-    by apply /fsetUP; rewrite H7; right.
-*)
   Admitted.
 
-  Theorem flip_edge_triangulation : forall tr, forall d, triangulation tr d -> forall t1, forall t2, t1 != t2 -> t1 \in tr-> t2 \in tr ->
-                                    forall p1, forall p2, p1 \in vertex_set t1 -> p1 \in vertex_set t1 ->
+  Theorem flip_edge_triangulation : forall tr, forall d, triangulation tr d -> 
+                                    forall t1, forall t2, t1 != t2 -> t1 \in tr-> t2 \in tr ->
+                                    forall p1, forall p2, p1 \in vertex_set t1 ->
+                                    p1 \in vertex_set t1 ->
                                     p2 \in vertex_set t1 -> p2 \in vertex_set t2 ->
                                     triangulation (flip_edge tr t1 t2 p1 p2) d.
 Proof.
