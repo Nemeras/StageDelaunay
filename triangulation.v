@@ -142,7 +142,7 @@ Definition covers_hull (tr : {fset T}) (d : {fset P}) :=
 forall p : P, hull d p -> exists t, (t \in tr) /\ (in_triangle_w_edges t p).
 
 Definition covers_vertices (tr : {fset T}) (d : {fset P}) :=
-forall p : P, p \in d -> exists t, (t \in tr) /\ (p \in vertex_set t).
+forall p : P, p \in d <-> exists t, (t \in tr) /\ (p \in vertex_set t).
 
 
 Definition no_cover_intersection (tr : {fset T}) (d : {fset P}) :=
@@ -180,7 +180,12 @@ Check split_triangle.
   forall t, forall p, in_triangle t p ->
             forall p0, in_triangle t p0 ->exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0).*)
 
-Definition get_third_vertex t p1 p2 :=
+
+
+(*Definition get_third_vertex t p1 p2 :=
+  let set_uniq := (vertex_set t `\ p1) `\ p2 in
+  set_uniq.
+
   if (vertex1 t == p1) || (vertex1 t == p2) then
     (if (vertex2 t == p1) || (vertex2 t == p2) then
        vertex3 t
@@ -192,7 +197,7 @@ Definition flip_edge tr t1 t2 p1 p2 :=
   let p32 := get_third_vertex t2 p1 p2 in
   let new_t1 := vertices_to_triangle p31 p32 p1 in
   let new_t2 := vertices_to_triangle p31 p32 p2 in
-  new_t1 |` (new_t2 |` ((tr `\ t1) `\ t2)).
+  new_t1 |` (new_t2 |` ((tr `\ t1) `\ t2)).*)
 
 Open Local Scope ring_scope.
 
@@ -290,9 +295,36 @@ Hypothesis in_triangle_barycentre : forall t, forall p, in_triangle_w_edges t p 
               yCoord p = \sum_i ((a i)*yCoord (vertex t i))). 
 
 
-   Lemma hull_from_triangle :
+Theorem fun_f_sum : forall d :{fset P},forall f : P -> R,forall i:d, 
+        f (val i) = \sum_i0 (if i0 == i then 1 else 0) * f (val i0).
+Proof.
+move => d f i.
+rewrite (bigD1 i) => //=.
+case abs:(i==i);last by move:abs => /eqP.
+rewrite mul1r.
+have sum0 : \sum_(i0 | i0 != i) 
+             (if i0 == i then 1 else 0) * f (fsval i0) = 0.
+  have f0 : (forall i0:d, i0 != i -> 
+                     ((if i0 == i then 1%R else 0))= 0%R).
+    move => t0 i0 i_0_nvert.
+    move:abs=>_.
+    case i0_vert :(i0==i);last by [].
+    move:i0_vert => /eqP i0_vert.
+    rewrite i0_vert in i_0_nvert.
+    by case abs:(i == i);first rewrite abs in i_0_nvert;
+        last move:abs=>/eqP.
+  rewrite big1 => //=.
+  move =>i0 i0_nvert.
+  have temp :((if i0 == i then 1 else 0) = 0) by move => t0;apply f0.
+  by rewrite temp;apply mul0r.
+by rewrite sum0 addr0.
+Qed.
+
+
+
+Lemma hull_from_triangle :
   forall d, forall tr, forall t, forall p, triangulation tr d -> t \in tr -> in_triangle t p -> hull d p.
-  Proof.
+Proof.
 move => d tr t p tr_d t_tr intp.
 rewrite /triangulation in tr_d.
 move:tr_d =>[covh_tr_d [covv_tr_d nps_tr_d]].   
@@ -310,18 +342,45 @@ have fun_sum_ord3 : forall f, f p = \sum_i ((a i)*(f (vertex t i))) ->
   rewrite f_p.
   rewrite (bigD1 ord30) => //=.
   rewrite (bigD1 ord31) => //=.
-  assert (forall i, ((i != ord30) && (i != ord31)) = (i == ord32)).
-  have imply_ord : (forall i, (i != ord30) -> (i != ord31) -> (i = ord32)). 
-  by move => [[|[|[|j]]] pi]; move => * //=; apply val_inj.
-  move =>[i pi].
+  rewrite (bigD1 ord32) => //=.
+  have H: (forall i, ((i != ord30) && (i != ord31) && (i != ord32) -> false)).
+  move =>i cond.
+  case test0:(i==ord30);case test1:(i==ord31);case test2:(i==ord32) => //=;
+  rewrite test0 in cond;rewrite test1 in cond; rewrite test2 in cond => //=.
+  have imply_ord : (forall i, (i != ord30) -> (i != ord31) -> (i = ord32))
+    by move => [[|[|[|j]]] pi]; move => * //=; apply val_inj.
+  have abs : (i=ord32).
+  apply imply_ord; apply /negP; first by rewrite test0;last move.
+    by rewrite test1.
+  by rewrite abs in test2.
+  rewrite (eq_bigl (fun i => false ));last by move =>i;
+  case abs:((i != ord30) && (i != ord31) && (i != ord32)); first apply H in abs. 
+  rewrite big_pred0_eq.
+  rewrite addr0.
+  by rewrite addrA.
+  rewrite /covers_vertices in covv_tr_d.
+  apply fun_sum_ord3 in a_x;apply fun_sum_ord3 in a_y; move :fun_sum_ord3 =>_.
+  have vert_t_i :forall i, vertex t i \in d.
+    move =>i;apply covv_tr_d;exists t;split;move => //=.
+    by rewrite /vertex_set; apply:in_imfset.
+  have hull_vert_x : forall i, hull d (vertex t i).
+    move => i;rewrite /hull.
+    have vert_i_d : vertex t i \in d.
+      by apply covv_tr_d; exists t;split => //=; last by apply:in_imfset.
+    exists (fun j:d => if (j == [` vert_i_d]) then 1%R else 0).
+    split; first by rewrite -fun_f_sum.
+    split; first by rewrite -fun_f_sum.
+    split.
+    rewrite [X in _ == X](@fun_f_sum d (fun i => 1%R) [`vert_i_d]).  
+    admit.
+    split.
+    by move => i0; case temp:(i0 == [`vert_i_d]).
 
-  
-  
 Admitted.
 
 
 
-  Theorem triangulation_split_triangle:
+Theorem triangulation_split_triangle:
   forall tr, forall t , forall p, forall d, triangulation tr d -> t \in tr -> in_triangle t p ->
                       triangulation (split_triangle tr t p) (p |` d).
  move => tr t p d tr_d t_tr intp.
@@ -342,10 +401,10 @@ split.
   Admitted.
 
   Theorem flip_edge_triangulation : forall tr, forall d, triangulation tr d -> 
-                                    forall t1, forall t2, t1 != t2 -> t1 \in tr-> t2 \in tr ->
+                                    forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
                                     forall p1, forall p2, p1 \in vertex_set t1 ->
                                     p1 \in vertex_set t1 ->
-                                    p2 \in vertex_set t1 -> p2 \in vertex_set t2 ->
+                                    p2 \in vertex_set t1 -> p2 \in vertex_set t2->
                                     triangulation (flip_edge tr t1 t2 p1 p2) d.
 Proof.
   move => tr d tr_d t1 t2 t1_not_t2 t1_tr t2_tr p1 p2 p1_t1 p1_t2 p2_t1 p2_t2.
