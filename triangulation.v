@@ -371,8 +371,8 @@ have fun_sum_ord3 : forall f, f p = \sum_i ((a i)*(f (vertex t i))) ->
     split; first by rewrite -fun_f_sum.
     split; first by rewrite -fun_f_sum.
     split.
-    rewrite [X in _ == X](@fun_f_sum d (fun i => 1%R) [`vert_i_d]).  
-    admit.
+    rewrite [X in _ == X](@fun_f_sum d (fun i => 1%R) [`vert_i_d]).
+    by apply/eqP/eq_bigr=> x _; rewrite mulr1.
     split.
     by move => i0; case temp:(i0 == [`vert_i_d]).
 
