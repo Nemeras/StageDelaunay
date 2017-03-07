@@ -1,16 +1,17 @@
 ~~~ Premiere partie du travail ~~~
 
 Prouver que split triangle conserve triangulation
-	prouver que split triangle conserve covers_hull
+	prouver que split triangle conserve covers_hull : OK
 		Besoin de hull_add_point : OK
-		Interessant de rajouter un lemme disant qu'un point dans un triangle
-		 est un barycentre des trois points ?
-			Apres discussion ca a l'air simple.
-	Prouver que split triangle conserve covers_vertices (a l'air tres simple)
-	Prouver que split triangle conserve no_cover_intersection : devrait marcher potablement
+		Interessant de rajouter un lemme disant qu'un point dans un 
+		triangle
+		 est un barycentre des trois points ? : OK
+	Prouver que split triangle conserve covers_vertices : OK
+		(a l'air tres simple)
+	Prouver que split triangle conserve no_cover_intersection : 
+		devrait marcher potablement
 	Prouver que split_triangle conserve no_point_on_segment.
-		/!\ je vais avoir besoin ici de l'hypothese 'in general position' normalement
-
+		
 Prouver que flip edge conserve triangulation
 Changer la definition pour une definition ensembliste !
 	A part si j'ai des problemes avec ma definition de flip_edge,
@@ -20,8 +21,9 @@ Changer la definition pour une definition ensembliste !
 ~~~ Deuxieme partie du travail ~~~
 
 	Ecrire l'algorithme qui transforme en triangulation de Delaunay. 
-		La preuve qu'il cree bien une triangulation de Delaunay devrait etre 
-		simple, le probleme est de prouver qu'il termine, normalement ?
+		La preuve qu'il cree bien une triangulation de Delaunay 
+		devrait etre simple, le probleme est de prouver qu'il 
+		termine, normalement ?
 
 
 ~~~ Troisieme partie du travail ~~~

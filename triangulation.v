@@ -30,13 +30,29 @@ Variable D : {fset P}.
 
 Variable vertex : T -> P^3.
 
+Open Scope nat_scope.
+Lemma lt03 : 0<3.
+Proof.
+  by [].
+Qed.
+
+Definition ord30 := @Ordinal 3 0 lt03.
+Definition ord31 := @Ordinal 3 1 isT.
+Definition ord32 := @Ordinal 3 2 isT.
+
+
+Definition vertex1 t := vertex t ord30.
+Definition vertex2 t := vertex t ord31.
+Definition vertex3 t := vertex t ord32.
+
+Open Scope fset_scope.
 
 (*Variable interior : T -> P -> bool.*)
 (*Variable surface : T -> P -> bool.*)
 Variable oriented_surface : P -> P -> P -> R.
 
 
-Axiom triangle_3vertices : forall (t:T), injective (vertex t).
+Hypothesis triangle_3vertices : forall (t:T), injective (vertex t).
 
 Open Local Scope ring_scope.
 Definition vertex_set t := (vertex t) @` 'I_3.
@@ -45,7 +61,7 @@ Variable vertices_to_triangle : P -> P -> P -> T.
 
 Hypothesis vertices_to_triangle_correct :
   forall p1, forall p2, forall p3, forall t, vertices_to_triangle p1 p2 p3 == t <->
-  (p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t).
+  ((p1 \in vertex_set t) /\ (p2 \in vertex_set t) /\ (p3 \in vertex_set t)).
                                                                  
 
 Axiom not_2_triangles : forall (t1 : T), forall (t2 : T), t1 == t2 <-> (vertex_set t1 == vertex_set t2).
@@ -65,14 +81,6 @@ Proof.
   by intro;unfold is_left_or_on_line; rewrite oriented_surface_x_x_x.
 Qed.
 
-Definition ord30 := @Ordinal 3 0 isT.
-Definition ord31 := @Ordinal 3 1 isT.
-Definition ord32 := @Ordinal 3 2 isT.
-
-
-Definition vertex1 t := vertex t ord30.
-Definition vertex2 t := vertex t ord31.
-Definition vertex3 t := vertex t ord32.
 
 Axiom oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0. 
 
@@ -176,9 +184,9 @@ Definition split_triangle_aux t p :=
 Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
 Check split_triangle.
-(*Hypothesis three_triangles_cover_one :
+Hypothesis three_triangles_cover_one :
   forall t, forall p, in_triangle t p ->
-            forall p0, in_triangle t p0 ->exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0).*)
+            forall p0, in_triangle_w_edges t p0 ->exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0).
 
 
 
@@ -204,10 +212,10 @@ Open Local Scope ring_scope.
 
 
 
-Lemma hull_add_point p d: p \notin d -> hull d p ->
-   forall q, hull (p |` d ) q -> hull d q.
+Lemma hull_add_point p d q: p \notin d -> hull d p ->
+   hull (p |` d ) q -> hull d q.
 Proof.
-move => npd [b [b_x [b_y [bsum [bpos dne]]]]] q [a [a_x [a_y [asum [apos _]]]]].
+move => npd [b [b_x [b_y [bsum [bpos dne]]]]] [a [a_x [a_y [asum [apos _]]]]].
 have dpd : d `<=` (p |` d) by exact: fsubsetU1.
 have ppd : [fset p] `<=` (p |` d) by exact: fsubsetUl.
 have pp : p \in [fset p] by exact:fset11.
@@ -290,7 +298,7 @@ Qed.
 
 
 Hypothesis in_triangle_barycentre : forall t, forall p, in_triangle_w_edges t p <-> 
-              exists a : 'I_3 -> R, ((forall i, (a i) > 0%R) /\ \sum_i a i = 1 /\
+              exists a : 'I_3 -> R, ((forall i, (a i) >= 0%R) /\ \sum_i a i = 1 /\
               xCoord p = \sum_i ((a i)*xCoord (vertex t i)) /\
               yCoord p = \sum_i ((a i)*yCoord (vertex t i))). 
 
@@ -321,11 +329,13 @@ by rewrite sum0 addr0.
 Qed.
 
 
-
 Lemma hull_from_triangle :
-  forall d, forall tr, forall t, forall p, triangulation tr d -> t \in tr -> in_triangle t p -> hull d p.
+  forall d:{fset P}, forall tr, forall t, forall p, d != fset0 -> triangulation tr d -> 
+t \in tr -> in_triangle t p -> hull d p.
 Proof.
-move => d tr t p tr_d t_tr intp.
+
+
+move => d tr t p dne tr_d t_tr intp.
 rewrite /triangulation in tr_d.
 move:tr_d =>[covh_tr_d [covv_tr_d nps_tr_d]].   
 rewrite /covers_hull in covh_tr_d.
@@ -334,12 +344,11 @@ rewrite /hull.
 have inwetp : in_triangle_w_edges t p by apply:in_triangle_imply_w_edges.
 move:inwetp => /in_triangle_barycentre [a [apos [aun [a_x a_y]]]].
 
-have fun_sum_ord3 : forall f, f p = \sum_i ((a i)*(f (vertex t i))) ->
-                         f p = (a ord30)*(f (vertex t ord30))+
-                               (a ord31)*(f (vertex t ord31))+
-                               (a ord32)*(f (vertex t ord32)). 
-  move => f f_p. 
-  rewrite f_p.
+have fun_sum_ord3 : forall f, \sum_i ((a i)*(f (vertex t i))) =
+                         (a ord30)*(f (vertex t ord30))+
+                         (a ord31)*(f (vertex t ord31))+
+                         (a ord32)*(f (vertex t ord32)).
+  move => f. 
   rewrite (bigD1 ord30) => //=.
   rewrite (bigD1 ord31) => //=.
   rewrite (bigD1 ord32) => //=.
@@ -358,47 +367,224 @@ have fun_sum_ord3 : forall f, f p = \sum_i ((a i)*(f (vertex t i))) ->
   rewrite big_pred0_eq.
   rewrite addr0.
   by rewrite addrA.
-  rewrite /covers_vertices in covv_tr_d.
-  apply fun_sum_ord3 in a_x;apply fun_sum_ord3 in a_y; move :fun_sum_ord3 =>_.
-  have vert_t_i :forall i, vertex t i \in d.
-    move =>i;apply covv_tr_d;exists t;split;move => //=.
-    by rewrite /vertex_set; apply:in_imfset.
-  have hull_vert_x : forall i, hull d (vertex t i).
-    move => i;rewrite /hull.
-    have vert_i_d : vertex t i \in d.
-      by apply covv_tr_d; exists t;split => //=; last by apply:in_imfset.
-    exists (fun j:d => if (j == [` vert_i_d]) then 1%R else 0).
-    split; first by rewrite -fun_f_sum.
-    split; first by rewrite -fun_f_sum.
-    split.
-    rewrite [X in _ == X](@fun_f_sum d (fun i => 1%R) [`vert_i_d]).
-    by apply/eqP/eq_bigr=> x _; rewrite mulr1.
-    split.
-    by move => i0; case temp:(i0 == [`vert_i_d]).
+have vert_t_i :forall i, vertex t i \in d.
+  move =>i;apply covv_tr_d;exists t;split;move => //=.
+   by rewrite /vertex_set; apply:in_imfset.
+have vert_0_d : vertex t ord30 \in d by apply vert_t_i.
+have vert_1_d : vertex t ord31 \in d by apply vert_t_i.
+have vert_2_d : vertex t ord32 \in d by apply vert_t_i.
+have not_2_1 : ([` vert_2_d] != [` vert_1_d]).
+  case abs:([` vert_2_d] == [` vert_1_d])=> //=.
+  move:abs => /eqP abs.
+  have abs2:(val [` vert_2_d] = val [` vert_1_d]) by rewrite abs.
+  by move:abs2 => /= abs2; apply triangle_3vertices in abs2.   
+have not_2_0 : ([` vert_2_d] != [` vert_0_d]).
+  case abs:([` vert_2_d] == [` vert_0_d])=> //=.
+  move:abs => /eqP abs.
+  have abs2:(val [` vert_2_d] = val [` vert_0_d]) by rewrite abs.
+  by move:abs2 => /= abs2; apply triangle_3vertices in abs2.
+have not_1_0 : ([` vert_1_d] != [` vert_0_d]).
+  case abs:([` vert_1_d] == [` vert_0_d])=> //=.
+  move:abs => /eqP abs.
+  have abs2:(val [` vert_1_d] = val [` vert_0_d]) by rewrite abs.
+  by move:abs2 => /= abs2; apply triangle_3vertices in abs2.   
+rewrite fun_sum_ord3 in a_x;rewrite fun_sum_ord3 in a_y; move :fun_sum_ord3 =>_.
+pose a' : d -> R := fun i => (if i ==  [`vert_0_d] then a ord30 else
+                              if i == [`vert_1_d] then a ord31 else
+                                   if i == [`vert_2_d] then a ord32 else 0).
+exists a'.
+have a'0 : a' [`vert_0_d] = a ord30 by rewrite /a' => /=; rewrite eq_refl.
+have a'1 : a' [`vert_1_d] = a ord31. rewrite /a' => /=.
+  case abs : ([`vert_1_d] == [`vert_0_d]);last by rewrite eq_refl.
+  move:abs => /eqP abs.
+  have temp: val [` vert_1_d] = val [` vert_0_d] by rewrite abs.
+  by move:temp => /= temp; apply triangle_3vertices in temp.
+have a'2 : a' [`vert_2_d] = a ord32. rewrite /a' => /=.
+  case abs : ([`vert_2_d] == [`vert_0_d] ); move:abs => /eqP abs.
+  have temp: val [` vert_2_d] = val [` vert_0_d] by rewrite abs.
+  by move:temp => /= temp; apply triangle_3vertices in temp.    
+  case abs2 :([`vert_2_d] == [`vert_1_d]);last by rewrite eq_refl.
+  move:abs2 => /eqP abs2.
+  have temp: val [` vert_2_d] = val [` vert_1_d] by rewrite abs2.
+  by move:temp => /= temp; apply triangle_3vertices in temp.
+have sum0_f : forall f, \sum_(i | (i != [` vert_0_d]) && (i != [` vert_1_d])
+                                            && (i != [` vert_2_d]))
+               a' i * f (fsval i) = 0.
+  move => f;apply big1;move => i not_vert.
+  have a'i0 : a' i = 0;first rewrite /a' => /=.
+    case inv0:(i == [`vert_0_d]); rewrite inv0 in not_vert;
+    case inv1:(i == [`vert_1_d]); rewrite inv1 in not_vert;
+    case inv2:(i == [`vert_2_d]); rewrite inv2 in not_vert;move:not_vert=> _ //=.
+  by rewrite a'i0; apply mul0r.
 
-Admitted.
+  have fun_sump : forall f, f p = a ord30 * f ((vertex t) ord30) + 
+                             a ord31 * f ((vertex t) ord31) +
+                             a ord32 * f ((vertex t) ord32) ->
+                       f p == \sum_i a' i * f (val i).
+  move => f f_hyp.
+  rewrite (bigD1 [` vert_0_d])=> //=.
+  rewrite (bigD1 [` vert_1_d])=> //=.
+  rewrite  (bigD1 [` vert_2_d]) =>//=;last by rewrite not_2_1 not_2_0.        
+  by rewrite  a'0 a'1 a'2 sum0_f addr0 f_hyp addrA.
+split;first by apply:fun_sump.
+split;first by apply:fun_sump.
+have sum0 : \sum_(i | (i != [` vert_0_d]) && (i != [` vert_1_d])
+                                            && (i != [` vert_2_d]))
+               a' i = 0.
+  apply big1;move => i not_vert.
+  have a'i0 : a' i = 0;first rewrite /a' => /=.
+    case inv0:(i == [`vert_0_d]); rewrite inv0 in not_vert;
+    case inv1:(i == [`vert_1_d]); rewrite inv1 in not_vert;
+    case inv2:(i == [`vert_2_d]); rewrite inv2 in not_vert;move:not_vert=> _ //=.
+  by rewrite a'i0.
+split.
+  rewrite (bigD1 [` vert_0_d])=> //=.
+  rewrite (bigD1 [` vert_1_d])=> //=.
+  rewrite (bigD1 [` vert_2_d]) =>//=;last by rewrite not_2_1 not_2_0.        
+  rewrite a'1 a'0 a'2 sum0 addr0 addrA.
+  move:aun.
+  rewrite (bigD1 ord30) => //=.
+  rewrite (bigD1 ord31) => //=.
+  rewrite (bigD1 ord32) => //=.
+  have sum_0_ord : (\sum_(i < 3 | (i != ord30) && (i != ord31) && (i != ord32)) a i = 0).
+    rewrite (eq_bigl (fun i => false)); first by apply big_pred0_eq.
+    by move=>[[|[|[|i']]] pi].
+  by rewrite sum_0_ord addrA addr0 => ->.
+split;last by [].
+move => i.
+rewrite /a'.
+case (i == [` vert_0_d]); case (i == [` vert_1_d]);
+case (i == [` vert_2_d]) => //=.
+Qed.
 
 
 
 Theorem triangulation_split_triangle:
-  forall tr, forall t , forall p, forall d, triangulation tr d -> t \in tr -> in_triangle t p ->
+  forall tr, forall t , forall p, forall d, d != fset0 -> p \notin d -> triangulation tr d -> t \in tr -> in_triangle t p ->
                       triangulation (split_triangle tr t p) (p |` d).
- move => tr t p d tr_d t_tr intp.
+move => tr t p d dne p_nin_d tr_d t_tr intp.
 rewrite /triangulation in tr_d.
 rewrite /triangulation.
+move:(tr_d) => [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]].
 split.
   rewrite /covers_hull.
-  move => q hull_pdq.
-  move:tr_d => [covh_tr_d [covv_tr_d nps_tr_d]].
-  case p_q:(p==q).
-  rewrite /split_triangle.
-  rewrite /covers_hull in covh_tr_d.
-  
+  move => q hull_pdq.  
+ (* case p_q:(q==p); move:p_q => /eqP p_q;first rewrite p_q.
+    rewrite /split_triangle.
+    pose t0 := (vertices_to_triangle (vertex1 t) (vertex2 t) p); exists t0.
+    split;first by apply /fsetUP;left;apply /fset1UP;left .
+    have temp:t0 == vertices_to_triangle (vertex1 t) (vertex2 t) p by apply/eqP.
+    apply vertices_to_triangle_correct in temp.
+    apply in_triangle_vertex_correct.
+    by move:temp => [_ [_ ->]].*)
+  have hull_d_q : hull d q.
+    move:(p_nin_d)=>/hull_add_point temp.
+    apply temp;move:temp => _.
+    move:(dne)=>/hull_from_triangle temp.
+    move:(tr_d)=>/temp temp2.
+    by apply (temp2 t).
+  by [].
+  apply covh_tr_d in hull_d_q as [t0 [t0_tr intwe_to_q]].
+  case t_t0 : (t0 == t).
+    move:t_t0 => /eqP t_t0.
+    have temp:(forall p0 : P,
+                              in_triangle_w_edges t p0 ->
+                              exists t1 : T,
+                                t1 \in split_triangle_aux t p /\ in_triangle_w_edges t1 p0)
+      by apply three_triangles_cover_one.
+    have temp2 :(exists t1 : T, t1 \in split_triangle_aux t p /\ in_triangle_w_edges t1 q)
+    by apply temp;rewrite -t_t0.
+    move:temp => _. move:temp2 => [t1 [split_aux_t1_tp intwe_t1_q]].
+    exists t1;split=>//=.
+    by apply /fsetUP;left.    
+  exists t0.
+  split=>//=.
+  apply /fsetUP;right.
+  apply /fsetD1P.
+  split;first apply/eqP;move:t_t0=>/eqP //= .
 
-  rewrite /split_triangle_aux.
   
+split.
+  move => q.
+  split.
+    move=>q_in_p.
+    case p_q:(q==p);move:p_q=>/eqP p_q.
+    pose t0 := (vertices_to_triangle (vertex1 t) (vertex2 t) p); exists t0.
+    split;first by apply /fsetUP;left;apply/fset1UP;left.
+    rewrite /t0.
+    have temp : (t0 == vertices_to_triangle (vertex1 t) (vertex2 t) p) by [].
+    apply vertices_to_triangle_correct in temp.
+    by rewrite p_q; move:temp => [_ [_ temp]].
+  move:q_in_p => /fset1UP q_in_d.
+  destruct q_in_d; first  by rewrite H in p_q.
+  apply covv_tr_d in H;move:H=>[t1 [t1_tr v_t1]].
+  case t_t1:(t==t1);move:t_t1=> /eqP t_t1.
+    pose t0 := (vertices_to_triangle (vertex1 t) (vertex2 t) p).
+    pose t2 := vertices_to_triangle p (vertex2 t) (vertex3 t).
+    have t0_spl : t0 \in split_triangle tr t p
+      by apply/fsetUP;left;apply/fset1UP;left.
+    have t2_spl : t2  \in split_triangle tr t p
+      by apply/fsetUP;left;apply/fset1UP;right;apply/fset2P;left.
+    move:v_t1 => /imfsetP [[[|[|[|x']]] px] _] x_v => //=.
+    
+          (*exist*) 
+        exists t0.
+        split=> //=.
+        have v1_t0 :vertex1 t \in vertex_set t0.
+          have temp:t0 == t0 by [].
+          apply vertices_to_triangle_correct in temp.
+          by move:temp=>[temp _].
+        have q_v1t : (q = vertex1 t).
+          rewrite x_v t_t1.
+          congr(vertex t1 _).
+          by apply ord_inj.
+        by rewrite q_v1t.
+      exists t0.
+      split=> //=.
+      have v2_t0 :vertex2 t \in vertex_set t0.
+        have temp:t0 == t0 by [].
+        apply vertices_to_triangle_correct in temp.
+        by move:temp=>[_ [temp _]].
+      have q_v2t : (q = vertex2 t).
+        rewrite x_v t_t1.
+        congr(vertex t1 _).
+        by apply ord_inj.
+      by rewrite q_v2t.
+    exists t2.
+    split=> //=.
+    have v3_t0 :vertex3 t \in vertex_set t2.
+      have temp:t2 == t2 by [].
+      apply vertices_to_triangle_correct in temp.
+      by move:temp=>[_ [_ temp]].
+    have q_v3t : (q = vertex3 t).
+      rewrite x_v t_t1.
+      congr(vertex t1 _).
+      by apply ord_inj.
+    by rewrite q_v3t.
+      
+    (*move:v_t1 => /imfsetP [x a] x_v => //=.*)
+    rewrite /split_triangle /split_triangle_aux.
+    
+    (*have q_in_imfset_t1: (exists x, q = vertex t1 x). 
+    apply/imfsetP.*)
+  exists t1;split=>//=;apply /fsetUP;right.
+  by apply /fsetD1P;split=>//=; move:t_t1=>/eqP t_t1; rewrite eq_sym.
 
-  Admitted.
+  move=> [t0 [spl_t0 v_t0]].  
+  move:spl_t0 => /fsetUP H.
+  destruct H.
+    admit.
+
+  have t0_tr :t0 \in tr by move:H => /fsetD1P [_ H].
+  rewrite /covers_vertices in covv_tr_d.
+  have temp: t0 \in tr /\ q \in vertex_set t0 by [].
+  apply/fset1UP;right.
+  apply covv_tr_d.
+  by exists t0.
+split.
+
+
+Qed.
 
   Theorem flip_edge_triangulation : forall tr, forall d, triangulation tr d -> 
                                     forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
