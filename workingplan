@@ -7,9 +7,12 @@ Prouver que split triangle conserve triangulation
 		triangle
 		 est un barycentre des trois points ? : OK
 	Prouver que split triangle conserve covers_vertices : OK
-	Prouver que split triangle conserve no_cover_intersection : OK
-	Prouver que split_triangle conserve no_point_on_segment.
-		plus complique que prevu : definir arretes !	
+	Prouver que split triangle conserve no_cover_intersection : presque OK
+	Prouver que split_triangle conserve no_point_on_segment : presque OK
+		Manque, pour les deux derniers, les cas ou les deux triangles
+		ont ete obtenus avec split_triangle.
+		Il est possible de gerer ces cas avec les axiomes d'orientation
+		
 Prouver que flip edge conserve triangulation
 Changer la definition pour une definition ensembliste !
 	A part si j'ai des problemes avec ma definition de flip_edge,

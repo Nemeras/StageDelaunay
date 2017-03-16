@@ -18,6 +18,7 @@ Variable R : numDomainType.
 
 Variable P : choiceType.
 Variable T : choiceType.
+Variable E : choiceType.
 
 Variable xCoord : P -> R.
 Variable yCoord : P -> R.
@@ -29,6 +30,8 @@ Variable Tr : {fset T}.
 Variable D : {fset P}.
 
 Variable vertex : T -> P^3.
+Variable edge : T -> E^3.
+Variable vertex_edge : E -> P^2.
 
 Open Scope nat_scope.
 Lemma lt03 : 0<3.
@@ -40,10 +43,20 @@ Definition ord30 := @Ordinal 3 0 lt03.
 Definition ord31 := @Ordinal 3 1 isT.
 Definition ord32 := @Ordinal 3 2 isT.
 
+Definition ord20 := @Ordinal 2 0 isT.
+Definition ord21 := @Ordinal 2 1 isT.
+
 
 Definition vertex1 t := vertex t ord30.
 Definition vertex2 t := vertex t ord31.
 Definition vertex3 t := vertex t ord32.
+
+Definition vertex_edge1 e := vertex_edge e ord20.
+Definition vertex_edge2 e := vertex_edge e ord21.
+
+Definition edge1 t := edge t ord30.
+Definition edge2 t := edge t ord31.
+Definition edge3 t := edge t ord32.
 
 Open Scope fset_scope.
 
@@ -52,17 +65,21 @@ Open Scope fset_scope.
 Variable oriented_surface : P -> P -> P -> R.
 
 
-Hypothesis triangle_3vertices : forall (t:T), injective (vertex t).
+
+Hypothesis edge_2vertices : forall e:E, injective (vertex_edge e).
+Hypothesis triangle_3edges: forall t:T, injective (edge t).
 
 Open Local Scope ring_scope.
 Definition vertex_set t := (vertex t) @` 'I_3.
+Definition edges_set t := (edge t) @` 'I_3.
+Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
 
 Variable vertices_to_triangle : P -> P -> P -> T.
 
 (*Hypothesis vertices_to_triangle_correct :
   forall p1, forall p2, forall p3, forall t, vertices_to_triangle p1 p2 p3 == t <->
   ((p1 \in vertex_set t) /\ (p2 \in vertex_set t) /\ (p3 \in vertex_set t)).*)
-                                                                
+
 
 Hypothesis vertices_to_triangle_correct : forall a b c, 
     a = vertex (vertices_to_triangle a b c) ord30 /\
@@ -89,7 +106,7 @@ Axiom not_2_triangles : forall (t1 : T), forall (t2 : T), t1 == t2 <->
 
 Definition is_left_of p a b := oriented_surface p a b > 0%R.
 Definition is_left_or_on_line p a b := oriented_surface p a b >= 0%R.
-
+Variable on_edge : E -> P-> bool.
 
 
 Hypothesis oriented_surface_x_x_x : forall x, oriented_surface x x x = 0%R.
@@ -111,18 +128,40 @@ Definition in_triangle_w_edges t p := is_left_or_on_line (vertex1 t) (vertex2 t)
                              is_left_or_on_line p (vertex2 t) (vertex3 t) &&
                              is_left_or_on_line (vertex1 t) p (vertex3 t).
 
-Hypothesis in_triangle_imply_w_edges : forall t, forall p, in_triangle t p -> in_triangle_w_edges t p.
+Lemma in_triangle_imply_w_edges : forall t, forall p, in_triangle t p -> in_triangle_w_edges t p.
+Proof.
+move => t p intp.
+move:intp =>/andP [intp intp3];move:intp => /andP [intp1 intp2].
+by apply /andP;split;first apply /andP;first split;apply ltrW.
+Qed.
 
 Hypothesis in_triangle_vertex_correct: forall t, forall p, p \in vertex_set t -> in_triangle_w_edges t p.
+
+Hypothesis in_triangle_w_edge_edges : forall t, forall p, in_triangle_w_edges t p <->
+                                                (p \in vertex_set t) \/ (in_triangle t p) \/
+                                                (exists e, e \in edges_set t /\ on_edge e p). 
+Hypothesis vert_in_triangle_w_edges : forall t, forall p, p \in vertex_set t
+                                                      -> in_triangle_w_edges t p.
+
+Hypothesis in_triangle_not_vert :  forall t, forall p, in_triangle t p -> p \notin vertex_set t.
+
+Hypothesis in_triangle_not_on_edges :
+  forall t, forall p, in_triangle t p ->
+       forall e, (e \in edges_set t ->  on_edge e p -> false).
+
+Hypothesis vert_not_on_edges : 
+  forall t, forall p, p \in vertex_set t ->
+       forall e, (e \in edges_set t -> on_edge e p -> false).
+                         
 Definition adjacent t1 t2:= #|` ((vertex_set t1) `&` (vertex_set t2))| = 2.
-(*/\ (forall p, in_triangle t1 p -> in_triangle t2 p = false).*)
 
 Variable in_circle_determinant : P -> P -> P -> P -> R.
 
 Definition in_circle p a b c  := in_circle_determinant p a b c >0.
 Definition in_circle_wboundaries p a b c := in_circle_determinant p a b c >= 0.
 
-Axiom allTriangles : forall p1, forall p2, forall p3, exists t, p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t.
+Axiom allTriangles : forall p1, forall p2, forall p3, exists t, 
+          p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t.
 
 Definition in_circle_triangle p t := in_circle p (vertex1 t) (vertex2 t) (vertex3 t).
 
@@ -183,7 +222,9 @@ Definition no_point_on_segment (tr : {fset T}) (d : {fset P}) :=
   forall t1, forall t2,t1 \in tr -> t2 \in tr -> forall p, p \in vertex_set t1 ->
   in_triangle_w_edges t2 p -> p \in vertex_set t2.
 
-Definition triangulation tr d := covers_hull tr d /\ covers_vertices tr d /\
+Definition triangle_3vertices_tr (tr:{fset T}) := forall t:T, t \in tr -> injective (vertex t).
+
+Definition triangulation tr d := triangle_3vertices_tr tr /\ covers_hull tr d /\ covers_vertices tr d /\
                                  no_cover_intersection tr d /\ no_point_on_segment tr d.
 
 Definition delaunay tr d := triangulation tr d /\ regular tr.
@@ -204,11 +245,28 @@ Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 Check split_triangle.
 Hypothesis three_triangles_cover_one :
   forall t, forall p, in_triangle t p ->
-            forall p0, in_triangle_w_edges t p0 <-> exists t1, (t1 \in split_triangle_aux t p) /\ (in_triangle_w_edges t1 p0).
+            forall p0, in_triangle_w_edges t p0 <-> exists t1, (t1 \in split_triangle_aux t p) 
+                                                   /\ (in_triangle_w_edges t1 p0).
+
 
 Hypothesis split_aux_in_triangle :
   forall t, forall p, in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
                             -> forall q, in_triangle t1 q -> in_triangle t q.
+
+Hypothesis split_aux_in_triangle_we :
+  forall t, forall p, in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
+                            -> forall q, in_triangle_w_edges t1 q 
+                            ->      in_triangle_w_edges t q.
+
+
+Hypothesis on_edge_split_triangle : 
+  forall t, forall p, in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
+  forall e, e \in edges_set t0 -> forall q, on_edge e q -> 
+      (in_triangle t q \/ (exists e0, e0 \in edges_set t /\ on_edge e0 q)).
+
+
+Hypothesis triangle_3vertex_nempty :
+forall t, #|` vertex_set t| = 3 -> exists p, in_triangle t p.
 
 (*Definition get_third_vertex t p1 p2 :=
   let set_uniq := (vertex_set t `\ p1) `\ p2 in
@@ -229,6 +287,40 @@ Definition flip_edge tr t1 t2 p1 p2 :=
 
 Open Local Scope ring_scope.
 
+Lemma vertex_in_split_triangle :
+forall t, forall p, in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
+forall q, q \in vertex_set t0 -> (q \in vertex_set t \/ q=p).
+move => t p intp t0 t0_spl q qvt0.
+move:t0_spl => /fset1UP.
+move=>[H|/fset2P [H|H]].
+    have temp2 := vertices_to_triangle_correct (vertex1 t) (vertex2 t) p.
+    move:temp2 => [temp21 [temp22 temp23]].
+    move:qvt0=>/imfsetP [[[|[|[|x']]] px] _] qvt0x=>//=;
+    [pose ordx:=ord30|pose ordx:=ord31|pose ordx:=ord32];
+    have temp:q = vertex t0 ordx
+      by rewrite qvt0x;congr ((vertex t0) _);apply ord_inj.
+        rewrite H -temp21 in temp;left;apply/imfsetP;exists ord30=>//=.
+      rewrite H -temp22 in temp;left;apply/imfsetP;exists ord31=>//=.
+    by rewrite H -temp23 in temp;right.
+  have temp2 := vertices_to_triangle_correct p (vertex2 t) (vertex3 t).
+  move:temp2 => [temp21 [temp22 temp23]].
+  move:qvt0=>/imfsetP [[[|[|[|x']]] px] _] qvt0x=>//=;
+           [pose ordx:=ord30|pose ordx:=ord31|pose ordx:=ord32];
+    have temp:q = vertex t0 ordx
+    by rewrite qvt0x;congr ((vertex t0) _);apply ord_inj.
+      by rewrite H -temp21 in temp;right.
+    by rewrite H -temp22 in temp;left;apply/imfsetP;exists ord31.
+  by rewrite H -temp23 in temp;left;apply/imfsetP;exists ord32.
+have temp2 := vertices_to_triangle_correct (vertex1 t) p (vertex3 t).
+move:temp2 => [temp21 [temp22 temp23]].
+move:qvt0=>/imfsetP [[[|[|[|x']]] px] _] qvt0x=>//=;
+         [pose ordx:=ord30|pose ordx:=ord31|pose ordx:=ord32];
+  have temp:q = vertex t0 ordx
+  by rewrite qvt0x;congr ((vertex t0) _);apply ord_inj.
+    by rewrite H -temp21 in temp;left;apply/imfsetP;exists ord30.
+  by rewrite H -temp22 in temp;right.
+by rewrite H -temp23 in temp;left;apply/imfsetP;exists ord32.
+Qed.
 
 
 
@@ -316,6 +408,12 @@ apply:addr_ge0 => //=.
 by apply:mulr_ge0 => //=.
 Qed.
 
+Hypothesis in_triangle_on_edge : forall t, forall p,   in_triangle t p -> 
+                                 forall t2, (exists p2, in_triangle t2 p2) ->
+                                       forall e,  e \in edges_set t2 -> on_edge e p ->
+                                       exists q,  in_triangle t q /\ in_triangle t2 q.
+                                                                    
+                                           
 
 Hypothesis in_triangle_barycentre : forall t, forall p, in_triangle_w_edges t p <-> 
               exists a : 'I_3 -> R, ((forall i, (a i) >= 0%R) /\ \sum_i a i = 1 /\
@@ -356,14 +454,9 @@ Proof.
 
 
 move => d tr t p dne tr_d t_tr intp.
-rewrite /triangulation in tr_d.
-move:tr_d =>[covh_tr_d [covv_tr_d nps_tr_d]].   
-rewrite /covers_hull in covh_tr_d.
-rewrite /hull.
-
+move:tr_d =>[tr3v [covh_tr_d [covv_tr_d nps_tr_d]]].   
 have inwetp : in_triangle_w_edges t p by apply:in_triangle_imply_w_edges.
 move:inwetp => /in_triangle_barycentre [a [apos [aun [a_x a_y]]]].
-
 have fun_sum_ord3 : forall f, \sum_i ((a i)*(f (vertex t i))) =
                          (a ord30)*(f (vertex t ord30))+
                          (a ord31)*(f (vertex t ord31))+
@@ -397,17 +490,20 @@ have not_2_1 : ([` vert_2_d] != [` vert_1_d]).
   case abs:([` vert_2_d] == [` vert_1_d])=> //=.
   move:abs => /eqP abs.
   have abs2:(val [` vert_2_d] = val [` vert_1_d]) by rewrite abs.
-  by move:abs2 => /= abs2; apply triangle_3vertices in abs2.   
+  have temp: (injective (vertex t)) by apply tr3v.
+  by move:abs2 => /= abs2; apply temp in abs2.   
 have not_2_0 : ([` vert_2_d] != [` vert_0_d]).
   case abs:([` vert_2_d] == [` vert_0_d])=> //=.
   move:abs => /eqP abs.
   have abs2:(val [` vert_2_d] = val [` vert_0_d]) by rewrite abs.
-  by move:abs2 => /= abs2; apply triangle_3vertices in abs2.
+  have temp: (injective (vertex t)) by apply tr3v.
+  by move:abs2 => /= abs2; apply temp in abs2.
 have not_1_0 : ([` vert_1_d] != [` vert_0_d]).
   case abs:([` vert_1_d] == [` vert_0_d])=> //=.
   move:abs => /eqP abs.
   have abs2:(val [` vert_1_d] = val [` vert_0_d]) by rewrite abs.
-  by move:abs2 => /= abs2; apply triangle_3vertices in abs2.   
+  have temp: (injective (vertex t)) by apply tr3v.
+  by move:abs2 => /= abs2; apply temp in abs2.   
 rewrite fun_sum_ord3 in a_x;rewrite fun_sum_ord3 in a_y; move :fun_sum_ord3 =>_.
 pose a' : d -> R := fun i => (if i ==  [`vert_0_d] then a ord30 else
                               if i == [`vert_1_d] then a ord31 else
@@ -418,15 +514,18 @@ have a'1 : a' [`vert_1_d] = a ord31. rewrite /a' => /=.
   case abs : ([`vert_1_d] == [`vert_0_d]);last by rewrite eq_refl.
   move:abs => /eqP abs.
   have temp: val [` vert_1_d] = val [` vert_0_d] by rewrite abs.
-  by move:temp => /= temp; apply triangle_3vertices in temp.
+  have injvt: (injective (vertex t)) by apply tr3v.
+  by move:temp => /= temp; apply injvt in temp.
 have a'2 : a' [`vert_2_d] = a ord32. rewrite /a' => /=.
   case abs : ([`vert_2_d] == [`vert_0_d] ); move:abs => /eqP abs.
   have temp: val [` vert_2_d] = val [` vert_0_d] by rewrite abs.
-  by move:temp => /= temp; apply triangle_3vertices in temp.    
+  have injvt: (injective (vertex t)) by apply tr3v.
+  by move:temp => /= temp; apply injvt in temp.    
   case abs2 :([`vert_2_d] == [`vert_1_d]);last by rewrite eq_refl.
   move:abs2 => /eqP abs2.
+  have injvt: (injective (vertex t)) by apply tr3v.
   have temp: val [` vert_2_d] = val [` vert_1_d] by rewrite abs2.
-  by move:temp => /= temp; apply triangle_3vertices in temp.
+  by move:temp => /= temp; apply injvt in temp.
 have sum0_f : forall f, \sum_(i | (i != [` vert_0_d]) && (i != [` vert_1_d])
                                             && (i != [` vert_2_d]))
                a' i * f (fsval i) = 0.
@@ -496,20 +595,111 @@ Theorem triangulation_split_triangle:
                         in_triangle t p ->
                         triangulation (split_triangle tr t p) (p |` d).
 move => tr t p d dne p_nin_d tr_d t_tr intp.
-rewrite /triangulation in tr_d.
-rewrite /triangulation.
-move:(tr_d) => [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]].
+move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]]].
+have nci_spl : no_cover_intersection (split_triangle tr t p) (p |` d).
+  move => t1 t2 t1_spl t2_spl q int1q int2q.
+  move:t1_spl => /fsetUP;  move => [t1_spl|t1_spl];
+  move:t2_spl=> /fsetUP;move=>[t2_spl|t2_spl];last first.
+        move:t1_spl => /fsetD1P [t1nt t1_tr].
+        move:t2_spl => /fsetD1P [t2nt t2_tr].
+        rewrite /no_cover_intersection in nci_tr_d.
+        have temp:=(nci_tr_d t1 t2).
+        apply:(temp) => //=.
+        apply int1q.
+        apply int2q.
+      move:t1_spl => /fsetD1P [t1nt t1_tr].
+      have intwet2q := (in_triangle_imply_w_edges int2q).
+      have temp:(t2 \in split_triangle_aux t p /\ in_triangle_w_edges t2 q)=>//=.
+      
+      have temp2 := (three_triangles_cover_one intp q).
+      have intwetq : in_triangle_w_edges t q by apply temp2;exists t2.
+      rewrite /no_cover_intersection in nci_tr_d.
+      have intq := (split_aux_in_triangle intp t2_spl int2q).
+      have abs := (nci_tr_d t1 t t1_tr t_tr q int1q intq).
+      rewrite abs in t1nt.
+      by move :t1nt => /eqP.  
+    move:t2_spl => /fsetD1P [t2nt t2_tr].
+    have intwet1q := (in_triangle_imply_w_edges int1q).
+    have temp:(t1 \in split_triangle_aux t p /\ in_triangle_w_edges t1 q)=>//=.
+    have temp2 := (three_triangles_cover_one intp q).
+    have intwetq : in_triangle_w_edges t q by apply temp2;exists t1.
+    rewrite /no_cover_intersection in nci_tr_d.
+    have intq := (split_aux_in_triangle intp t1_spl int1q).
+    have abs := (nci_tr_d t2 t t2_tr t_tr q int2q intq).
+    rewrite abs in t2nt.
+    by move :t2nt => /eqP.  
+  admit.
+split.
+  move => t0 insplt0.
+  have vert_n_p : forall i, vertex t i != p.
+    move => i.
+    case abs:(vertex t i == p) => //=.
+    move:abs => /eqP abs.
+    have temp:=(in_triangle_not_vert intp);move:temp=>/negbTE;rewrite-abs=>temp.
+    have vtivt:(vertex t i \in vertex_set t) by apply:in_imfset.
+    by rewrite temp in vtivt.
+  have p_n_vert : forall i, p != vertex t i 
+        by move => i; rewrite eq_sym;apply vert_n_p.
+  move:insplt0 => /fsetUP [t0spl | t0tr];last first.
+    move:t0tr => /fsetD1P [_ t0tr].
+    by apply tr3v.
+  
+  (*apply bij_inj.*)
+
+  have triangle_inj_vert_to_triangle : forall (p:P), forall (q:P), forall (r:P), p!=q -> p!=r -> q !=r ->
+                                                      t0 = vertices_to_triangle p q r ->
+                                                      injective (vertex t0).
+  move => p1 p2 p3 p12 p13 p23 t0vert.
+  by move => [[|[|[|a]]] pa] [[|[|[|b]]] pb] vt0ab => //=;
+  try apply ord_inj=>//=;
+  rewrite t0vert in vt0ab;
+  have temp := vertices_to_triangle_correct p1 p2 p3;
+  move:temp=>[v1t [v2t v3t]];
+  [have temp2 : Ordinal pa =ord30|have temp2 : Ordinal pa =ord30|
+  have temp2 : Ordinal pa =ord31|have temp2 : Ordinal pa =ord31|
+  have temp2 : Ordinal pa =ord32|have temp2 : Ordinal pa =ord32];
+  try apply ord_inj => //=;rewrite temp2 in vt0ab;move:temp2=> _;                                         [have temp2 : Ordinal pb =ord31|have temp2 : Ordinal pb =ord32|
+   have temp2 : Ordinal pb =ord30|have temp2 : Ordinal pb =ord32|
+   have temp2 : Ordinal pb =ord30|have temp2 : Ordinal pb =ord31];
+  try apply ord_inj => //=;rewrite temp2 in vt0ab;move:temp2=> _;
+  [rewrite -v1t in vt0ab|rewrite -v1t in vt0ab|
+   rewrite -v1t in vt0ab|rewrite -v3t in vt0ab|
+   rewrite -v1t in vt0ab|rewrite -v3t in vt0ab];
+  [rewrite -v2t in vt0ab|rewrite -v3t in vt0ab|
+   rewrite -v2t in vt0ab|rewrite -v2t in vt0ab|
+   rewrite -v3t in vt0ab|rewrite -v2t in vt0ab];
+  [move:p12|move:p13|move:p12|move:p23|move:p13|move:p23];
+   rewrite vt0ab; move => /eqP.
+  
+  move:t0spl=> /fset1UP [t0spl | t0spl];last move:t0spl=> /fset2P [t0spl|t0spl].
+      move:t0spl;apply triangle_inj_vert_to_triangle;
+        try apply vert_n_p => //=.
+      have temp : ord30 != ord31 by [].
+      move:temp;have temp := (tr3v t t_tr).
+      rewrite /injective in temp.
+      have temp2 := (temp ord30 ord31).
+      apply contraNneq =>vt.
+      by apply /eqP; apply temp2.
+    move:t0spl;apply triangle_inj_vert_to_triangle;
+      try apply p_n_vert => //=.    
+    have temp : ord31 != ord32 by [].
+    move:temp;have temp := (tr3v t t_tr).
+    rewrite /injective in temp.
+    have temp2 := (temp ord31 ord32).
+    apply contraNneq =>vt.
+      by apply /eqP; apply temp2.
+  move:t0spl;apply triangle_inj_vert_to_triangle;
+      try apply p_n_vert;try apply vert_n_p => //=.    
+  have temp : ord30 != ord32 by [].
+  move:temp;have temp := (tr3v t t_tr).
+  rewrite /injective in temp.
+  have temp2 := (temp ord30 ord32).
+  apply contraNneq =>vt.
+    by apply /eqP; apply temp2.
+
 split.
   rewrite /covers_hull.
   move => q hull_pdq.  
- (* case p_q:(q==p); move:p_q => /eqP p_q;first rewrite p_q.
-    rewrite /split_triangle.
-    pose t0 := (vertices_to_triangle (vertex1 t) (vertex2 t) p); exists t0.
-    split;first by apply /fsetUP;left;apply /fset1UP;left .
-    have temp:t0 == vertices_to_triangle (vertex1 t) (vertex2 t) p by apply/eqP.
-    apply vertices_to_triangle_correct in temp.
-    apply in_triangle_vertex_correct.
-    by move:temp => [_ [_ ->]].*)
   have hull_d_q : hull d q.
     move:(p_nin_d)=>/hull_add_point temp.
     apply temp;move:temp => _.
@@ -520,12 +710,13 @@ split.
   apply covh_tr_d in hull_d_q as [t0 [t0_tr intwe_to_q]].
   case t_t0 : (t0 == t).
     move:t_t0 => /eqP t_t0.
-    have temp:(forall p0 : P,
-                              in_triangle_w_edges t p0 ->
-                              exists t1 : T,
-                                t1 \in split_triangle_aux t p /\ in_triangle_w_edges t1 p0)
+    have temp:(forall p0 : P,in_triangle_w_edges t p0 ->
+                        exists t1 : T,
+                          t1 \in split_triangle_aux t p /\
+                                 in_triangle_w_edges t1 p0)
       by apply three_triangles_cover_one.
-    have temp2 :(exists t1 : T, t1 \in split_triangle_aux t p /\ in_triangle_w_edges t1 q)
+    have temp2 :(exists t1 : T, t1 \in split_triangle_aux t p /\
+                                  in_triangle_w_edges t1 q)
     by apply temp;rewrite -t_t0.
     move:temp => _. move:temp2 => [t1 [split_aux_t1_tp intwe_t1_q]].
     exists t1;split=>//=.
@@ -559,8 +750,6 @@ split.
     have t2_spl : t2  \in split_triangle tr t p
       by apply/fsetUP;left;apply/fset1UP;right;apply/fset2P;left.
     move:v_t1 => /imfsetP [[[|[|[|x']]] px] _] x_v => //=.
-    
-          (*exist*) 
         exists t0.
         split=> //=.
         have v1_t0 :vertex1 t \in vertex_set t0.
@@ -595,11 +784,10 @@ split.
       by apply ord_inj.
     by rewrite q_v3t.
       
-    (*move:v_t1 => /imfsetP [x a] x_v => //=.*)
+
     rewrite /split_triangle /split_triangle_aux.
     
-    (*have q_in_imfset_t1: (exists x, q = vertex t1 x). 
-    apply/imfsetP.*)
+
   exists t1;split=>//=;apply /fsetUP;right.
   by apply /fsetD1P;split=>//=; move:t_t1=>/eqP t_t1; rewrite eq_sym.
 
@@ -640,41 +828,82 @@ split.
   apply/fset1UP;right.
   apply covv_tr_d.
   by exists t0.
-split.
-  move => t1 t2 t1_spl t2_spl q int1q int2q.
-  move:t1_spl => /fsetUP;  move => [t1_spl|t1_spl];
-  move:t2_spl=> /fsetUP;move=>[t2_spl|t2_spl];last first.
-        move:t1_spl => /fsetD1P [t1nt t1_tr].
-        move:t2_spl => /fsetD1P [t2nt t2_tr].
-        rewrite /no_cover_intersection in nci_tr_d.
-        have temp:=(nci_tr_d t1 t2).
-        apply:(temp) => //=.
-        apply int1q.
-        apply int2q.
-      move:t1_spl => /fsetD1P [t1nt t1_tr].
-      have intwet2q := (in_triangle_imply_w_edges int2q).
-      have temp:(t2 \in split_triangle_aux t p /\ in_triangle_w_edges t2 q)=>//=.
-      have temp2 := (three_triangles_cover_one intp q).
-      have intwetq : in_triangle_w_edges t q by apply temp2;exists t2.
-      rewrite /no_cover_intersection in nci_tr_d.
-      have intq := (split_aux_in_triangle intp t2_spl int2q).
-      have abs := (nci_tr_d t1 t t1_tr t_tr q int1q intq).
-      rewrite abs in t1nt.
-      by move :t1nt => /eqP.  
-    move:t2_spl => /fsetD1P [t2nt t2_tr].
-    have intwet1q := (in_triangle_imply_w_edges int1q).
-    have temp:(t1 \in split_triangle_aux t p /\ in_triangle_w_edges t1 q)=>//=.
-    have temp2 := (three_triangles_cover_one intp q).
-    have intwetq : in_triangle_w_edges t q by apply temp2;exists t1.
-    rewrite /no_cover_intersection in nci_tr_d.
-    have intq := (split_aux_in_triangle intp t1_spl int1q).
-    have abs := (nci_tr_d t2 t t2_tr t_tr q int2q intq).
-    rewrite abs in t2nt.
-    by move :t2nt => /eqP.  
-  admit.
+split=>//=.
 move => t1 t2 t1_spl t2_spl q qvt1 intwet2q.
 move:t1_spl => /fsetUP;  move => [t1_spl|t1_spl];
 move:t2_spl=> /fsetUP;move=>[t2_spl|t2_spl];last first.
+      admit.
+    have intwetq := (split_aux_in_triangle_we intp t2_spl intwet2q).
+    move:t1_spl => /fsetD1P [t1_nt t1_tr].
+    have q_vt := (nps_tr_d t1 t t1_tr t_tr q qvt1 intwetq).
+    have test:= (in_triangle_w_edge_edges t2 q).
+    move:(intwet2q) => /test truc.
+    move:truc => [q_vt2 | [int2q | t2e]] => //=.
+      have abs := in_triangle_not_vert (split_aux_in_triangle intp t2_spl int2q).
+      by rewrite q_vt in abs.
+    move:t2e => [e [e_t2 int2e]].   
+    have abs := (on_edge_split_triangle intp t2_spl e_t2 int2e).
+    move:abs => [intq|abs].
+      have abs := in_triangle_not_vert intq.
+      by rewrite q_vt in abs. 
+    move:abs=>[e0 [e0_t q_e0]].
+      by have abs:=(vert_not_on_edges q_vt e0_t q_e0).
+      
+  have intwet1q := (vert_in_triangle_w_edges qvt1).
+  have intwetq := (split_aux_in_triangle_we intp t1_spl intwet1q).
+  have temp := (vertex_in_split_triangle intp t1_spl qvt1).  
+  move:t2_spl=>/fsetD1P [t2_nt t2_tr].
+  move:temp => [qvt | q_p].
+    by have test:= (nps_tr_d t t2 t_tr t2_tr q qvt intwet2q).
+  have test:= (in_triangle_w_edge_edges t2 q).
+  move:(intwet2q) => /test truc.
+  move:truc => [q_vt2 | [int2q | t2e]] => //=.
+    rewrite /no_cover_intersection in  nci_tr_d.
+    rewrite q_p in int2q.
+    have temp := (nci_tr_d t t2 t_tr t2_tr p intp int2q).
+    by rewrite temp in t2_nt; move:t2_nt => /eqP.
+  move:t2e => [e [e_t2 int2e]].
+  have t2_3vertex : (#|` vertex_set t2| = 3).
+
+  have test3 : (#|` [fset (vertex t2) x | x in 'I_3]| = #|` finset 'I_3|).
+  apply:card_in_imfset.
+  move => x y px py.
+  have machin : (injective (vertex t2)).
+    admit.
+  apply machin.
+  by rewrite test3 card_finset card_ord.
+  have t2_nempty := (triangle_3vertex_nempty t2_3vertex).
+  rewrite q_p in int2e.
+  have temp := (in_triangle_on_edge intp t2_nempty e_t2 int2e).
+  move:temp => [q' [intq' int2q']].
+  rewrite /no_cover_intersection in nci_tr_d.
+  have abs := (nci_tr_d t t2 t_tr t2_tr q' intq' int2q').
+  by move:t2_nt ;rewrite abs => /eqP.
+
+
+have spl_p_in_vset: forall t3, t3 \in split_triangle_aux t p -> p \in vertex_set t3.
+  by move => t3 /fset1UP [vt3 | /fset2P [vt3|vt3]];
+  [have temp := vertices_to_triangle_correct (vertex1 t) (vertex2 t) p|
+   have temp := vertices_to_triangle_correct p (vertex2 t) (vertex3 t)|
+   have temp := vertices_to_triangle_correct (vertex1 t) p (vertex3 t)];
+  [move:temp => [_ [_ temp]]|move:temp => [temp _]|move:temp => [_ [temp _]]];
+  rewrite temp;apply /imfsetP;
+  [exists ord32|exists ord30|exists ord31]=> //=;rewrite vt3.
+
+case t1_t2 : (t2==t1);last move:t1_t2 => /eqP t1_n_t2.
+  by move :t1_t2 => /eqP => ->.
+move:t1_spl=> /fset1UP [vt1 |t1_spl];last move:t1_spl=> /fset2P [vt1|vt1];
+rewrite vt1 in qvt1;move:(qvt1) => /in_vertex_set [valq | [valq | valq]];
+move:valq => /eqP valq;rewrite valq;(*try apply spl_p_in_vset=>//=;*)
+move:t2_spl => /fset1UP [vt2|t2_spl];try move:t2_spl=> /fset2P [vt2|vt2];
+rewrite vt1 vt2 in t1_n_t2 => //=;
+have temp := (vertices_to_triangle_correct2 vt2);
+move:temp => [temp1 [temp2 temp3]]=> //=;rewrite valq in intwet2q.
+
+
+
+
+
 
 Qed.
 
@@ -704,4 +933,4 @@ Proof.
     exists t.
     split;trivial;rewrite /flip_edge.
     
-End Triangulation.
+End Triangulation.n
