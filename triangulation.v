@@ -14,7 +14,7 @@ Section Triangulation.
 
 Open Scope fset_scope.
 
-Variable R : numDomainType.
+Variable R : realDomainType.
 
 Variable P : choiceType.
 Variable T : choiceType.
@@ -117,7 +117,69 @@ Proof.
 Qed.
 
 
-Axiom oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0. 
+Hypothesis oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
+
+Hypothesis oriented_surface_circular : forall a, forall b, forall c, oriented_surface a b c = oriented_surface c a b.
+
+Lemma is_left_of_circular : forall a, forall b, forall c, is_left_of a b c = is_left_of c a b.
+Proof.
+move => a b c.
+by rewrite /is_left_of oriented_surface_circular.
+Qed.
+
+Lemma is_left_or_on_line_circular : forall a, forall b, forall c,
+        is_left_or_on_line a b c = is_left_or_on_line c a b.
+Proof.
+move => a b c.
+by rewrite /is_left_or_on_line oriented_surface_circular.
+Qed.
+
+Hypothesis oriented_surface_change1 : forall a, forall b, forall c,
+        oriented_surface a b c = -oriented_surface a c b.
+
+Lemma oriented_surface_change2 : forall a, forall b, forall c,
+        oriented_surface a b c = -oriented_surface b a c.
+Proof.
+move => a b c.
+rewrite -[X in _ = - X] oriented_surface_circular.
+exact : oriented_surface_change1.
+Qed.
+
+Lemma oriented_surface_change3 : forall a, forall b, forall c,
+        oriented_surface a b c = -oriented_surface c b a.
+Proof.
+move => a b c.
+rewrite [X in _ = - X] oriented_surface_circular.
+exact:oriented_surface_change1.
+Qed.
+
+Lemma is_left_or_on_change : forall a, forall b, forall c,
+        is_left_or_on_line a b c = ~~ is_left_of b a c.
+Proof.
+move => a b c.
+rewrite /is_left_or_on_line /is_left_of.
+rewrite oriented_surface_change1 oriented_surface_circular.
+rewrite oppr_ge0.
+by rewrite real_lerNgt => //=; apply num_real.
+Qed.
+
+
+Lemma is_left_of_change : forall a, forall b, forall c,
+        is_left_of a b c = ~~ is_left_or_on_line b a c.
+Proof.
+move => a b c.
+rewrite /is_left_or_on_line /is_left_of.
+rewrite oriented_surface_change1 oriented_surface_circular.
+rewrite oppr_gt0.
+by rewrite real_ltrNge => //=; apply num_real.
+Qed.
+
+Lemma is_lof_imply_is_lor_on_line : forall a b c, 
+    is_left_of a b c -> is_left_or_on_line a b c.
+Proof.
+move => a b c islofabc.
+by apply ltrW in islofabc.
+Qed.
 
 
 Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
@@ -610,7 +672,6 @@ have nci_spl : no_cover_intersection (split_triangle tr t p) (p |` d).
       move:t1_spl => /fsetD1P [t1nt t1_tr].
       have intwet2q := (in_triangle_imply_w_edges int2q).
       have temp:(t2 \in split_triangle_aux t p /\ in_triangle_w_edges t2 q)=>//=.
-      
       have temp2 := (three_triangles_cover_one intp q).
       have intwetq : in_triangle_w_edges t q by apply temp2;exists t2.
       rewrite /no_cover_intersection in nci_tr_d.
@@ -628,8 +689,93 @@ have nci_spl : no_cover_intersection (split_triangle tr t p) (p |` d).
     have abs := (nci_tr_d t2 t t2_tr t_tr q int2q intq).
     rewrite abs in t2nt.
     by move :t2nt => /eqP.  
-  admit.
-split.
+    
+  
+  case t1_t2 : (t2==t1);last move:t1_t2 => /eqP t1_n_t2.
+    by move :t1_t2 => /eqP => ->.
+  move:t1_spl=> /fset1UP [vt1 |t1_spl];last move:t1_spl=> /fset2P [vt1|vt1];
+  move:t2_spl => /fset1UP [vt2|t2_spl];try move:t2_spl=> /fset2P [vt2|vt2];
+  rewrite vt1 vt2 in t1_n_t2 => //=;
+            move:int1q => /andP [/andP [_ islo] _].
+            have vct1 := (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
+            rewrite -vt1 in vct1.
+            move:vct1 => [v1t1 [v2t1 v3t1]].
+            rewrite /vertex2 /vertex3 -v3t1 -v2t1  in islo.
+            move:int2q => /andP [/andP [islor _] _].
+            have vct2 := (vertices_to_triangle_correct p (vertex2 t) (vertex3 t)).
+            rewrite -vt2 in vct2.
+            move:vct2 => [v1t2 [v2t2 v3t2]].
+            rewrite /vertex1 /vertex2 /vertex3 -v1t2 -v2t2  in islor.           
+            rewrite is_left_of_change is_left_or_on_line_circular in islor.
+            apply is_lof_imply_is_lor_on_line in islo.
+              by rewrite islo in islor.
+          move:int1q => /andP [/andP _ islo].
+          have vct1 := (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
+          rewrite -vt1 in vct1.
+          move:vct1 => [v1t1 [v2t1 v3t1]].
+          rewrite /vertex1 /vertex3 -v3t1 -v1t1  in islo.
+          move:int2q => /andP [/andP [islor _] _].
+          have vct2 := (vertices_to_triangle_correct (vertex1 t) p (vertex3 t)).
+          rewrite -vt2 in vct2.
+          move:vct2 => [v1t2 [v2t2 v3t2]].
+          rewrite /vertex1 /vertex2 /vertex3 -v1t2 -v2t2  in islor.           
+          rewrite is_left_of_change -is_left_or_on_line_circular in islor.
+          apply is_lof_imply_is_lor_on_line in islo.
+            by rewrite islo in islor.
+        move:int1q => /andP [/andP [islo _] _].
+        have vct1 := (vertices_to_triangle_correct p (vertex2 t) (vertex3 t)).
+        rewrite -vt1 in vct1.
+        move:vct1 => [v1t1 [v2t1 v3t1]].
+        rewrite /vertex1 /vertex2 -v1t1 -v2t1  in islo.
+        move:int2q => /andP [/andP [_ islor] _].
+        have vct2 := (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
+        rewrite -vt2 in vct2.
+        move:vct2 => [v1t2 [v2t2 v3t2]].
+        rewrite /vertex1 /vertex2 /vertex3 -v3t2 -v2t2  in islor.           
+        rewrite is_left_of_change is_left_or_on_line_circular in islor.
+        apply is_lof_imply_is_lor_on_line in islo.
+          by rewrite islo in islor.
+      move:int1q => /andP [/andP _ islo].
+      have vct1 := (vertices_to_triangle_correct p (vertex2 t) (vertex3 t)).
+      rewrite -vt1 in vct1.
+      move:vct1 => [v1t1 [v2t1 v3t1]].
+      rewrite /vertex1 /vertex3 -v3t1 -v1t1  in islo.
+      move:int2q => /andP [/andP [_ islor] _].
+      have vct2 := (vertices_to_triangle_correct (vertex1 t) p (vertex3 t)).
+      rewrite -vt2 in vct2.
+      move:vct2 => [v1t2 [v2t2 v3t2]].
+      rewrite /vertex1 /vertex2 /vertex3 -v3t2 -v2t2  in islor.           
+      rewrite is_left_of_change  in islor.
+      apply is_lof_imply_is_lor_on_line in islo.
+        by rewrite islo in islor.
+    move:int1q => /andP [/andP [islo _] _].
+    have vct1 := (vertices_to_triangle_correct (vertex1 t) p (vertex3 t)).
+    rewrite -vt1 in vct1.
+    move:vct1 => [v1t1 [v2t1 v3t1]].
+    rewrite /vertex1 /vertex2 /vertex3 -v2t1 -v1t1  in islo.
+    move:int2q => /andP [/andP [_ _] islor].
+    have vct2 := (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
+    rewrite -vt2 in vct2.
+    move:vct2 => [v1t2 [v2t2 v3t2]].
+    rewrite /vertex1 /vertex2 /vertex3 -v1t2 -v3t2  in islor.           
+    rewrite is_left_of_change -is_left_or_on_line_circular in islor.
+    apply is_lof_imply_is_lor_on_line in islo.
+      by rewrite islo in islor.
+  move:int1q => /andP [/andP [_ islo] _].
+  have vct1 := (vertices_to_triangle_correct (vertex1 t) p (vertex3 t)).
+  rewrite -vt1 in vct1.
+  move:vct1 => [v1t1 [v2t1 v3t1]].
+  rewrite /vertex1 /vertex2 /vertex3 -v3t1 -v2t1  in islo.
+  move:int2q => /andP [/andP [_ _] islor].
+  have vct2 := (vertices_to_triangle_correct p (vertex2 t) (vertex3 t)).
+  rewrite -vt2 in vct2.
+  move:vct2 => [v1t2 [v2t2 v3t2]].
+  rewrite /vertex1 /vertex2 /vertex3 -v3t2 -v1t2  in islor.           
+  rewrite is_left_of_change  in islor.
+  apply is_lof_imply_is_lor_on_line in islo.
+    by rewrite islo in islor.
+
+have injvt : forall t1, t1 \in split_triangle tr t p -> injective (vertex t1).
   move => t0 insplt0.
   have vert_n_p : forall i, vertex t i != p.
     move => i.
@@ -697,6 +843,7 @@ split.
   apply contraNneq =>vt.
     by apply /eqP; apply temp2.
 
+split=> //=.
 split.
   rewrite /covers_hull.
   move => q hull_pdq.  
@@ -832,7 +979,11 @@ split=>//=.
 move => t1 t2 t1_spl t2_spl q qvt1 intwet2q.
 move:t1_spl => /fsetUP;  move => [t1_spl|t1_spl];
 move:t2_spl=> /fsetUP;move=>[t2_spl|t2_spl];last first.
-      admit.
+      move:t1_spl => /fsetD1P [t1_nt t1_tr].
+      move:t2_spl => /fsetD1P [t2_nt t2_tr].
+      rewrite /no_point_on_segment in nps_tr_d.
+      have temp := (nps_tr_d t1 t2 t1_tr t2_tr q qvt1).
+      by apply temp.
     have intwetq := (split_aux_in_triangle_we intp t2_spl intwet2q).
     move:t1_spl => /fsetD1P [t1_nt t1_tr].
     have q_vt := (nps_tr_d t1 t t1_tr t_tr q qvt1 intwetq).
@@ -866,11 +1017,13 @@ move:t2_spl=> /fsetUP;move=>[t2_spl|t2_spl];last first.
   have t2_3vertex : (#|` vertex_set t2| = 3).
 
   have test3 : (#|` [fset (vertex t2) x | x in 'I_3]| = #|` finset 'I_3|).
-  apply:card_in_imfset.
-  move => x y px py.
-  have machin : (injective (vertex t2)).
-    admit.
-  apply machin.
+    apply:card_in_imfset.
+    move => x y px py.
+    have machin : (injective (vertex t2)).
+      apply injvt.
+      apply /fsetUP;right.
+      apply /fsetD1P=>//=.
+    apply machin.
   by rewrite test3 card_finset card_ord.
   have t2_nempty := (triangle_3vertex_nempty t2_3vertex).
   rewrite q_p in int2e.
@@ -900,12 +1053,61 @@ rewrite vt1 vt2 in t1_n_t2 => //=;
 have temp := (vertices_to_triangle_correct2 vt2);
 move:temp => [temp1 [temp2 temp3]]=> //=;rewrite valq in intwet2q.
 
-
-
-
-
-
+rewrite /in_triangle in intp.
+          move:(intp) => /andP[/andP [islo _] _].
+          move:(intwet2q) => /andP [/andP [islor _] _].
+          have vdt2:= (vertices_to_triangle_correct p (vertex2 t) (vertex3 t)).
+          rewrite -vt2 in vdt2.
+          move:vdt2 => [dp [dv2t2 _]].
+          rewrite /vertex1 -dp /vertex2 -dv2t2 in islor.
+          rewrite is_left_or_on_change is_left_of_circular in islor.
+            by rewrite islo in islor.
+        move:(intp) => /andP[/andP [islo _] _].
+        move:(intwet2q) => /andP [/andP [islor _] _].
+        have vdt2:= (vertices_to_triangle_correct (vertex1 t) p (vertex3 t)).
+        rewrite -vt2 in vdt2.
+        move:vdt2 => [dp [dv2t2 _]].
+        rewrite /vertex1 -dp /vertex2 -dv2t2 in islor.
+        rewrite is_left_or_on_change is_left_of_circular in islor.
+        rewrite is_left_of_circular in islor.
+          by rewrite islo in islor.
+      move:(intp) => /andP[/andP [islo _] _].
+      move:(intwet2q) => /andP [/andP [islor _] _].
+      have vdt2:= (vertices_to_triangle_correct (vertex1 t) p (vertex3 t)).
+      rewrite -vt2 in vdt2.
+      move:vdt2 => [dp [dv2t2 _]].
+      rewrite /vertex1 -dp /vertex2 -dv2t2 in islor.
+      rewrite is_left_or_on_change -is_left_of_circular in islor.
+        by rewrite islo in islor.   
+    move:(intp) => /andP[/andP [_ islo] _].
+    move:(intwet2q) => /andP [/andP [_ islor] _].
+    have vdt2:= (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
+    rewrite -vt2 in vdt2.
+    move:vdt2 => [_ [dv2t2 dp]].
+    rewrite /vertex2 /vertex3 -dp -dv2t2 in islor.
+    rewrite is_left_or_on_change is_left_of_circular in islor.
+      by rewrite islo in islor.
+  move:(intp) => /andP[/andP [islo _] _].
+  move:(intwet2q) => /andP [/andP [islor _] _].
+  have vdt2:= (vertices_to_triangle_correct p (vertex2 t) (vertex3 t)).
+  rewrite -vt2 in vdt2.
+  move:vdt2 => [dp [dv2t2 _]].
+  rewrite /vertex1 -dp /vertex2 -dv2t2 in islor.
+  rewrite is_left_or_on_change is_left_of_circular in islor.
+    by rewrite islo in islor.
+move:(intp) => /andP[/andP [_ islo] _].
+move:(intwet2q) => /andP [/andP [_ islor] _].
+have vdt2:= (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
+rewrite -vt2 in vdt2.
+move:vdt2 => [_ [dv2t2 dp]].
+rewrite /vertex2 /vertex3 -dp -dv2t2 in islor.
+rewrite is_left_or_on_change is_left_of_circular in islor.
+  by rewrite islo in islor.      
 Qed.
+
+
+
+
 
   Theorem flip_edge_triangulation : forall tr, forall d, triangulation tr d -> 
                                     forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
@@ -933,4 +1135,4 @@ Proof.
     exists t.
     split;trivial;rewrite /flip_edge.
     
-End Triangulation.n
+End Triangulation.
