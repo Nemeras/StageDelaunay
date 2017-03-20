@@ -695,7 +695,7 @@ have nci_spl : no_cover_intersection (split_triangle tr t p) (p |` d).
     by move :t1_t2 => /eqP => ->.
   move:t1_spl=> /fset1UP [vt1 |t1_spl];last move:t1_spl=> /fset2P [vt1|vt1];
   move:t2_spl => /fset1UP [vt2|t2_spl];try move:t2_spl=> /fset2P [vt2|vt2];
-  rewrite vt1 vt2 in t1_n_t2 => //=;
+  rewrite vt1 vt2 in t1_n_t2 => //=.
             move:int1q => /andP [/andP [_ islo] _].
             have vct1 := (vertices_to_triangle_correct (vertex1 t) (vertex2 t) p).
             rewrite -vt1 in vct1.
