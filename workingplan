@@ -1,5 +1,9 @@
 ~~~ Premiere partie du travail ~~~
 
+	J'ai changé le predicat d'orientation : je ne considere que des
+	triangles orientes, et le resultat de vertices_to_triangle est
+	dit correct si les 3 points donnés sont orientés
+
 Prouver que split triangle conserve triangulation : OK !!!
 	prouver que split triangle conserve covers_hull : OK
 		Besoin de hull_add_point : OK
