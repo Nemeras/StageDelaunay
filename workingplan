@@ -4,6 +4,9 @@
 	triangles orientes, et le resultat de vertices_to_triangle est
 	dit correct si les 3 points donnés sont orientés
 
+/!\	Apres reflexion, une ou plusieurs hypothese(s) sont prouvable
+	en utilisant les predicats d'orientation, je dois reverifier ca
+
 Prouver que split triangle conserve triangulation : OK !!!
 	prouver que split triangle conserve covers_hull : OK
 		Besoin de hull_add_point : OK
@@ -15,11 +18,24 @@ Prouver que split triangle conserve triangulation : OK !!!
 	Prouver que split_triangle conserve no_point_on_segment : OK
 		Ajout de lemmes/hypotheses sur les orientations
 Prouver que flip edge conserve triangulation
-Changer la definition pour une definition ensembliste !
+     -   Changer la definition pour une definition ensembliste !
 	A part si j'ai des problemes avec ma definition de flip_edge,
 	cela devrait marcher quasiment directement, je pense.
 	J'ai ecris le début des preuves, ça a l'air de bien marcher...
 
+	J'ai rechange la definition de flip_edge apres reflexion, pour
+	eviter d'avoir des problemes avec la definition ensembliste.
+
+	prouver covers hull :
+		Premier lemme : montrer que si un point est dans un des
+		triangles d'entree pour split edge alors il est dans un
+		triangle de sortie
+	prouver covers_vertices : devrait etre OK sans lemme
+	
+	prouver NCI:
+	
+	prouver NPS: 
+		 
 ~~~ Deuxieme partie du travail ~~~
 
 	Ecrire l'algorithme qui transforme en triangulation de Delaunay. 
