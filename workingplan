@@ -26,11 +26,11 @@ Prouver que flip edge conserve triangulation
 	J'ai rechange la definition de flip_edge apres reflexion, pour
 	eviter d'avoir des problemes avec la definition ensembliste.
 
-	prouver covers hull :
+	prouver covers hull : OK
 		Premier lemme : montrer que si un point est dans un des
 		triangles d'entree pour split edge alors il est dans un
-		triangle de sortie
-	prouver covers_vertices : devrait etre OK sans lemme
+		triangle de sortie : OK
+	prouver covers_vertices : OK
 	
 	prouver NCI:
 	
