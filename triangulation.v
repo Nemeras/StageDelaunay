@@ -1227,8 +1227,7 @@ by rewrite ltrr.
 Qed.
 
 
-
-Hypothesis is_left_or_on_axiom : forall a b c d, is_left_or_on_line a b c ->
+(*Hypothesis is_left_or_on_axiom : forall a b c d, is_left_or_on_line a b c ->
                                             is_left_or_on_line a b d ->
                                             is_left_or_on_line b c d ->
                                             is_left_or_on_line a d c.
@@ -1236,9 +1235,66 @@ Hypothesis is_left_or_on_axiom : forall a b c d, is_left_or_on_line a b c ->
 Hypothesis is_left_or_on_axiom2 : forall q b c d, is_left_or_on_line b c d ->
                                             is_left_or_on_line d b q ->
                                             is_left_or_on_line b c q ->
-                                            is_left_or_on_line c d q.
+                                            is_left_or_on_line c d q.*)
+Hypothesis is_left_of_trans : forall a b c d q, is_left_of a b c ->
+                                           is_left_of a b d ->
+                                           is_left_of a b q ->
+                                           is_left_of q b d ->
+                                           is_left_of d b c ->
+                                           is_left_of q b c.
 
+Hypothesis is_left_or_line_trans : forall a b c d q, is_left_or_on_line a b c ->
+                                           is_left_or_on_line a b d ->
+                                           is_left_or_on_line a b q ->
+                                           is_left_or_on_line q b d ->
+                                           is_left_or_on_line d b c ->
+                                           is_left_or_on_line q b c.
 
+Hypothesis is_left_of_trans2 : forall a b c d q, is_left_of c b a ->
+                                           is_left_of d b a ->
+                                           is_left_of q b a ->
+                                           is_left_of d b q ->
+                                           is_left_of c b d ->
+                                           is_left_of c b q.
+
+Hypothesis is_left_or_line_trans2 : forall a b c d q, is_left_or_on_line c b a ->
+                                           is_left_or_on_line d b a ->
+                                           is_left_or_on_line q b a ->
+                                           is_left_or_on_line d b q ->
+                                           is_left_or_on_line c b d ->
+                                           is_left_or_on_line c b q.
+
+Definition is_right_of a b c  := ~~(is_left_or_on_line a b c).
+
+Hypothesis is_right_of_trans : forall a b c d q, is_right_of a b c ->
+                                              is_right_of a b d ->
+                                              is_right_of a b q ->
+                                              is_right_of c b q ->
+                                              is_right_of q b d ->
+                                              is_right_of c b q.
+
+Definition is_right_or_on_line a b c  := ~~(is_left_of a b c).
+
+Hypothesis is_right_or_on_trans : forall a b c d q, is_right_or_on_line a b c ->
+                                              is_right_or_on_line a b d ->
+                                              is_right_or_on_line a b q ->
+                                              is_right_or_on_line c b q ->
+                                              is_right_or_on_line q b d ->
+                                              is_right_or_on_line c b q.
+
+Check is_left_of_change.
+
+Lemma is_left_of_change_right :
+  forall a b c, is_left_of a b c = is_right_of b a c.
+Proof.
+by move => a b c;rewrite is_left_of_change /is_right_or_on_line.
+Qed.
+
+Lemma is_left_or_on_change_right :
+  forall a b c, is_left_or_on_line a b c = is_right_or_on_line b a c.
+Proof.
+by move => a b c;rewrite is_left_or_on_change /is_right_of.
+Qed.
 
 Lemma flip_edge_covers_aux : forall tr, forall data, triangulation tr data -> 
                                     forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
@@ -1316,7 +1372,20 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
     move:islo_qbd;rewrite -is_left_or_on_line_circular => islo_bdq.
     move:islo_abd => islof_abd. 
     move:(islof_abd) => /is_lof_imply_is_lor_on_line islo_abd.
-    by apply:is_left_or_on_axiom islo_abd islo_abq islo_bdq.
+
+    rewrite is_left_or_on_line_circular.
+    rewrite is_left_of_circular in islof_abd.
+    apply is_lof_imply_is_lor_on_line in islof_abd.
+    apply is_lof_imply_is_lor_on_line in oriented_abc.
+    rewrite is_left_or_on_line_circular in oriented_abc.
+    
+    apply:(is_left_or_line_trans2 islof_abd oriented_abc).
+        by rewrite is_left_or_on_line_circular in islo_abq.
+          by move:islo_and => /andP [_ temp];
+           rewrite is_left_or_on_line_circular in temp.
+    by apply is_lof_imply_is_lor_on_line in islo_acd;
+    rewrite is_left_or_on_line_circular in islo_acd.
+    
   exists (vertices_to_triangle b c d).
   split;first by apply/fset2P ;right.
   have oriented_bcd : oriented_triangle_points b c d.
@@ -1337,8 +1406,15 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
   rewrite - is_left_or_on_line_circular.
   move:islo_bcd => islof_bcd.
   move:(islof_bcd) => /is_lof_imply_is_lor_on_line islo_bcd.
-  apply:(is_left_or_on_axiom2 islo_bcd) => //=.
-  by rewrite -is_left_or_on_line_circular.
+  rewrite is_left_or_on_line_circular.
+  move:oriented_abc => islo_bca.
+  apply is_lof_imply_is_lor_on_line in islo_bca.
+  rewrite -is_left_or_on_line_circular in islo_bca.
+
+  apply:(is_left_or_line_trans islo_bcd islo_bca islo_bcq).
+    by move:islo_and=>/andP [_ temp];
+      rewrite -is_left_or_on_line_circular in temp.
+  by apply is_lof_imply_is_lor_on_line in islo_acd.
 Qed.
 
 Hypothesis vertices_to_triangle_circular :
@@ -1394,6 +1470,12 @@ Proof.
 move => tr data tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
 move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
 move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d nps_tr_d]]]].
+have vc_abd := vertices_to_triangle_correct
+                         (is_lof_imply_is_lor_on_line islo_abd).
+have vc_bcd := vertices_to_triangle_correct
+                         (is_lof_imply_is_lor_on_line islo_bcd).
+move : (vc_abd) => [a_abd [b_abd d_abd]].
+move : (vc_bcd) => [b_bcd [c_bcd d_bcd]].
 split;first admit.
 split.
 move => p hull_d_p.
@@ -1483,10 +1565,6 @@ split.
 
 
 move:t_spl=>/fsetUP [Ht |  /fsetD1P [t_nt2 /fsetD1P [t_nt1 t_tr]]];apply cvv_tr_d.
-  have vc_abd := vertices_to_triangle_correct 
-                   (is_lof_imply_is_lor_on_line islo_abd).
-  have vc_bcd := vertices_to_triangle_correct 
-                   (is_lof_imply_is_lor_on_line islo_bcd).
   move:vc_abd => [abd0 [abd1 abd2]].
   move:vc_bcd => [bcd0 [bcd1 bcd2]].
   by move : Ht => /fset2P [t_v | t_v];rewrite t_v in p_vset_t;
@@ -1505,13 +1583,64 @@ exists t;split => //=.
 
 split.
   move => t3 t4 t3_spl t4_spl p int3p int4p.
-  move:t3_spl => /fsetUP [Ht3 | /fsetD1P [t3_nt2 /fsetD1P [t3_nt1 t3_tr]]];
-  move:t4_spl => /fsetUP [Ht4 | /fsetD1P [t4_nt2 /fsetD1P [t4_nt1 t4_tr]]].
-        admit.
-      admit.
+  have not_in_both_triangles:in_triangle (vertices_to_triangle a b d) p ->
+       in_triangle (vertices_to_triangle b c d) p -> false.
+    move => p_abd p_bcd.
+    rewrite /in_triangle /vertex1 /vertex2 /vertex3
+    -a_abd -b_abd -d_abd in p_abd.
+    move:p_abd => /andP [/andP[islo_abp islo_pbd] islo_apd].
+    rewrite /in_triangle /vertex1 /vertex2 /vertex3
+    -b_bcd -c_bcd -d_bcd in p_bcd.
+    move:p_bcd => /andP [/andP[islo_bcp islo_pcd] islo_bpd].
+    rewrite  is_left_of_change in islo_bpd.
+    apply is_lof_imply_is_lor_on_line in islo_pbd.
+      by rewrite islo_pbd in islo_bpd.
+
+  have vc_abc := vertices_to_triangle_correct
+                         (is_lof_imply_is_lor_on_line oriented_abc).
+  have vc_acd := vertices_to_triangle_correct
+                         (is_lof_imply_is_lor_on_line oriented_acd).
+  move : (vc_abc) => [a_abc [b_abc c_abc]].
+  move : (vc_acd) => [a_acd [c_acd d_acd]].
+
+(*  have in_flip_aux:forall q, forall t, in_triangle t q -> t \in flip_edge_aux a b c d ->
+                       in_triangle_w_edges (vertices_to_triangle a b c) q \/
+                       in_triangle_w_edges (vertices_to_triangle a c d) q.
+    move => q t intq t_flip.
+    move:t_flip => /fset2P [Ht|Ht];
+    rewrite Ht /in_triangle /vertex1 /vertex2 /vertex3 in intq;
+    [rewrite -a_abd -b_abd -d_abd in intq|
+     rewrite -b_bcd -c_bcd -d_bcd in intq];
+    move:intq => /andP[/andP [intq1 intq2] intq3].
+    case islo_acq:(is_left_of a q c);[left |right|move|move];
+
+      [rewrite /in_triangle /vertex1 /vertex2 /vertex3 -a_abc -b_abc -c_abc|
+       rewrite /in_triangle /vertex1 /vertex2 /vertex3 -a_acd -c_acd -d_acd|
+       move|move];
+      [apply/andP;split=> //=;apply/andP;split => //=|
+       apply/andP;split=> //=;apply/andP;split => //=|move|move].
+      apply:(is_left_of_trans oriented_abc islo_abd intq1 intq2).
+      by rewrite is_left_of_circular in islo_bcd.*)
+
+
+
+    
+
+    move:t3_spl => /fsetUP [Ht3 | /fsetD1P [t3_nt2 /fsetD1P [t3_nt1 t3_tr]]];
+    move:t4_spl => /fsetUP [Ht4 | /fsetD1P [t4_nt2 /fsetD1P [t4_nt1 t4_tr]]].
+    move:Ht3 => /fset2P [Ht3|Ht3];move:Ht4=>/fset2P [Ht4|Ht4];
+    (try by rewrite Ht3 Ht4);rewrite Ht3 in int3p;rewrite Ht4 in int4p.
+        by have:false by apply not_in_both_triangles.
+      by have temp:=(not_in_both_triangles int4p int3p).
+    Check nps_tr_d.
+    rewrite /no_point_on_segment in nps_tr_d.
+    rewrite /in_triangle /vertex1 /vertex2 /vertex3 in int3p.
+    rewrite /in_triangle /vertex1 /vertex2 /vertex3 in int4p.
+    rewrite -b_bcd -c_bcd -d_bcd in int4p.
+    rewrite -a_abd -b_abd -d_abd in int3p.
     admit.
   apply:nci_tr_d => //=.
-    apply int3p => //=.
+  apply int3p => //=.
   by [].
   
 (*
