@@ -7,6 +7,11 @@
 /!\	Apres reflexion, une ou plusieurs hypothese(s) sont prouvable
 	en utilisant les predicats d'orientation, je dois reverifier ca
 
+
+	j'ai changé la definition de triangulation : rajoute edt et tne
+	pour la raison dont on en avait disucté, et parce que je me suis
+	rendu compte d'une inconsistence.
+	
 Prouver que split triangle conserve triangulation : OK !!!
 	prouver que split triangle conserve covers_hull : OK
 		Besoin de hull_add_point : OK
@@ -17,6 +22,12 @@ Prouver que split triangle conserve triangulation : OK !!!
 	Prouver que split triangle conserve no_cover_intersection : OK
 	Prouver que split_triangle conserve no_point_on_segment : OK
 		Ajout de lemmes/hypotheses sur les orientations
+
+	Prouver que split_triangle conserve tne : OK
+	Prouver que split_triangle conserve edge_disjoint_triangle : OK
+
+/!\ 	Reverifier mes hypotheses.
+
 Prouver que flip edge conserve triangulation
      -   Changer la definition pour une definition ensembliste !
 	A part si j'ai des problemes avec ma definition de flip_edge,
@@ -32,10 +43,13 @@ Prouver que flip edge conserve triangulation
 		triangle de sortie : OK
 	prouver covers_vertices : OK
 	
-	prouver NCI:
+	prouver NCI: OK
 	
 	prouver NPS: 
-		 
+
+	prouver TNE:
+	
+	prouver EDT:		 
 ~~~ Deuxieme partie du travail ~~~
 
 	Ecrire l'algorithme qui transforme en triangulation de Delaunay. 
