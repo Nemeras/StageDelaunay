@@ -107,7 +107,11 @@ Definition is_left_or_on_line p a b := oriented_surface p a b >= 0%R.
 Variable on_edge : E -> P-> bool.
 
 
-Hypothesis oriented_surface_x_x_x : forall x, oriented_surface x x x = 0%R.
+Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
+Lemma oriented_surface_x_x_x : forall x, oriented_surface x x x = 0%R.
+Proof.
+by move => x; rewrite oriented_surface_x_x.
+Qed.
 
 Lemma is_left_or_on_line_x_x_x : forall x, is_left_or_on_line x x x.
 Proof.
@@ -1916,7 +1920,50 @@ Theorem flip_edge_tr3v : forall tr, forall data, triangulation tr data ->
                                      is_left_of b c d ->
                                      is_left_of a b d ->
                                      triangle_3vertices_tr (flip_edge tr t1 t2 a b c d).
-Admitted.
+Proof.
+move => tr data tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
+move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
+move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d nps_tr_d]]]].
+have vc_abd := vertices_to_triangle_correct
+                         (is_lof_imply_is_lor_on_line islo_abd).
+have vc_bcd := vertices_to_triangle_correct
+                         (is_lof_imply_is_lor_on_line islo_bcd).
+move : (vc_abd) => [a_abd [b_abd d_abd]].
+move : (vc_bcd) => [b_bcd [c_bcd d_bcd]].
+move => t t_fl.
+move:t_fl => /fsetUP [Ht|/fsetD1P [_ /fsetD1P[_ t_tr]]];last first.
+  by apply:tr3v_tr_d.
+by move:Ht=> /fset2P[Ht|Ht];
+move => [[|[|[|x']]] px] [[|[|[|y']]] py] => vtx_vty //=;
+try (by apply ord_inj);
+try (have ordpx :Ordinal px = ord30 by apply ord_inj);
+try (have ordpx :Ordinal px = ord31 by apply ord_inj);
+try (have ordpx :Ordinal px = ord32 by apply ord_inj);
+try (have ordpy :Ordinal py = ord30 by apply ord_inj);
+try (have ordpy :Ordinal py = ord31 by apply ord_inj);
+try (have ordpy :Ordinal py = ord32 by apply ord_inj);
+rewrite ordpx ordpy Ht in vtx_vty;
+try(rewrite -a_abd in vtx_vty);
+try(rewrite -b_abd in vtx_vty);
+try(rewrite -d_abd in vtx_vty);
+try(rewrite -b_bcd in vtx_vty);
+try(rewrite -c_bcd in vtx_vty);
+try(rewrite -d_bcd in vtx_vty);
+[rewrite vtx_vty in b_na;move:b_na => /eqP|
+rewrite vtx_vty in d_na;move:d_na => /eqP|
+rewrite vtx_vty in b_na;move:b_na => /eqP|
+move|
+rewrite vtx_vty in d_na;move:d_na => /eqP|
+move|
+rewrite vtx_vty in b_nc;move:b_nc => /eqP|
+move|
+rewrite vtx_vty in b_nc;move:b_nc => /eqP|
+rewrite vtx_vty in d_nc;move:d_nc => /eqP|
+move|
+rewrite vtx_vty in d_nc;move:d_nc => /eqP]=>//=;
+move:islo_bcd;
+rewrite  is_left_of_circular /is_left_of vtx_vty oriented_surface_x_x ltrr.
+Qed.
 
 
 Theorem flip_edge_cvh : forall tr, forall data, triangulation tr data -> 
