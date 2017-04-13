@@ -66,7 +66,7 @@ Variable oriented_surface : P -> P -> P -> R.
 
 
 
-Hypothesis edge_2vertices : forall e:E, injective (vertex_edge e).
+(* Hypothesis edge_2vertices : forall e:E, injective (vertex_edge e). *)
 (*Hypothesis triangle_3edges: forall t:T, injective (edge t).*)
 
 Open Local Scope ring_scope.
@@ -129,10 +129,10 @@ move => a b c.
 by rewrite /is_left_of oriented_surface_circular.
 Qed.
 
-Hypothesis equality_vertex_edge :
+(* Hypothesis equality_vertex_edge :
   forall e e', vertex_edge1 e = vertex_edge1 e' ->
           vertex_edge2 e = vertex_edge2 e' -> 
-          e=e'.
+          e=e'. *)
 
 Lemma is_left_or_on_line_circular : forall a, forall b, forall c,
         is_left_or_on_line a b c = is_left_or_on_line c a b.
@@ -413,6 +413,7 @@ forall t, #|` vertex_set t| = 3 -> exists p, in_triangle t p.*)
 Open Local Scope ring_scope.
 
 
+(*
 Hypothesis edge1_triangle_vertex1 : 
   forall t, vertex_edge (edge1 t) ord20 = vertex1 t.
 
@@ -430,6 +431,7 @@ Hypothesis edge3_triangle_vertex1 :
 
 Hypothesis edge3_triangle_vertex2 : 
   forall t, vertex_edge (edge3 t) ord21 = vertex1 t.
+ *)
 
 Hypothesis surface_non_empty :
   forall p1 p2 p3, oriented_surface p1 p2 p3 > 0 -> 
@@ -574,44 +576,19 @@ Hypothesis in_triangle_on_edge : forall t, forall p,   in_triangle t p ->
                                                                     
                                            
 
+(* Remarque Yves: la solution pour a est :
+    a i = oriented_surface (vertex t (i.+1 mod 3)) (vertex t (i.+2 mod 3)) p /
+          oriented_surface (vertex t 0) (vertex t 1) (vertex t 2) *)
 Hypothesis in_triangle_barycentre : forall t, forall p, in_triangle_w_edges t p <-> 
               exists a : 'I_3 -> R, ((forall i, (a i) >= 0%R) /\ \sum_i a i = 1 /\
               xCoord p = \sum_i ((a i)*xCoord (vertex t i)) /\
               yCoord p = \sum_i ((a i)*yCoord (vertex t i))). 
 
 
-Theorem fun_f_sum : forall d :{fset P},forall f : P -> R,forall i:d, 
-        f (val i) = \sum_i0 (if i0 == i then 1 else 0) * f (val i0).
-Proof.
-move => d f i.
-rewrite (bigD1 i) => //=.
-case abs:(i==i);last by move:abs => /eqP.
-rewrite mul1r.
-have sum0 : \sum_(i0 | i0 != i) 
-             (if i0 == i then 1 else 0) * f (fsval i0) = 0.
-  have f0 : (forall i0:d, i0 != i -> 
-                     ((if i0 == i then 1%R else 0))= 0%R).
-    move => t0 i0 i_0_nvert.
-    move:abs=>_.
-    case i0_vert :(i0==i);last by [].
-    move:i0_vert => /eqP i0_vert.
-    rewrite i0_vert in i_0_nvert.
-    by case abs:(i == i);first rewrite abs in i_0_nvert;
-        last move:abs=>/eqP.
-  rewrite big1 => //=.
-  move =>i0 i0_nvert.
-  have temp :((if i0 == i then 1 else 0) = 0) by move => t0;apply f0.
-  by rewrite temp;apply mul0r.
-by rewrite sum0 addr0.
-Qed.
-
-
 Lemma hull_from_triangle :
   forall d:{fset P}, forall tr, forall t, forall p, d != fset0 -> triangulation tr d -> 
 t \in tr -> in_triangle t p -> hull d p.
 Proof.
-
-
 move => d tr t p dne tr_d t_tr intp.
 move:tr_d =>[tr3v [covh_tr_d [covv_tr_d nps_tr_d]]].   
 have inwetp : in_triangle_w_edges t p by apply:in_triangle_imply_w_edges.
@@ -1422,23 +1399,11 @@ split;first by apply:triangulation_nps.
 (*by apply:(triangulation_edt dne).*)
 Qed.
 
-Hypothesis in_vert_to_triangl_in_triangle :
+(* This is probably a lemma that can already be proved: TODO *)
+Hypothesis in_vert_to_triangle_in_triangle :
   forall a b c, is_left_of a b c ->
       forall t, a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
       forall q, in_triangle (vertices_to_triangle a b c) q -> in_triangle t q.
-
-(*Definition get_third_vertex p t p1 p2 :=
-  let set_uniq := (vertex_set t `\ p1) `\ p2 in
-  Option.default p (omap val (pick ([finType of set_uniq]))).
-
-Definition flip_edge p tr t1 t2 p1 p2 :=
-  let p31 := get_third_vertex p t1 p1 p2 in
-  let p32 := get_third_vertex p t2 p1 p2 in
-  let new_t1 := vertices_to_triangle p31 p32 p1 in
-  let new_t2 := vertices_to_triangle p31 p32 p2 in
-  new_t1 |` (new_t2 |` ((tr `\ t1) `\ t2)).*)
-
-
 
 Definition flip_edge_aux a b c d :=
 let new_t1 := vertices_to_triangle a b d in
@@ -1459,16 +1424,6 @@ by apply:ler_lt_trans oriented_acb oriented_abc.
 by rewrite ltrr. 
 Qed.
 
-
-(*Hypothesis is_left_or_on_axiom : forall a b c d, is_left_or_on_line a b c ->
-                                            is_left_or_on_line a b d ->
-                                            is_left_or_on_line b c d ->
-                                            is_left_or_on_line a d c.
-
-Hypothesis is_left_or_on_axiom2 : forall q b c d, is_left_or_on_line b c d ->
-                                            is_left_or_on_line d b q ->
-                                            is_left_or_on_line b c q ->
-                                            is_left_or_on_line c d q.*)
 Hypothesis is_left_of_trans : forall a b c d q, is_left_of a b c ->
                                            is_left_of a b d ->
                                            is_left_of a b q ->
@@ -1496,13 +1451,6 @@ Hypothesis is_left_or_line_trans2 : forall a b c d q, is_left_or_on_line c b a -
                                            is_left_or_on_line d b q ->
                                            is_left_or_on_line c b d ->
                                            is_left_or_on_line c b q.
-
-(*Hypothesis is_left_of_trans3 : forall a b c d q, is_left_of a b c ->
-                                           is_left_of a b d ->
-                                           is_left_of a b q ->
-                                           is_left_or_on_line q b d ->
-                                           is_left_of d b c ->
-                                           is_left_of q b c.*)
 
 Lemma is_on_line_imply_is_lor : 
   forall a b c, is_on_line a b c -> is_left_or_on_line a b c.
@@ -1654,8 +1602,8 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
   by apply is_lof_imply_is_lor_on_line in islo_acd.
 Qed.
 
+(* TODO : this should be a consequence of the previous hypothesis. *)
 Hypothesis vertices_to_triangle_circular :
-  
   forall a b c p, in_triangle_w_edges (vertices_to_triangle a b c) p ->
                   in_triangle_w_edges (vertices_to_triangle c a b) p. 
 
@@ -2166,9 +2114,9 @@ move:Ht3 => /fset2P [Ht3|Ht3];move:Ht4=>/fset2P [Ht4|Ht4];
 
     have temp := infl t3 Ht3 p int3p.
     move:temp => [Htp|[Htp|Htp]];
-    try have intxp := (in_vert_to_triangl_in_triangle oriented_abc
+    try have intxp := (in_vert_to_triangle_in_triangle oriented_abc
                       a_t1 b_t1 c_t1 Htp);
-    try have intxp := (in_vert_to_triangl_in_triangle oriented_acd
+    try have intxp := (in_vert_to_triangle_in_triangle oriented_acd
                       a_t2 c_t2 d_t2 Htp);
     try have abst1 := nci_tr_d t1 t4 t1_tr t4_tr p intxp int4p;
     try have abst2 := nci_tr_d t2 t4 t2_tr t4_tr p intxp int4p;
@@ -2181,9 +2129,9 @@ move:Ht3 => /fset2P [Ht3|Ht3];move:Ht4=>/fset2P [Ht4|Ht4];
     by move:t4_nt1;rewrite abs;move => /eqP.
   have temp := infl t4 Ht4 p int4p.
   move:temp => [Htp|[Htp|Htp]];
-  try have intxp := (in_vert_to_triangl_in_triangle oriented_abc
+  try have intxp := (in_vert_to_triangle_in_triangle oriented_abc
                       a_t1 b_t1 c_t1 Htp);
-  try have intxp := (in_vert_to_triangl_in_triangle oriented_acd
+  try have intxp := (in_vert_to_triangle_in_triangle oriented_acd
                       a_t2 c_t2 d_t2 Htp);
   try have abst1 := nci_tr_d t1 t3 t1_tr t3_tr p intxp int3p;
   try have abst2 := nci_tr_d t2 t3 t2_tr t3_tr p intxp int3p;
