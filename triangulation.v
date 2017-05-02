@@ -10,6 +10,19 @@ Unset Printing Implicit Defensive.
 
 Import GRing.Theory Num.Theory.
 
+Open Scope fset_scope.
+
+Lemma leq_imfset_card (T K : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+  (p : finmempred P A) : (#|` imfset f p| <= #|` A|)%N.
+Proof.
+have vP (x : A) : P (val x) by rewrite -(finmempredE p) (valP x).
+rewrite (leq_trans _ (leq_imset_card (fun x : A => [` in_imfset f p (vP x)]) _)) //.
+apply/subset_leq_card/subsetP=> /= x _; apply/imsetP => /=.
+have /imfsetP [t Pt x_def] := valP x.
+have tA : t \in A by rewrite (finmempredE p).
+by exists [` tA] => //; apply/val_inj.
+Qed.
+
 Section Triangulation.
 
 Open Scope fset_scope.
@@ -65,7 +78,7 @@ Variable oriented_surface : P -> P -> P -> R.
 
 Open Local Scope ring_scope.
 Definition oriented_triangle_points a b c:= oriented_surface a b c >= 0.
-Definition vertex_set t := (vertex t) @` 'I_3.
+Definition vertex_set t := [fset vertex t i | i in 'I_3].
 Definition edges_set t := (edge t) @` 'I_3.
 Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
 
@@ -1249,65 +1262,29 @@ Hypothesis vertex_set_eq_in_triangle_w_edges :
   forall t1, forall t2, vertex_set t1 = vertex_set t2 -> 
         forall p , in_triangle_w_edges t1 p -> in_triangle_w_edges t2 p.
 
-Lemma in_vert_to_triangle_in_triangle :
-  forall a b c, is_left_of a b c ->
-      forall t, a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
-      forall q, in_triangle (vertices_to_triangle a b c) q -> in_triangle t q.
-Proof.
-move => a b c islo_abc t a_t b_t c_t.
-apply:vertex_set_eq_in_triangle.
-rewrite vertex_set_vertices_to_triangle.
-case b_na : (a!=b);last first.
-  move:b_na => /eqP a_b;rewrite a_b in islo_abc.
-  by rewrite /is_left_of oriented_surface_x_x ltrr in islo_abc.
-case b_nc : (b!=c);last first.
-  move:b_nc => /eqP b_c;rewrite b_c in islo_abc.
-  by rewrite -is_left_of_circular /is_left_of 
-             oriented_surface_x_x ltrr in islo_abc.
-case c_na : (a!=c);last first.
-  move:c_na => /eqP a_c;rewrite a_c in islo_abc.
-  by rewrite is_left_of_circular /is_left_of
-             oriented_surface_x_x ltrr in islo_abc.
-apply /eqP.
-rewrite eqEfcard.
-apply/andP.
-split.
-apply /fsubsetP.
-move => x.
-move => /fsetUP  [/fset2P [->|->]|/fset1P ->] //=.
-have card_fset3 : #|` [fset a; b; c] | = 3%N.
-  have card_fset2 : #|` [fset a; b] | = 2%N.
-    rewrite cardfs2.
-    move:b_na => /negP. rewrite eq_sym. by move => /negP -> .
-  have abIc0: [fset a; b] `&` [fset c] = fset0.
-    apply disjoint_fsetI0.
-    rewrite fdisjointX1.
-    apply /negP.
-    case abs:(c \in [fset a;b])=> //=.
-    move:abs => /fset2P [abs|abs];
-                 [rewrite abs in c_na|rewrite abs in b_nc];
-                 [move:c_na => /negP |move:b_nc => /negP] => //=.
-  have card_abIc0:#|` [fset a; b] `&` [fset c]| = 0%N.
-    rewrite abIc0.
-    by apply cardfs0.
-  by rewrite cardfsU card_fset2 cardfs1 card_abIc0.
-rewrite card_fset3.
-rewrite (@leq_trans  #|'I_3|) //; last by rewrite card_ord.
-have vx x : vertex t x \in vertex t @` 'I_3.
-  by apply/imfsetP; exists x.
-rewrite (leq_trans _ (@leq_imset_card _ _ (fun x => [`vx x]) xpredT)) //=.
-rewrite /vertex_set.
-set u := (X in (_ <=  X )%N).
 
-have test : u  = #|` [fset (vertex t) x | x in 'I_3] |.
-  rewrite /u;move :u => _.
-  rewrite -card_finset.
-  set s1 := (X in (#|` X | = _) ).
-  set s2 := (X in (_ = #|` X |) ).
-  Search _ (#|` _ | = #| _ |).
-  Search _ ([fset _]) (finset _).
-  admit.
-by rewrite test.
+Lemma in_vert_to_triangle_in_triangle a b c :
+  is_left_of a b c ->
+  forall t, a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
+  {subset in_triangle (vertices_to_triangle a b c) <= in_triangle t}.
+Proof.
+move=> islo_abc t a_t b_t c_t.
+apply: vertex_set_eq_in_triangle.
+rewrite vertex_set_vertices_to_triangle.
+move: islo_abc.
+have [->|b_na] := eqVneq a b.
+  by rewrite /is_left_of oriented_surface_x_x ltrr.
+have [->|b_nc] := eqVneq b c.
+  by rewrite -is_left_of_circular /is_left_of oriented_surface_x_x ltrr.
+have [->|c_na] := eqVneq a c.
+  by rewrite is_left_of_circular /is_left_of oriented_surface_x_x ltrr.
+move=> islo_abc; apply /eqP; rewrite eqEfcard; apply/andP; split.
+  by apply /fsubsetP=> x /fsetUP [/fset2P [] ->|/fset1P ->].
+suff card_fset3 : #|` [fset a; b; c] | = 3%N.
+  rewrite card_fset3 (leq_trans (leq_imfset_card _ _)) //.
+  by rewrite card_finset card_ord.
+rewrite !cardfsU !cardfs1 fsetI1 !inE [b == a]eq_sym (negPf b_na) cardfs0.
+by rewrite fsetI1 !inE ![c == _]eq_sym (negPf b_nc) (negPf c_na) /= cardfs0.
 Qed.
 
 Lemma in_vert_to_triangle_in_triangle_w_edges :
