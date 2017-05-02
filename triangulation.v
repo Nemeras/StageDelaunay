@@ -1287,10 +1287,27 @@ rewrite !cardfsU !cardfs1 fsetI1 !inE [b == a]eq_sym (negPf b_na) cardfs0.
 by rewrite fsetI1 !inE ![c == _]eq_sym (negPf b_nc) (negPf c_na) /= cardfs0.
 Qed.
 
-Lemma in_vert_to_triangle_in_triangle_w_edges :
-  forall a b c, is_left_of a b c ->
+Lemma in_vert_to_triangle_in_triangle_w_edges a b c:
+   is_left_of a b c ->
       forall t, a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
       forall q, in_triangle_w_edges (vertices_to_triangle a b c) q -> in_triangle_w_edges t q.
+Proof.
+move => islo_abc t a_t b_t c_t q intwq.
+have invt := in_vert_to_triangle_in_triangle islo_abc a_t b_t c_t.
+apply in_triangle_w_edge_edges in intwq.
+apply in_triangle_w_edge_edges.  
+move:intwq => [q_vt| [intq|q_et]];[left|right;left|right;right];
+[rewrite vertex_set_vertices_to_triangle in q_vt|by apply invt|move];
+first by move:q_vt => /fsetUP [/fset2P [] |/fset1P] ->.
+move:q_et => [e [e_abc e_q]];exists e;split => //=.
+by move:e_abc; rewrite  edges_set_vertices_to_triangle
+=> /fsetUP [/fset2P []| /fset1P] ->;
+apply vertex_set_edge_triangle => //=;
+move:islo_abc; [have [|//=] := eqVneq a b|
+have [|//=] := eqVneq a c| have [|//=] := eqVneq b c] => ->;
+[move|rewrite is_left_of_circular|rewrite -is_left_of_circular];
+rewrite /is_left_of oriented_surface_x_x ltrr.
+Qed.
 
 
 Lemma vertices_to_triangle_circular_w_edges :
