@@ -36,11 +36,8 @@ Variable E : choiceType.
 Variable xCoord : P -> R.
 Variable yCoord : P -> R.
 
-Variable Tr : {fset T}.
-Variable D : {fset P}.
-
 Variable vertex : T -> P^3.
-Variable edge : T -> E^3.
+
 Variable vertex_edge : E -> P^2.
 
 Open Scope nat_scope.
@@ -64,6 +61,13 @@ Definition vertex3 t := vertex t ord32.
 Definition vertex_edge1 e := vertex_edge e ord20.
 Definition vertex_edge2 e := vertex_edge e ord21.
 
+Variable vertices_to_edge : P -> P -> E.
+Definition edge (t:T) := fun (i:'I_3) =>
+    if i == ord30 then vertices_to_edge (vertex1 t) (vertex2 t)
+    else if i== ord31 then vertices_to_edge (vertex2 t) (vertex3 t)
+         else vertices_to_edge (vertex3 t) (vertex1 t).
+Variable edge : T -> E^3.
+
 Definition edge1 t := edge t ord30.
 Definition edge2 t := edge t ord31.
 Definition edge3 t := edge t ord32.
@@ -80,7 +84,7 @@ Definition edges_set t := (edge t) @` 'I_3.
 Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
 
 Variable vertices_to_triangle : P -> P -> P -> T.
-Variable vertices_to_edge : P -> P -> E.
+
 
 
 
@@ -268,12 +272,6 @@ Definition in_circle_wboundaries p a b c := in_circle_determinant p a b c >= 0.
 
 
 Definition in_circle_triangle p t := in_circle p (vertex1 t) (vertex2 t) (vertex3 t).
-
-
-Definition nd := #|`D|.
-
-
-
 
 Hypothesis vertex_set_edge_triangle :
   forall t, forall a, a \in vertex_set t ->  forall b, b \in vertex_set t -> a!=b ->
