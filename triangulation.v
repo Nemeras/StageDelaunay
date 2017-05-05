@@ -36,9 +36,9 @@ Variable E : choiceType.
 Variable xCoord : P -> R.
 Variable yCoord : P -> R.
 
-Variable vertex : T -> P^3.
+Variable vertex : T -> 'I_3 -> P.
 
-Variable vertex_edge : E -> P^2.
+Variable vertex_edge : E -> 'I_2 -> P.
 
 Open Scope nat_scope.
 Lemma lt03 : 0<3.
@@ -78,18 +78,20 @@ Variable oriented_surface : P -> P -> P -> R.
 
 
 Open Local Scope ring_scope.
-Definition oriented_triangle_points a b c:= oriented_surface a b c >= 0.
+(*Definition oriented_triangle_points a b c:= oriented_surface a b c >= 0.*)
 Definition vertex_set t := [fset vertex t i | i in 'I_3].
 Definition edges_set t := (edge t) @` 'I_3.
 Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
 
 Variable vertices_to_triangle : P -> P -> P -> T.
 
-
+Definition is_left_of p a b := oriented_surface p a b > 0%R.
+Definition is_left_or_on_line p a b := oriented_surface p a b >= 0%R.
+Variable on_edge : E -> P-> bool.
 
 
 Hypothesis vertices_to_triangle_correct : forall a b c, 
-    oriented_triangle_points a b c ->
+    is_left_or_on_line a b c ->
     a = vertex (vertices_to_triangle a b c) ord30 /\
     b = vertex (vertices_to_triangle a b c) ord31 /\
     c = vertex (vertices_to_triangle a b c) ord32.
@@ -100,9 +102,7 @@ Hypothesis vertices_to_edge_correct :
 Hypothesis vertices_to_edge_sym :
   forall a b, vertices_to_edge a b = vertices_to_edge b a.
 
-Definition is_left_of p a b := oriented_surface p a b > 0%R.
-Definition is_left_or_on_line p a b := oriented_surface p a b >= 0%R.
-Variable on_edge : E -> P-> bool.
+
 
 
 Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
@@ -405,7 +405,7 @@ forall q, q \in vertex_set t0 -> (q \in vertex_set t \/ q=p).
 move => intp t0 t0_spl q qvt0.
 move:t0_spl => /fset1UP.
 move=>[H|/fset2P [H|H]].
-    have t_oriented : oriented_triangle_points (vertex1 t) (vertex2 t) p.
+    have t_oriented : is_left_or_on_line (vertex1 t) (vertex2 t) p.
       move:(intp) => /andP [/andP [islo12p _] _].
       by apply is_lof_imply_is_lor_on_line in islo12p.
     have vertex_disj := vertices_to_triangle_correct t_oriented.
@@ -417,7 +417,7 @@ move=>[H|/fset2P [H|H]].
         rewrite H -v1t in temp;left;apply/imfsetP;exists ord30=>//=.
       rewrite H -v2t in temp;left;apply/imfsetP;exists ord31=>//=.
     by rewrite H -vp in temp;right.
-  have t_oriented : oriented_triangle_points p (vertex2 t) (vertex3 t).
+  have t_oriented : is_left_or_on_line p (vertex2 t) (vertex3 t).
     move:intp => /andP [/andP [_ islop23] _].
     by apply is_lof_imply_is_lor_on_line in islop23.
   have vertex_disj := vertices_to_triangle_correct t_oriented.
@@ -429,7 +429,7 @@ move=>[H|/fset2P [H|H]].
       by rewrite H -vp in temp;right.
     by rewrite H -v2t in temp;left;apply/imfsetP;exists ord31.
   by rewrite H -v3t in temp;left;apply/imfsetP;exists ord32.
-have t_oriented : oriented_triangle_points (vertex1 t) p (vertex3 t).
+have t_oriented : is_left_or_on_line (vertex1 t) p (vertex3 t).
   move:intp => /andP [_ islo1p3]. 
   by apply is_lof_imply_is_lor_on_line in islo1p3.
 have vertex_disj := vertices_to_triangle_correct t_oriented.
@@ -708,7 +708,7 @@ move:insplt0 => /fsetUP [t0spl | t0tr];last first.
 
 have triangle_inj_vert_to_triangle : 
 forall (p:P), forall (q:P), forall (r:P), p!=q -> p!=r -> q !=r -> 
-                           oriented_triangle_points p q r  ->
+                           is_left_or_on_line p q r  ->
                            t0 = vertices_to_triangle p q r ->
                            injective (vertex t0).
 move => p1 p2 p3 p12 p13 p23 t_oriented t0vert.
@@ -740,7 +740,7 @@ apply is_lof_imply_is_lor_on_line in islo3.
 move:t0spl=> /fset1UP [t0spl | t0spl];last move:t0spl=> /fset2P [t0spl|t0spl].
 
     move:t0spl;apply triangle_inj_vert_to_triangle;
-      try apply vert_n_p;rewrite /oriented_triangle_points => //=.
+      try apply vert_n_p;rewrite /is_left_or_on_line => //=.
     have ord301 : ord30 != ord31 by [].
     move:ord301;have tr3v_ttr := (tr3v t t_tr).
     rewrite /injective in tr3v_ttr.
@@ -748,7 +748,7 @@ move:t0spl=> /fset1UP [t0spl | t0spl];last move:t0spl=> /fset2P [t0spl|t0spl].
     apply contraNneq =>vt.
     by apply /eqP; apply vt01_01.
   move:t0spl;apply triangle_inj_vert_to_triangle;
-    try apply p_n_vert;rewrite /oriented_triangle_points => //=.
+    try apply p_n_vert;rewrite /is_left_or_on_line => //=.
   have ord312 : ord31 != ord32 by [].
   move:ord312;have injvt := (tr3v t t_tr).
   rewrite /injective in injvt.
@@ -756,7 +756,7 @@ move:t0spl=> /fset1UP [t0spl | t0spl];last move:t0spl=> /fset2P [t0spl|t0spl].
   apply contraNneq =>vt.
   by apply /eqP; apply ord12_12.
 move:t0spl;apply triangle_inj_vert_to_triangle;
-    try apply p_n_vert;try apply vert_n_p;rewrite /oriented_triangle_points => //=.    
+    try apply p_n_vert;try apply vert_n_p;rewrite /is_left_or_on_line => //=.    
 have ord302 : ord30 != ord32 by [].
 move:ord302;have injvt := (tr3v t t_tr).
 rewrite /injective in injvt.
@@ -1416,7 +1416,7 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
   case islo_qbd : (is_left_or_on_line q b d).
     exists (vertices_to_triangle a b d).
     split; first by apply /fset1UP;left.
-    have oriented_abd:(oriented_triangle_points a b d).
+    have oriented_abd:(is_left_or_on_line a b d).
       by apply is_lof_imply_is_lor_on_line.
     have vc_abc := vertices_to_triangle_correct oriented_abd.
     move:vc_abc => [va [vb vd]].
@@ -1444,7 +1444,7 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
     
   exists (vertices_to_triangle b c d).
   split;first by apply/fset2P ;right.
-  have oriented_bcd : oriented_triangle_points b c d.
+  have oriented_bcd : is_left_or_on_line b c d.
     by apply is_lof_imply_is_lor_on_line.
   have vc_bcd := vertices_to_triangle_correct oriented_bcd.
   move:vc_bcd => [vb [vc vd]].
