@@ -66,7 +66,7 @@ Definition edge (t:T) := fun (i:'I_3) =>
     if i == ord30 then vertices_to_edge (vertex1 t) (vertex2 t)
     else if i== ord31 then vertices_to_edge (vertex2 t) (vertex3 t)
          else vertices_to_edge (vertex3 t) (vertex1 t).
-Variable edge : T -> E^3.
+Variable edge : T -> 'I_3 -> E.
 
 Definition edge1 t := edge t ord30.
 Definition edge2 t := edge t ord31.
@@ -78,7 +78,7 @@ Variable oriented_surface : P -> P -> P -> R.
 
 
 Open Local Scope ring_scope.
-(*Definition oriented_triangle_points a b c:= oriented_surface a b c >= 0.*)
+
 Definition vertex_set t := [fset vertex t i | i in 'I_3].
 Definition edges_set t := (edge t) @` 'I_3.
 Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
@@ -104,7 +104,6 @@ Hypothesis vertices_to_edge_sym :
 
 
 
-
 Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
 Lemma oriented_surface_x_x_x : forall x, oriented_surface x x x = 0%R.
 Proof.
@@ -117,7 +116,19 @@ Proof.
 Qed.
 
 
-Hypothesis oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
+(*Hypothesis oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.*)
+
+Definition oriented_triangle t:= oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
+Hypothesis vertices_to_triangle_oriented :
+forall a b c, oriented_triangle (vertices_to_triangle a b c).
+
+Hypothesis oriented_surface_change1 : forall a, forall b, forall c,
+        oriented_surface a b c = -oriented_surface a c b.
+
+(*Lemma oriented_surface_circular a b c:
+  oriented_surface a b c = oriented_surface c a b.
+Proof.*)
+
 
 Hypothesis oriented_surface_circular : forall a, forall b, forall c, oriented_surface a b c = oriented_surface c a b.
 
@@ -140,9 +151,6 @@ Qed.
 
 
 
-
-Hypothesis oriented_surface_change1 : forall a, forall b, forall c,
-        oriented_surface a b c = -oriented_surface a c b.
 
 
 Definition is_on_line a b c := oriented_surface a b c == 0.
@@ -347,9 +355,12 @@ Definition edge_disjoint_triangles (tr:{fset T}) :=
   forall t1:T, t1 \in tr -> forall e :E, e \in edges_set t1 -> forall p, on_edge e p ->
   forall t2:T, t2 \in tr -> ~(in_triangle t2 p).
 
+Definition oriented_triangle_triangulation (tr:{fset T}) :=
+  forall t:T, t \in tr -> oriented_triangle t.
+
 Definition triangulation tr d := triangle_3vertices_tr tr /\ covers_hull tr d /\ covers_vertices tr d /\
                                  no_cover_intersection tr d /\ no_point_on_segment tr d /\
-                                 triangles_nempty tr. 
+                                 triangles_nempty tr /\ oriented_triangle_triangulation tr. 
 
 Definition delaunay tr d := triangulation tr d /\ regular tr.
 
@@ -770,7 +781,7 @@ Lemma triangulation_nci tr t p d:
    in_triangle t p -> no_cover_intersection (split_triangle tr t p) (p |` d).
 Proof.
 move => dne p_nin_d tr_d t_tr intp.
-move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]]].
+move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
 move => t1 t2 t1_spl t2_spl q int1q int2q.
 move:t1_spl => /fsetUP;  move => [t1_spl|t1_spl];
 move:t2_spl=> /fsetUP;move=>[t2_spl|t2_spl];last first.
@@ -888,7 +899,7 @@ d != fset0 -> p \notin d -> triangulation tr d -> t \in tr ->
 in_triangle t p ->no_point_on_segment (split_triangle tr t p) (p |` d).
 Proof.
 move => dne p_nin_d tr_d t_tr intp.
-move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d [nps_tr_d tne_tr_d]]]]].
+move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
 have injvt : forall t1, t1 \in split_triangle tr t p -> injective (vertex t1).
   move => t0 insplt0.
   have vert_n_p : forall i, vertex t i != p.
@@ -1206,7 +1217,20 @@ by move:(t'_spl) => /fset1UP [Ht' | /fset2P [Ht' |Ht']];
 rewrite Ht'; apply surface_non_empty.
 Qed. 
 
-
+Lemma triangulation_or:
+  forall tr, forall t , forall p, forall d, d != fset0 -> p \notin d ->
+                        triangulation tr d -> t \in tr ->
+                        in_triangle t p ->
+                        oriented_triangle_triangulation
+                          (split_triangle tr t p).
+Proof. 
+move => tr t p d dne p_nin_d tr_d t_tr intp t' t'_spl.
+move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
+move:t'_spl;rewrite /split_triangle => /fsetUP [];
+last by move => /fsetD1P [] _;apply:or_tr_d.
+by rewrite /split_triangle_aux => /fset1UP [-> | /fset2P [] ->];
+apply vertices_to_triangle_oriented.
+Qed.
     
 Theorem triangulation_split_triangle:
   forall tr, forall t , forall p, forall d, d != fset0 -> p \notin d ->
@@ -1220,7 +1244,11 @@ split;first by apply triangulation_cvh.
 split;first by apply triangulation_cvv.
 split;first by apply triangulation_nci.
 split;first by apply:triangulation_nps.
-by apply:(triangulation_tne dne).
+split;first by apply:(triangulation_tne dne).
+apply:triangulation_or => //=.
+by apply dne.
+by apply p_nin_d.
+by apply tr_d.
 Qed.
 
 (* This is probably a lemma that can already be proved: TODO *)
@@ -1376,6 +1404,7 @@ have islo_and : is_left_or_on_line a b q &&
                 is_left_or_on_line q b c &&
                 is_left_or_on_line a q c.
 move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
+move:(tr_d) => [_  [_ [_ [_ [_ [_ or_tr_d]]]]]].
   move:(a_t1) => /imfsetP [[[|[|[|x1']]] px1] _] a_vt1 => //=;
   move:(b_t1) => /imfsetP [[[|[|[|x2']]] px2] _] b_vt1 => //=;
   move:(c_t1) => /imfsetP [[[|[|[|x3']]] px3] _] c_vt1 => //=;
@@ -1391,7 +1420,6 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
   (try (rewrite x2_x3 in b_vt1;
   rewrite b_vt1 c_vt1 in b_nc;
   move:b_nc => /eqP //=));
-  have oriented_t1 := oriented_triangle t1;
   (try have ord1 : Ordinal px1 = ord30 by apply ord_inj);
   (try have ord1 : Ordinal px1 = ord31 by apply ord_inj);
   (try have ord1 : Ordinal px1 = ord32 by apply ord_inj);
@@ -1401,8 +1429,10 @@ move:(intwet1q) => /andP [/andP [islor12q islorq23] islor1q3].
   (try have ord3 : Ordinal px3 = ord30 by apply ord_inj);
   (try have ord3 : Ordinal px3 = ord31 by apply ord_inj);
   (try have ord3 : Ordinal px3 = ord32 by apply ord_inj);
+  
   rewrite ord1 in a_vt1;rewrite ord2 in b_vt1;rewrite ord3 in c_vt1;
-  rewrite /vertex1 /vertex2 /vertex3 -a_vt1 -b_vt1 -c_vt1 in oriented_t1;
+  have oriented_t1 := or_tr_d t1 t1_tr;
+  rewrite /oriented_triangle /vertex1 /vertex2 /vertex3 -a_vt1 -b_vt1 -c_vt1 in oriented_t1;
   rewrite /vertex1 /vertex2 /vertex3 -a_vt1 -b_vt1 -c_vt1 in intwet1q => //=;
   move:intwet1q => /andP [/andP [islo1 islo2] islo3];
   [move|rewrite -oriented_surface_circular in oriented_t1|move|move|
@@ -1940,7 +1970,7 @@ Theorem flip_edge_nci tr data: triangulation tr data ->
 Proof.
 move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
 move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
-move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d tne_tr_d ]]]]].
+move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
 have vc_abd := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_abd).
 have vc_bcd := vertices_to_triangle_correct
@@ -2186,7 +2216,7 @@ Theorem flip_edge_tne tr data : triangulation tr data ->
 Proof.
 move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
 move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
-move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d tne_tr_d ]]]]].
+move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
 
 
 move => t t_fl.
@@ -2194,6 +2224,30 @@ move:t_fl => /fsetUP [Ht|/fsetD1P[t_nt2 /fsetD1P [t_nt1 t_tr]]];last first.
   by have temp := tne_tr_d t t_tr.
 move:Ht => /fset2P [->|->];
 by apply surface_non_empty.
+Qed.
+
+Theorem flip_edge_or tr data : triangulation tr data -> 
+                               forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
+                                    forall a, forall c, a != c -> a \in vertex_set t1 ->
+                                     a \in vertex_set t2 ->
+                                     c \in vertex_set t1 -> c \in vertex_set t2 ->
+                                    forall b, b \in vertex_set t1 -> b != a -> b != c ->
+                                     is_left_of a b c ->
+                                     forall d, d \in vertex_set t2 -> d != a -> d != c ->
+                                     is_left_of a c d -> 
+                                     is_left_of b c d ->
+                                     is_left_of a b d ->
+                                     oriented_triangle_triangulation
+                                       (flip_edge tr t1 t2 a b c d).
+Proof.
+move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
+move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
+move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
+move => t.
+rewrite /flip_edge.
+move => /fsetUP [];last by move => /fsetD1P [] _ /fsetD1P [] _;apply or_tr_d.
+rewrite /flip_edge_aux.
+by move => /fset2P [] ->; apply vertices_to_triangle_oriented.
 Qed.
 
 Theorem flip_edge_triangulation tr data : triangulation tr data -> 
@@ -2224,12 +2278,9 @@ split;first by apply flip_edge_cvh.
 split;first by apply flip_edge_cvv.
 split;first by apply flip_edge_nci.
 split;first by apply flip_edge_nps.
-apply:flip_edge_tne => //=.
+split;first apply:flip_edge_tne => //=. apply tr_d.
+apply:flip_edge_or => //=.
 by apply tr_d.
-
-
-
-
 Qed.
 
 End Triangulation.

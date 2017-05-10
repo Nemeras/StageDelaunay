@@ -17,6 +17,9 @@
 	permettait de le remplacer etait dans tous les cas deja utilise
 	ailleurs.... Donc voila !
 
+	Ajout d'une nouvelle hypothese pour triangulation: tout triangle
+	de la triangulation est oriente.
+
 Prouver que split triangle conserve triangulation : OK !!!
 	prouver que split triangle conserve covers_hull : OK
 		Besoin de hull_add_point : OK
@@ -29,6 +32,8 @@ Prouver que split triangle conserve triangulation : OK !!!
 		Ajout de lemmes/hypotheses sur les orientations
 
 	Prouver que split_triangle conserve tne : OK
+
+	Prouver que split_triangle conserve or : OK
 
 /!\ 	Reverifier mes hypotheses.
 
@@ -54,6 +59,8 @@ Prouver que flip edge conserve triangulation
 	prouver NPS: OK
 
 	prouver TNE: OK		 
+	
+	prouver OR : OK
 ~~~ Deuxieme partie du travail ~~~
 
 	Ecrire l'algorithme qui transforme en triangulation de Delaunay. 
@@ -61,7 +68,10 @@ Prouver que flip edge conserve triangulation
 		devrait etre simple, le probleme est de prouver qu'il 
 		termine, normalement ?
 
-
+	sera fait en troisieme si il y a le temps
 ~~~ Troisieme partie du travail ~~~
 	
 	Faire l'implementation (determinant, etc...) et prouver les hypotheses. 
+
+	en cours :  verifier ce qui est reutilisable chez Wassim pour les preuves
+	non triviales sur les determinants notamment ?
