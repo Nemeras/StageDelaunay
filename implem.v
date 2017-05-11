@@ -4,6 +4,7 @@ From mathcomp Require Import ssralg ssrnum matrix mxalgebra.
 From mathcomp Require Import finmap.
 From mathcomp Require Import vector perm.
 Require Import triangulation.
+Require Import determinant_complements.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -17,14 +18,33 @@ Definition ord21:=@Ordinal 2 1 isT.
 Definition ord30:=@Ordinal 3 0 isT.
 Definition ord31:=@Ordinal 3 1 isT.
 Definition ord32:=@Ordinal 3 2 isT.*)
+Import GRing.Theory Num.Theory.
 
+
+
+Open Local Scope ring_scope.
 
 Variable R : realDomainType.
+
+
+Definition my_type := GRing.Zmodule.sort (Num.RealDomain.zmodType R).
+Definition my_mul :my_type -> my_type -> my_type := @GRing.mul R.
+Definition my_add :my_type -> my_type -> my_type:= @GRing.add R.
+Definition my_sub :my_type -> my_type -> my_type:= fun (x y : R) => x - y.
+Definition my_opp :my_type -> my_type := @GRing.opp R.
+Definition my_ring_theory := @mk_rt my_type 0 1 my_add my_mul my_sub my_opp (@eq _)
+(@add0r R) (@addrC R) (@addrA R) (@mul1r R) (@mulrC R) (@mulrA R) (@mulrDl R)
+(fun x y => erefl _) (@addrN R).
+
+Add Ring my_ring : my_ring_theory.
+
+Ltac rring := 
+rewrite !mulr1 !mul1r -/my_mul -/my_opp -/my_add -/my_type;ring.
 
 Definition P := 'rV[R]_2. 
 Definition xCoord (p : P) := p ord10 ord20.
 Definition yCoord (p : P) := p ord10 ord21.
-Open Local Scope ring_scope.
+
 Definition matrix_oriented_surface (p a b : P) :=
   \matrix_( i<3, j<3) if i==ord30 then if j==ord30 then xCoord p
                                         else if j==ord31 then yCoord p
@@ -138,10 +158,10 @@ Qed.
 Lemma eq_or_inf (a:R) b: a<b \/ a=b \/ a>b.
 Proof.
 case ab:(a < b);case ba:(b < a);try (by left);try (by right;right);right;left.
-move:ab=> /negP /negP;rewrite -Num.Theory.lerNgt => ab.
-move:ba=> /negP /negP;rewrite -Num.Theory.lerNgt => ba;symmetry;apply /eqP.
-move:(ab);rewrite Num.Theory.ler_eqVlt => /orP [] //=.
-by rewrite Num.Theory.ltrNge ba.
+move:ab=> /negP /negP;rewrite -lerNgt => ab.
+move:ba=> /negP /negP;rewrite -lerNgt => ba;symmetry;apply /eqP.
+move:(ab);rewrite ler_eqVlt => /orP [] //=.
+by rewrite ltrNge ba.
 Qed.
 
 Lemma coord_eq_imply_point_eq (a:P) b :
@@ -160,17 +180,10 @@ Qed.
 
 Lemma inf_imply_not_inf (a:R) b : a<b -> (b<a) = false. 
 Proof.
-rewrite Num.Theory.ltrNge Num.Theory.ler_eqVlt.
+rewrite ltrNge ler_eqVlt.
 move => /orP /Decidable.not_or [] _ H. by apply/negP.
 Qed.
 
-(*Lemma eq_not_inf (a:R) b : a=b -> (a<b = false)/\(b<a=false).
-Proof.
-move => ab.
-split;rewrite Num.Theory.ltr_neqAle; apply /nandP;left.
-  move:ab => /eqP -> //=. 
-symmetry in ab. by move:ab => /eqP -> //=. 
-Qed.*)
 
 Lemma vertices_to_edge_sym a b :
  vertices_to_edge a b = vertices_to_edge b a.
@@ -183,7 +196,7 @@ move:xCoord_disj => [] [] xab;rewrite xab;
 move:yCoord_disj => [] [] yab;(try rewrite yab);
 try(have xba:=inf_imply_not_inf xab;rewrite xba);
 try(have yba:=inf_imply_not_inf yab;rewrite yba) => //=;
-(try rewrite !Num.Theory.ltrr) => //=.
+(try rewrite !ltrr) => //=.
 rewrite /vertices_to_edge_aux.
 have ab :a=b by apply coord_eq_imply_point_eq.
 by apply matrixP; rewrite ab.
@@ -278,30 +291,26 @@ Lemma oriented_surface_circular a b c:
   oriented_surface a b c = oriented_surface c a b.
 Proof.
 rewrite /oriented_surface.
-(*pose s' := fun (i:'I_3) => if i == ord30 then ord32
-                       else if i == ord31 then ord30
-                            else ord31.
-have t: injective s'.
-  move => x y.
-  by move:x => [[|[|[|x']]] px] => //=;
-  move:y => [[|[|[|y']]] py] => //=;
-  (try have:Ordinal px = ord30 by apply ord_inj);
-  (try have:Ordinal px = ord31 by apply ord_inj);
-  (try have:Ordinal px = ord32 by apply ord_inj);
-  move => ->;
-  (try have:Ordinal py = ord30 by apply ord_inj);
-  (try have:Ordinal py = ord31 by apply ord_inj);
-  (try have:Ordinal py = ord32 by apply ord_inj);
-  move => ->.
-pose s :=perm t.
-have test := det_perm R s. *)
-rewrite /determinant.
-
-(matrix_oriented_surface a b c).
+rewrite !expand_det33.
+rewrite /matrix_oriented_surface.
+rewrite !mxE => /=.
+rring.
+Qed.
 
 
+Lemma oriented_surface_change1 a b c:
+        oriented_surface a b c = -oriented_surface a c b.
+Proof.
+rewrite /oriented_surface.
+rewrite !expand_det33.
+rewrite /matrix_oriented_surface.
+rewrite !mxE => //=.
+rring.
+Qed.
+  
 
-
+Definition is_left_or_on_line_circular :=
+  is_left_or_on_line_circular oriented_surface_circular.
 Lemma vertices_to_triangle_oriented  a b c :
   oriented_triangle (vertices_to_triangle a b c).
 Proof.
@@ -312,4 +321,115 @@ rewrite /vertex /triangulation.vertex1 /triangulation.vertex2;
 rewrite  /triangulation.vertex3;
 rewrite !mxE => //=.
 rewrite /is_left_or_on_line in islor_abc.
-rewrite is_left_or_on_line_circular in islor_abc.
+rewrite is_left_or_on_line_circular in islor_abc. 
+move:islor_abc.
+rewrite /triangulation.is_left_or_on_line lerNgt.
+move => /negP /negP.
+by rewrite -oppr_gt0 -oriented_surface_change1
+   -oriented_surface_circular ltr_def => /andP [].
+Qed.
+
+Definition is_left_of_circular := is_left_of_circular oriented_surface_circular.
+
+Lemma edges_set_vertices_to_triangle a b c: 
+  is_left_of a b c ->
+  edges_set (vertices_to_triangle a b c) = 
+  [fset (vertices_to_edge a b);
+     vertices_to_edge a c;
+     vertices_to_edge b c].
+Proof.
+rewrite /edges_set /triangulation.edges_set.
+symmetry.
+apply/eqP.
+rewrite eqEfcard.
+apply /andP;split.
+  by apply/fsubsetP => x /fsetUP [/fset2P []|/fset1P] ->;
+  apply /imfsetP;rewrite /edge /vertices_to_triangle;
+  case islor:(is_left_or_on_line a b c) => /=;
+  [exists ord30|exists ord30|exists ord32|exists ord31|exists ord31|exists ord32]=> //=;
+  rewrite /vertex1 /vertex2 /vertex3 /triangulation.vertex1
+  /triangulation.vertex2 /triangulation.vertex3 /vertex !mxE => //=;
+  rewrite vertices_to_edge_sym.
+suff card_fset3 : #|` [fset vertices_to_edge a b; vertices_to_edge a c; vertices_to_edge b c] | = 3%N.
+  rewrite card_fset3 (leq_trans (leq_imfset_card _ _)) //.
+  by rewrite card_finset card_ord.
+case a_nb : (a == b);first move:a_nb => /eqP a_b;first move:H;
+first by rewrite /is_left_of a_b /triangulation.is_left_of oriented_surface_x_x ltrr.
+move:a_nb => /eqP /eqP a_nb.
+rewrite /is_left_of is_left_of_circular in H.
+case a_nc : (a == c);first move:a_nc => /eqP a_c;first move:H;
+first by rewrite /is_left_of a_c /triangulation.is_left_of oriented_surface_x_x ltrr.
+move:a_nc => /eqP /eqP a_nc.
+rewrite /is_left_of is_left_of_circular in H.
+case b_nc : (b == c);first move:b_nc => /eqP b_c;first move:H;
+first by rewrite /is_left_of b_c /triangulation.is_left_of oriented_surface_x_x ltrr.
+move:b_nc => /eqP /eqP b_nc.
+
+case vab_nac :(vertices_to_edge a b == vertices_to_edge a c).
+  have:false.
+    move:vab_nac.
+    by rewrite /vertices_to_edge;case:(xCoord a < xCoord b);case(xCoord b < xCoord a);
+    case:(yCoord a < yCoord c);case:(xCoord a < xCoord c);case:(xCoord c < xCoord a);
+    case:(yCoord a < yCoord b) => /=;
+    rewrite /vertices_to_edge_aux => /eqP;
+    rewrite -matrixP => H2;
+    (try by (have abs := H2 ord10 ord21;move:abs;
+    rewrite !mxE => //= H3;
+    (try by move:b_nc;rewrite H3 => /eqP);
+    (try by move:a_nb;rewrite H3 => /eqP);
+    (try by move:a_nc;rewrite H3 => /eqP)));
+    have abs := H2 ord10 ord20;move:(abs);
+    rewrite !mxE => //= H3;
+    (try by move:b_nc;rewrite H3 => /eqP);
+    (try by move:a_nb;rewrite H3 => /eqP);
+    (try by move:a_nc;rewrite H3 => /eqP).
+ by [].
+case vab_nbc :(vertices_to_edge a b == vertices_to_edge b c).
+  have:false.
+    move:vab_nbc.
+    by rewrite /vertices_to_edge;case:(xCoord a < xCoord b);case:(xCoord b < xCoord a);
+    case:(xCoord b < xCoord c);case:(xCoord c < xCoord b);case:(yCoord b  < yCoord c);
+    case:(yCoord a < yCoord b) => /=;
+    rewrite /vertices_to_edge_aux => /eqP;
+    rewrite -matrixP => H2;
+    (try by (have abs := H2 ord10 ord21;move:abs;
+    rewrite !mxE => //= H3;
+    (try by move:b_nc;rewrite H3 => /eqP);
+    (try by move:a_nb;rewrite H3 => /eqP);
+    (try by move:a_nc;rewrite H3 => /eqP)));
+    have abs := H2 ord10 ord20;move:(abs);
+    rewrite !mxE => //= H3;
+    (try by move:b_nc;rewrite H3 => /eqP);
+    (try by move:a_nb;rewrite H3 => /eqP);
+    (try by move:a_nc;rewrite H3 => /eqP).
+  by [].
+
+case vbc_nac :(vertices_to_edge a c == vertices_to_edge b c).
+  have:false.
+    move:vbc_nac.
+    rewrite /vertices_to_edge;case:(xCoord a < xCoord c);case:(xCoord c < xCoord a);
+    case:(xCoord b < xCoord c);case:(xCoord c < xCoord b);case:(yCoord a  < yCoord c);
+    case:(yCoord b < yCoord c) => /=;
+    rewrite /vertices_to_edge_aux => /eqP;
+    rewrite -matrixP => H2;
+    (try by (have abs := H2 ord10 ord21;move:abs;
+    rewrite !mxE => //= H3;
+    (try by move:b_nc;rewrite H3 => /eqP);
+    (try by move:a_nb;rewrite H3 => /eqP);
+    (try by move:a_nc;rewrite H3 => /eqP)));
+    have abs := H2 ord10 ord20;move:(abs);
+    rewrite !mxE => //= H3;
+    (try by move:b_nc;rewrite H3 => /eqP);
+    (try by move:a_nb;rewrite H3 => /eqP);
+    (try by move:a_nc;rewrite H3 => /eqP).
+  by [].
+rewrite !cardfsU !cardfs1 fsetI1 !inE.
+move:vab_nac => /negP /negP vab_nac.
+move:vab_nbc => /negP /negP vab_nbc.
+move:vbc_nac => /negP /negP vbc_nac.
+
+rewrite [vertices_to_edge a c == vertices_to_edge a b]eq_sym (negPf vab_nac) cardfs0.
+rewrite fsetI1 !inE ![vertices_to_edge b c == _]eq_sym.
+by rewrite  (negPf vab_nbc) (negPf vbc_nac) /= cardfs0.
+Qed.
+

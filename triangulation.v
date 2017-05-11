@@ -179,7 +179,8 @@ by move:abc0;rewrite /is_on_line;move => /eqP /eqP.
 Qed.
 
 Hypothesis edges_set_vertices_to_triangle: 
-forall a b c, edges_set (vertices_to_triangle a b c) = 
+  forall a b c, is_left_of a b c ->
+    edges_set (vertices_to_triangle a b c) = 
                        [fset (vertices_to_edge a b);
                            vertices_to_edge a c;
                            vertices_to_edge b c].
@@ -1299,7 +1300,7 @@ move:intwq => [q_vt| [intq|q_et]];[left|right;left|right;right];
 [rewrite vertex_set_vertices_to_triangle in q_vt|by apply invt|move];
 first by move:q_vt => /fsetUP [/fset2P [] |/fset1P] ->.
 move:q_et => [e [e_abc e_q]];exists e;split => //=.
-by move:e_abc; rewrite  edges_set_vertices_to_triangle
+by move:e_abc; rewrite (edges_set_vertices_to_triangle islo_abc)
 => /fsetUP [/fset2P []| /fset1P] ->;
 apply vertex_set_edge_triangle => //=;
 move:islo_abc; [have [|//=] := eqVneq a b|
@@ -1692,11 +1693,11 @@ move : intq => [q_t | [intq | q_e]].
      apply vertices_to_triangle_correct2.
 move:q_e => [e [e_t q_e]].
 move:t_fl => /fset2P [Ht|Ht]; 
-rewrite Ht in e_t; rewrite edges_set_vertices_to_triangle in e_t;
+rewrite Ht in e_t;rewrite edges_set_vertices_to_triangle in e_t => //=;
 move:e_t => /fsetUP[/fset2P [He|He] | /fset1P He];
 [left|right|move|left|move|right];
 try (apply in_triangle_w_edge_edges;right;right);
-try (exists e;split => //=;rewrite edges_set_vertices_to_triangle);
+try (exists e;split => //=;rewrite edges_set_vertices_to_triangle) => //=;
 try (apply /fsetUP); try (by right;apply /fset1P);
 try (left;apply /fset2P);[by left|by right|move|move]; move:Ht => _.
 
