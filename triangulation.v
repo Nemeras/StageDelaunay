@@ -163,7 +163,8 @@ Qed.
 
 Hypothesis on_line_on_edge :
   forall a b c, is_left_of a b c -> forall q, is_on_line a c q -> 
-           is_left_of a b q -> is_left_of b c q -> on_edge (vertices_to_edge a c) q.
+                                   is_left_of a b q -> is_left_of b c q ->
+                                   on_edge (vertices_to_edge a c) q.
 
 Hypothesis on_edge_on_line :
   forall a b c, is_left_of a b c -> forall q, on_edge (vertices_to_edge a c) q ->
@@ -246,31 +247,58 @@ move => /andP [intp intp3];move:intp => /andP [intp1 intp2].
 by apply /andP;split;first apply /andP;first split;apply ltrW.
 Qed.
 
-Hypothesis in_triangle_vertex_correct: forall t, forall p, 
+(*Lemma in_triangle_vertex_correct: forall t, forall p, 
       p \in vertex_set t -> in_triangle_w_edges t p.
+Proof.
+move.
+move => t p p_t.
+rewrite /in_triangle_w_edges.
+Admitted.*)
 
 Hypothesis in_triangle_w_edge_edges : 
   forall t, forall p, in_triangle_w_edges t p <->
             (p \in vertex_set t) \/ (in_triangle t p) \/
             (exists e, e \in edges_set t /\ on_edge e p). 
-Hypothesis vert_in_triangle_w_edges : forall t, forall p, p \in vertex_set t
-                                              -> in_triangle_w_edges t p.
 
-Hypothesis in_triangle_not_vert : 
-  forall t, forall p, in_triangle t p -> p \notin vertex_set t.
 
-Hypothesis in_triangle_not_on_edges :
-  forall t, forall p, in_triangle t p ->
-            forall e, (e \in edges_set t ->  on_edge e p -> false).
+Lemma vert_in_triangle_w_edges : forall t, forall p,
+      oriented_triangle t -> p \in vertex_set t
+                                  -> in_triangle_w_edges t p.
+Proof.
+move => t p or_t.
+rewrite /vertex_set => /imfsetP [[[|[|[|x]]] px] _] p_tx => //=;
+(try have:Ordinal px = ord30 by apply:ord_inj);
+(try have:Ordinal px = ord31 by apply:ord_inj);
+(try have:Ordinal px = ord32 by apply:ord_inj);
+move => ordpx;rewrite ordpx in p_tx;rewrite p_tx /in_triangle_w_edges;
+apply /andP;split;
+[apply/andP;split|by rewrite /vertex1 /is_left_or_on_line oriented_surface_x_x|
+ apply/andP;split|rewrite -/vertex2;exact:or_t|apply/andP;split|
+rewrite /vertex3 /is_left_or_on_line -oriented_surface_circular oriented_surface_x_x] => //=;
+rewrite /vertex1 /vertex2 /vertex3 /is_left_or_on_line;
+(try by rewrite oriented_surface_x_x);
+(try by rewrite oriented_surface_circular oriented_surface_x_x);
+(try by rewrite -oriented_surface_circular oriented_surface_x_x).
+Qed.
 
-Hypothesis vert_not_on_edges : 
-  forall t, forall p, p \in vertex_set t ->
-       forall e, (e \in edges_set t -> on_edge e p -> false).
-                         
-Hypothesis edge_vertices_triangle : 
-  forall e, forall p, p \in vertex_set_edge e -> forall q, q \in vertex_set_edge e ->
-       forall t, in_triangle_w_edges t p -> in_triangle_w_edges t q ->
-       forall r, on_edge e r -> in_triangle t r.
+
+Lemma in_triangle_not_vert t p: 
+ in_triangle t p -> p \notin vertex_set t.
+Proof.
+rewrite /in_triangle.
+case abs:(p \in vertex_set t) => //=.
+by move:abs => /imfsetP [[[|[|[|x']]] px] _] vtx => //=;
+(try have:Ordinal px = ord30 by apply ord_inj);
+(try have:Ordinal px = ord31 by apply ord_inj);
+(try have:Ordinal px = ord32 by apply ord_inj) => ordpx;
+rewrite ordpx in vtx;rewrite vtx;rewrite /vertex1 /vertex2 /vertex3;
+move => /andP [] /andP [];[move => abs _ _|move => _ abs _|move => _ _ abs];
+[rewrite is_left_of_circular in abs |move|rewrite -is_left_of_circular in abs];
+rewrite /is_left_of oriented_surface_x_x ltrr in abs.
+Qed.
+
+Hypothesis vert_not_on_edges: forall t p,   oriented_triangle t -> p \in vertex_set t -> 
+                         forall e, (e \in edges_set t -> on_edge e p -> false).
 
 Definition adjacent t1 t2:= #|` ((vertex_set t1) `&` (vertex_set t2))| = 2.
 
@@ -313,9 +341,9 @@ Definition CH (s : seq P) (d : {fset P}) := ((seq_fset s) `<=` d) /\
                                             (#|`d| >= 2 -> (size s) >= 2) /\
                                             (#|`d| = 1 -> (size s) = 1).
 
-Hypothesis encompassed_ch : forall d : {fset P}, forall x, 0 < #|`d| -> hull d x = forall h,
+(*Hypothesis encompassed_ch : forall d : {fset P}, forall x, 0 < #|`d| -> hull d x = forall h,
                                   (CH h d  -> encompassed x h).
-
+*)
 
 Definition union_trD1 (Ts: {fset T}) (Ds : {fset P}) :=
 forall (t:T), t \in Ts -> forall p, p \in vertex_set t -> p \in Ds. 
@@ -324,10 +352,10 @@ Definition union_trD2 (Ts: {fset T}) (Ds : {fset P}) :=
 forall (p:P), p \in Ds -> exists (t:T), t \in Ts /\ p \in vertex_set t.
 
 Definition union_trD Ts Ds := union_trD1 Ts Ds /\ union_trD2 Ts Ds.
-
+(*
 Variable mkCH : {fset P} -> seq P. 
 
-Hypothesis mkCH_correct : forall d, CH (mkCH d) d. 
+Hypothesis mkCH_correct : forall d, CH (mkCH d) d. *)
 
 Definition covers_hull (tr : {fset T}) (d : {fset P}) :=
 forall p : P, hull d p -> exists t, (t \in tr) /\ (in_triangle_w_edges t p).
@@ -378,7 +406,7 @@ Definition split_triangle_aux t p :=
 
 Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
-Check split_triangle.
+(*TODO*)
 Hypothesis three_triangles_cover_one :
   forall t, forall p, in_triangle t p ->
             forall p0, in_triangle_w_edges t p0 <-> exists t1, (t1 \in split_triangle_aux t p) 
@@ -940,9 +968,13 @@ move:t2_spl => /fsetUP; move=>[t2_spl|t2_spl];last first.
       have abs := in_triangle_not_vert intq.
       by rewrite q_vt in abs. 
     move:abs=>[e0 [e0_t q_e0]].
-      by have abs:=(vert_not_on_edges q_vt e0_t q_e0).
-      
-  have intwet1q := (vert_in_triangle_w_edges qvt1).
+      by have abs:=(vert_not_on_edges (or_tr_d t t_tr) q_vt e0_t q_e0).
+
+  have oriented_t1 : oriented_triangle t1.
+    move:t1_spl;rewrite /split_triangle_aux => /fset1UP [|/fset2P []] ->;
+    apply:vertices_to_triangle_oriented.
+
+  have intwet1q := (vert_in_triangle_w_edges oriented_t1 qvt1).
   have intwetq := (split_aux_in_triangle_we intp t1_spl intwet1q).
   have q_disj := (vertex_in_split_triangle intp t1_spl qvt1).  
   move:t2_spl=>/fsetD1P [t2_nt t2_tr].
@@ -1255,21 +1287,23 @@ Qed.
 (* This is probably a lemma that can already be proved: TODO *)
 
 Hypothesis vertex_set_eq_in_triangle:
-  forall t1, forall t2, vertex_set t1 = vertex_set t2 -> 
+  forall t1, forall t2, oriented_triangle t1 -> oriented_triangle t2 ->
+              vertex_set t1 = vertex_set t2 -> 
         forall p , in_triangle t1 p -> in_triangle t2 p.
 
 Hypothesis vertex_set_eq_in_triangle_w_edges :
-  forall t1, forall t2, vertex_set t1 = vertex_set t2 -> 
+  forall t1, forall t2, oriented_triangle t1 -> oriented_triangle t2 ->
+              vertex_set t1 = vertex_set t2 -> 
         forall p , in_triangle_w_edges t1 p -> in_triangle_w_edges t2 p.
 
 
 Lemma in_vert_to_triangle_in_triangle a b c :
-  is_left_of a b c ->
-  forall t, a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
+  is_left_of a b c -> forall t, a \in vertex_set t ->
+  oriented_triangle t -> b \in vertex_set t -> c \in vertex_set t ->
   {subset in_triangle (vertices_to_triangle a b c) <= in_triangle t}.
 Proof.
-move=> islo_abc t a_t b_t c_t.
-apply: vertex_set_eq_in_triangle.
+move=> islo_abc t a_t or_t b_t c_t.
+apply: vertex_set_eq_in_triangle => //=.
 rewrite vertex_set_vertices_to_triangle.
 move: islo_abc.
 have [->|b_na] := eqVneq a b.
@@ -1289,11 +1323,13 @@ Qed.
 
 Lemma in_vert_to_triangle_in_triangle_w_edges a b c:
    is_left_of a b c ->
-      forall t, a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
+      forall t,  oriented_triangle t ->
+            a \in vertex_set t -> b \in vertex_set t -> c \in vertex_set t ->
       forall q, in_triangle_w_edges (vertices_to_triangle a b c) q -> in_triangle_w_edges t q.
 Proof.
-move => islo_abc t a_t b_t c_t q intwq.
-have invt := in_vert_to_triangle_in_triangle islo_abc a_t b_t c_t.
+move => islo_abc t or_t a_t b_t c_t q intwq.
+
+have invt := in_vert_to_triangle_in_triangle islo_abc a_t or_t b_t c_t.
 apply in_triangle_w_edge_edges in intwq.
 apply in_triangle_w_edge_edges.  
 move:intwq => [q_vt| [intq|q_et]];[left|right;left|right;right];
@@ -1320,7 +1356,11 @@ Proof.
   have t_abc : t = vertices_to_triangle c a b by [].
   have vc_cab := vertices_to_triangle_correct2 t_abc.
   move:vc_cab => [c_cab [a_cab b_cab]].
-  by apply:(in_vert_to_triangle_in_triangle_w_edges islo_abc a_cab).
+  rewrite /t in c_cab.
+  rewrite /t in a_cab.
+  rewrite /t in b_cab.
+  by apply:in_vert_to_triangle_in_triangle_w_edges; first apply islo_abc;
+  first apply vertices_to_triangle_oriented.
 Qed.
   
 Definition flip_edge_aux a b c d :=
@@ -2012,9 +2052,9 @@ move:Ht3 => /fset2P [Ht3|Ht3];move:Ht4=>/fset2P [Ht4|Ht4];
     have temp := infl t3 Ht3 p int3p.
     move:temp => [Htp|[Htp|Htp]];
     try have intxp := (in_vert_to_triangle_in_triangle oriented_abc
-                      a_t1 b_t1 c_t1 Htp);
+                      a_t1 (or_tr_d t1 t1_tr) b_t1 c_t1 Htp);
     try have intxp := (in_vert_to_triangle_in_triangle oriented_acd
-                      a_t2 c_t2 d_t2 Htp);
+                      a_t2 (or_tr_d t2 t2_tr) c_t2 d_t2 Htp);
     try have abst1 := nci_tr_d t1 t4 t1_tr t4_tr p intxp int4p;
     try have abst2 := nci_tr_d t2 t4 t2_tr t4_tr p intxp int4p;
     [move:t4_nt1|move:t4_nt2|move];try rewrite -abst1;try rewrite -abst2;
@@ -2027,9 +2067,9 @@ move:Ht3 => /fset2P [Ht3|Ht3];move:Ht4=>/fset2P [Ht4|Ht4];
   have temp := infl t4 Ht4 p int4p.
   move:temp => [Htp|[Htp|Htp]];
   try have intxp := (in_vert_to_triangle_in_triangle oriented_abc
-                      a_t1 b_t1 c_t1 Htp);
+                      a_t1 (or_tr_d t1 t1_tr) b_t1 c_t1 Htp);
   try have intxp := (in_vert_to_triangle_in_triangle oriented_acd
-                      a_t2 c_t2 d_t2 Htp);
+                      a_t2 (or_tr_d t2 t2_tr) c_t2 d_t2 Htp);
   try have abst1 := nci_tr_d t1 t3 t1_tr t3_tr p intxp int3p;
   try have abst2 := nci_tr_d t2 t3 t2_tr t3_tr p intxp int3p;
   [move:t3_nt1|move:t3_nt2|move];try rewrite -abst1;try rewrite -abst2;
@@ -2059,7 +2099,7 @@ Theorem flip_edge_nps tr data : triangulation tr data ->
 Proof.
 move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
 move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
-move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d tne_tr_d]]]]].
+move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
 have vc_abd := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_abd).
 have vc_bcd := vertices_to_triangle_correct
@@ -2147,8 +2187,8 @@ last first.
 
     by move:intp => [Hintp|Hintp];
     [have intp : in_triangle_w_edges t1 p|have intp : in_triangle_w_edges t2 p];
-      [by apply:(vertex_set_eq_in_triangle_w_edges v_abc_t1)|
-       move|by apply:(vertex_set_eq_in_triangle_w_edges v_acd_t2)|move];
+      [by apply:(vertex_set_eq_in_triangle_w_edges (vertices_to_triangle_oriented a b c) (or_tr_d t1 t1_tr) v_abc_t1)|
+       move|by apply:(vertex_set_eq_in_triangle_w_edges (vertices_to_triangle_oriented a c d) (or_tr_d t2 t2_tr)v_acd_t2)|move];
     [have p_t := nps_tr_d t3 t1 t3_tr t1_tr p p_t3 intp|
      have p_t := nps_tr_d t3 t2 t3_tr t2_tr p p_t3 intp];
     [rewrite -v_abc_t1 in p_t|rewrite -v_acd_t2 in p_t];
@@ -2156,7 +2196,7 @@ last first.
     rewrite Hp;
     move:Ht4 => /fset2P [Ht4|Ht4];rewrite Ht4;apply in_vertex_set;
     [left|move|right;left|left|move|right;left|left|move|move|right;left|right;right|right;right]
-    => //=;rewrite Hp in int4p;rewrite Ht4 in int4p;
+    => //=; rewrite Hp in int4p;rewrite Ht4 in int4p;
     rewrite /in_triangle_w_edges /vertex1 /vertex2 /vertex3 in int4p;
     [rewrite -b_bcd -c_bcd -d_bcd in int4p|
      rewrite -a_abd -b_abd -d_abd in int4p|

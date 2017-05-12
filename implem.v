@@ -433,3 +433,87 @@ rewrite fsetI1 !inE ![vertices_to_edge b c == _]eq_sym.
 by rewrite  (negPf vab_nbc) (negPf vbc_nac) /= cardfs0.
 Qed.
 
+Definition V := P.
+
+Definition points_to_vector : P -> P -> V  := fun a b =>
+  \matrix_(j<1, i<2) (if i == ord20
+                      then xCoord b - xCoord a
+                      else yCoord b - yCoord a).
+   
+Definition scalar : V -> V -> R := fun a b =>
+  (xCoord a * xCoord b)+(yCoord a * yCoord b).
+
+Definition on_edge : E -> P-> bool := fun e p =>
+  let p1 := e ord10 ord20 in
+  let p2 := e ord10 ord21 in
+  if oriented_surface p1 p2 p != 0
+  then false
+  else let p1p2 := points_to_vector p1 p2 in
+       let p1p  := points_to_vector p1 p  in
+       let sc   := scalar p1p2 p1p in
+       if (0 <= sc) && (sc <= scalar p1p2 p1p2)
+       then true
+       else false.
+
+Definition in_triangle := in_triangle vertex oriented_surface.
+
+Definition is_on_line := is_on_line oriented_surface.
+
+Lemma on_line_on_edge (a b c :P):
+  is_left_of a b c -> forall q:P, is_on_line a c q -> 
+                          is_left_of a b q -> is_left_of b c q ->
+                          on_edge (vertices_to_edge a c) q.  
+Proof.
+move => islo_abc q il_acq islo_abq islo_bcq.
+rewrite /is_on_line /triangulation.is_on_line in il_acq.
+move:il_acq => /eqP il_acq.
+rewrite /on_edge.
+rewrite /vertices_to_edge.
+
+have:(xCoord a < xCoord c) = true -> 0 <= scalar (points_to_vector a c) (points_to_vector a q) <= scalar (points_to_vector a c) (points_to_vector a c).
+move => xac.
+apply/andP;split.
+rewrite /scalar.
+
+
+case yac :(yCoord a < yCoord c).
+  admit.
+
+have:0 <= scalar (points_to_vector c a) (points_to_vector a q) <= scalar (points_to_vector c a) (points_to_vector c a).
+  admit.
+
+case xac:(xCoord a < xCoord c);
+case xca:(xCoord c < xCoord a);
+case yac:(yCoord a < yCoord c) => /=;
+rewrite /vertices_to_edge_aux !mxE => /=;
+(try rewrite il_acq);
+rewrite oriented_surface_change1 oriented_surface_circular in  il_acq;
+(try (move:il_acq => /eqP;rewrite oppr_eq0 => /eqP ->)) => /=;
+(have:0==0 by (move => temp; apply/eqP)) => -> /=;
+move => H1 H2.
+admit.
+admit.
+admit.
+admit.
+
+(try rewrite H1); (try rewrite H2) => //=.
+Qed.
+
+
+
+
+Lemma vert_not_on_edges t p:   oriented_triangle t -> p \in vertex_set t -> 
+                         forall e, (e \in edges_set t -> on_edge e p -> false).
+Proof.
+move => or_t p_t e e_t e_p.                         
+move:or_t.
+rewrite /oriented_triangle => or_t.
+case s0 : (oriented_surface (vertex1 t) (vertex2 t) (vertex3 t) != 0);last first.
+  admit.
+have: 0<(oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)).
+  rewrite ltr_def.
+  apply/andP;split => //=.
+move => islo.
+Check edges_set.
+move:e_t. => /imfsetP .
+Check on_edge_on_line islo. e_p.
