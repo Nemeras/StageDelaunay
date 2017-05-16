@@ -107,6 +107,11 @@ Hypothesis vertices_to_edge_sym :
 Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
 
 Definition oriented_triangle t:= oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
+
+Definition oriented_triangle_strict t := oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0.
+
+
+
 Hypothesis vertices_to_triangle_oriented :
 forall a b c, oriented_triangle (vertices_to_triangle a b c).
 
@@ -233,6 +238,9 @@ Hypothesis vertices_to_triangle_correct2 : forall p1 p2 p3, forall t,
 Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
                               is_left_of p (vertex2 t) (vertex3 t) &&
                               is_left_of (vertex1 t) p (vertex3 t).
+
+
+Hypothesis triangle_not_empty : forall t, forall p, in_triangle t p -> oriented_triangle_strict t.
 
 Definition in_triangle_w_edges t p := 
   is_left_or_on_line (vertex1 t) (vertex2 t) p &&
@@ -438,12 +446,20 @@ Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
 (*TODO*)
 Open Scope ring_scope.
+
+Ltac bycircular :=
+(try by rewrite is_left_of_circular);
+(try by rewrite -is_left_of_circular);
+(try by rewrite is_left_or_on_line_circular);
+(try by rewrite -is_left_or_on_line_circular);
+(try by []).
+
 Lemma three_triangles_cover_one t p :
 in_triangle t p ->forall p0, in_triangle_w_edges t p0 <-> 
                        exists t1, (t1 \in split_triangle_aux t p) 
                              /\ (in_triangle_w_edges t1 p0).
 Proof.
-move => /andP [] /andP [] v12p vp23 v1p3 q.
+move => intp;move:(intp) => /andP [] /andP [] v12p vp23 v1p3 q.
 apply is_lof_imply_is_lor_on_line in v12p.
 apply is_lof_imply_is_lor_on_line in vp23.
 apply is_lof_imply_is_lor_on_line in v1p3.
@@ -496,8 +512,78 @@ split.
       admit.
     have abs := is_on_line_trans abs1 abs2.
     move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
-    
-Admitted.
+    have tne := triangle_not_empty intp.
+    by rewrite /oriented_triangle_strict abs ltrr in tne.
+  move:c1;rewrite /is_left_or_on_line => /negP /negP;rewrite -ltrNge.
+  rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
+  move => c1.
+  case c2:(is_left_or_on_line q (vertex2 t) p).
+    have vc12p:=vertices_to_triangle_correct v12p.
+    move:vc12p => [v1t [v2t vp]].  
+    exists (vertices_to_triangle (vertex1 t) (vertex2 t) p);split;first by apply /fset1UP;left.
+    rewrite /in_triangle_w_edges;apply/andP;split;try (apply/andP;split);
+    rewrite /vertex1 /vertex2 /vertex3;
+    try rewrite -!vp;
+    try rewrite -!v1t;
+    try rewrite -!v2t=> //=.
+    rewrite oriented_surface_circular in c1.
+    by apply is_lof_imply_is_lor_on_line in c1.
+    move:c2;rewrite /is_left_or_on_line => /negP /negP;rewrite -ltrNge.
+    rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
+    move => c2.
+    case c3 :(is_left_or_on_line p q (vertex3 t)).
+      have vcp23:=vertices_to_triangle_correct vp23.
+      move:vcp23 => [vp [v2t v3t]].  
+      exists(vertices_to_triangle p (vertex2 t) (vertex3 t));split;
+        first by apply /fset1UP;right;apply/fset2P;left.
+    by rewrite /in_triangle_w_edges;apply/andP;split;try (apply/andP;split);
+    rewrite /vertex1 /vertex2 /vertex3;
+    try rewrite -!vp;
+    try rewrite -!v3t;
+    try rewrite -!v2t;
+    try apply is_lof_imply_is_lor_on_line in c2.
+  admit.
+have ve12p := vertices_to_triangle_correct v12p.
+rewrite /vertex1 /vertex2 /vertex3 in v12p.
+move:ve12p => [v112p [v212p v312p]].
+have vep23 := vertices_to_triangle_correct vp23.
+rewrite /vertex1 /vertex2 /vertex3 in vp23.
+move:vep23 => [v1p23 [v2p23 v3p23]].
+have ve1p3 := vertices_to_triangle_correct v1p3.
+rewrite /vertex1 /vertex2 /vertex3 in v1p3.
+move:ve1p3 => [v11p3 [v21p3 v31p3]].
+move => [t1 []] => /fset1UP [|/fset2P []] -> /andP [] /andP [];
+rewrite /vertex1 /vertex2 /vertex3;
+[rewrite -v112p -v212p -v312p|rewrite -v1p23 -v2p23 -v3p23|
+rewrite -v11p3 -v21p3 -v31p3] => islor1 islor2 islor3;
+rewrite /in_triangle_w_edges;apply/andP;split;try (apply/andP;split) => //=;
+move:(intp) => /andP [] /andP [] /is_lof_imply_is_lor_on_line islof12p;
+have islor123 :=(is_lof_imply_is_lor_on_line (triangle_not_empty intp));
+move:(islor123);rewrite is_left_or_on_line_circular => islor312;
+move:(islor123);rewrite -is_left_or_on_line_circular => islor231;
+move => /is_lof_imply_is_lor_on_line islofp23 /is_lof_imply_is_lor_on_line islof1p3;bycircular.
+
+by apply:(is_left_or_line_trans islor123 islof12p islor1).
+
+rewrite is_left_or_on_line_circular.
+rewrite is_left_or_on_line_circular in islof12p.
+apply:(is_left_or_line_trans2 islor312 islof12p);bycircular.
+
+apply:(is_left_or_line_trans2 islor123 islofp23);bycircular.
+
+rewrite -is_left_or_on_line_circular.
+rewrite -is_left_or_on_line_circular in islofp23.
+apply(is_left_or_line_trans islor231 islofp23);bycircular.
+
+rewrite is_left_or_on_line_circular in islof1p3.
+rewrite is_left_or_on_line_circular.
+apply:(is_left_or_line_trans islor312 islof1p3);bycircular.
+
+rewrite -is_left_or_on_line_circular.
+rewrite -is_left_or_on_line_circular in islof1p3.
+apply:(is_left_or_line_trans2 islor231 islof1p3);bycircular.
+
+Qed.
 
 Hypothesis split_aux_in_triangle :
   forall t, forall p, in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
