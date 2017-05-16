@@ -105,18 +105,6 @@ Hypothesis vertices_to_edge_sym :
 
 
 Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
-Lemma oriented_surface_x_x_x : forall x, oriented_surface x x x = 0%R.
-Proof.
-by move => x; rewrite oriented_surface_x_x.
-Qed.
-
-Lemma is_left_or_on_line_x_x_x : forall x, is_left_or_on_line x x x.
-Proof.
-  by intro;unfold is_left_or_on_line; rewrite oriented_surface_x_x_x.
-Qed.
-
-
-(*Hypothesis oriented_triangle : forall t, oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.*)
 
 Definition oriented_triangle t:= oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
 Hypothesis vertices_to_triangle_oriented :
@@ -125,9 +113,6 @@ forall a b c, oriented_triangle (vertices_to_triangle a b c).
 Hypothesis oriented_surface_change1 : forall a, forall b, forall c,
         oriented_surface a b c = -oriented_surface a c b.
 
-(*Lemma oriented_surface_circular a b c:
-  oriented_surface a b c = oriented_surface c a b.
-Proof.*)
 
 
 Hypothesis oriented_surface_circular : forall a, forall b, forall c, oriented_surface a b c = oriented_surface c a b.
@@ -139,17 +124,20 @@ by rewrite /is_left_of oriented_surface_circular.
 Qed.
 
 
-Lemma is_left_or_on_line_circular : forall a, forall b, forall c,
+Lemma is_left_or_on_line_circular a b c: 
         is_left_or_on_line a b c = is_left_or_on_line c a b.
 Proof.
-move => a b c.
 by rewrite /is_left_or_on_line oriented_surface_circular.
 Qed.
 
-
-
-
-
+Lemma is_left_or_on_line_change1 a b c:
+  ~~ is_left_or_on_line b a c ->  is_left_or_on_line a b c.
+Proof.
+rewrite /is_left_or_on_line.
+rewrite oriented_surface_change1 oriented_surface_circular oppr_ge0 -ltrNge.
+rewrite -[X in 0 <= X]opprK oppr_ge0 ler_oppl oppr0 ltr_def.
+by move => /andP[].
+Qed.
 
 
 
@@ -160,6 +148,16 @@ Proof.
 by rewrite /is_on_line oriented_surface_change1
 oriented_surface_circular oppr_eq0.
 Qed.
+
+Lemma is_on_line_circular a b c : is_on_line a b c = is_on_line c a b.
+Proof.
+by rewrite /is_on_line oriented_surface_circular.
+Qed.
+
+
+Hypothesis is_on_line_trans :
+  forall a b c d, is_on_line a b c -> is_on_line a b d -> is_on_line a c d.
+
 
 Hypothesis on_line_on_edge :
   forall a b c, is_left_of a b c -> forall q, is_on_line a c q -> 
@@ -186,7 +184,7 @@ Hypothesis edges_set_vertices_to_triangle:
                            vertices_to_edge a c;
                            vertices_to_edge b c].
 
-Lemma oriented_surface_change2 a b c :
+(*Lemma oriented_surface_change2 a b c :
         oriented_surface a b c = -oriented_surface b a c.
 Proof.
 rewrite -[X in _ = - X] oriented_surface_circular.
@@ -198,7 +196,7 @@ Lemma oriented_surface_change3 a b c:
 Proof.
 rewrite [X in _ = - X] oriented_surface_circular.
 exact:oriented_surface_change1.
-Qed.
+Qed.*)
 
 Lemma is_left_or_on_change a b c :
         is_left_or_on_line a b c = ~~ is_left_of b a c.
@@ -246,14 +244,6 @@ Proof.
 move => /andP [intp intp3];move:intp => /andP [intp1 intp2].
 by apply /andP;split;first apply /andP;first split;apply ltrW.
 Qed.
-
-(*Lemma in_triangle_vertex_correct: forall t, forall p, 
-      p \in vertex_set t -> in_triangle_w_edges t p.
-Proof.
-move.
-move => t p p_t.
-rewrite /in_triangle_w_edges.
-Admitted.*)
 
 Hypothesis in_triangle_w_edge_edges : 
   forall t, forall p, in_triangle_w_edges t p <->
@@ -345,7 +335,7 @@ Definition CH (s : seq P) (d : {fset P}) := ((seq_fset s) `<=` d) /\
                                   (CH h d  -> encompassed x h).
 *)
 
-Definition union_trD1 (Ts: {fset T}) (Ds : {fset P}) :=
+(*Definition union_trD1 (Ts: {fset T}) (Ds : {fset P}) :=
 forall (t:T), t \in Ts -> forall p, p \in vertex_set t -> p \in Ds. 
 
 Definition union_trD2 (Ts: {fset T}) (Ds : {fset P}) :=
@@ -356,7 +346,7 @@ Definition union_trD Ts Ds := union_trD1 Ts Ds /\ union_trD2 Ts Ds.
 Variable mkCH : {fset P} -> seq P. 
 
 Hypothesis mkCH_correct : forall d, CH (mkCH d) d. *)
-
+*)
 Definition covers_hull (tr : {fset T}) (d : {fset P}) :=
 forall p : P, hull d p -> exists t, (t \in tr) /\ (in_triangle_w_edges t p).
 
@@ -403,15 +393,111 @@ Definition split_triangle_aux t p :=
   t1 |` (t2 |` [fset t3]).
 
 
+Hypothesis is_left_of_trans : forall a b c d q, is_left_of a b c ->
+                                           is_left_of a b d ->
+                                           is_left_of a b q ->
+                                           is_left_of q b d ->
+                                           is_left_of d b c ->
+                                           is_left_of q b c.
 
+Hypothesis is_left_of_mix_trans : forall a b c d q, is_left_or_on_line a b c ->
+                                           is_left_or_on_line a b d ->
+                                           is_left_or_on_line a b q ->
+                                           is_left_of q b d ->
+                                           is_left_of d b c ->
+                                           is_left_of q b c.
+
+Hypothesis is_left_or_line_trans : forall a b c d q, is_left_or_on_line a b c ->
+                                           is_left_or_on_line a b d ->
+                                           is_left_or_on_line a b q ->
+                                           is_left_or_on_line q b d ->
+                                           is_left_or_on_line d b c ->
+                                           is_left_or_on_line q b c.
+
+Hypothesis is_left_of_trans2 : forall a b c d q, is_left_of c b a ->
+                                           is_left_of d b a ->
+                                           is_left_of q b a ->
+                                           is_left_of d b q ->
+                                           is_left_of c b d ->
+                                           is_left_of c b q.
+
+(*Hypothesis is_left_of_mix_trans2 : forall a b c d q, is_left_or_on_line c b a ->
+                                           is_left_or_on_line d b a ->
+                                           is_left_or_on_line q b a ->
+                                           is_left_of d b q ->
+                                           is_left_of c b d ->
+                                           is_left_of c b q.*)
+
+Hypothesis is_left_or_line_trans2 : forall a b c d q, is_left_or_on_line c b a ->
+                                           is_left_or_on_line d b a ->
+                                           is_left_or_on_line q b a ->
+                                           is_left_or_on_line d b q ->
+                                           is_left_or_on_line c b d ->
+                                           is_left_or_on_line c b q.
 Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
 (*TODO*)
-Hypothesis three_triangles_cover_one :
-  forall t, forall p, in_triangle t p ->
-            forall p0, in_triangle_w_edges t p0 <-> exists t1, (t1 \in split_triangle_aux t p) 
-                                                   /\ (in_triangle_w_edges t1 p0).
-
+Open Scope ring_scope.
+Lemma three_triangles_cover_one t p :
+in_triangle t p ->forall p0, in_triangle_w_edges t p0 <-> 
+                       exists t1, (t1 \in split_triangle_aux t p) 
+                             /\ (in_triangle_w_edges t1 p0).
+Proof.
+move => /andP [] /andP [] v12p vp23 v1p3 q.
+apply is_lof_imply_is_lor_on_line in v12p.
+apply is_lof_imply_is_lor_on_line in vp23.
+apply is_lof_imply_is_lor_on_line in v1p3.
+split.
+  move => /andP [] /andP [] v12q vq23 v1q3.
+  rewrite /split_triangle_aux.
+  case c1 :(is_left_or_on_line (vertex1 t) p q).
+    case c3 :(is_left_or_on_line q p (vertex3 t)).
+    have vc1p3:=vertices_to_triangle_correct v1p3.
+    move:vc1p3 => [v1t [vp v3t]].    
+    exists (vertices_to_triangle (vertex1 t) p (vertex3 t));split;
+      first apply /fset1UP.
+        by right;apply/fset2P;right.
+      by rewrite /in_triangle_w_edges;apply/andP;split;try (apply/andP;split);
+      rewrite /vertex1 /vertex2 /vertex3;
+      try rewrite -!vp;
+      try rewrite -!v1t;
+      try rewrite -!v3t.
+    case c2 :(is_left_or_on_line p (vertex2 t) q).
+      exists(vertices_to_triangle p (vertex2 t) (vertex3 t)).
+      have vcp23:=vertices_to_triangle_correct vp23.
+       move:vcp23 => [vp [v2t v3t]].  
+      split;first apply/fset1UP;try (by right;apply/fset2P;left).
+      rewrite /in_triangle_w_edges /vertex1 /vertex2 /vertex3 -!vp -!v2t -!v3t.
+      apply/andP;split;try(apply/andP;split) => //=.
+      move:c3 => /negP /negP c3.
+      by apply is_left_or_on_line_change1 in c3.
+    suff:false.
+      by [].
+    move:c2;rewrite /is_left_or_on_line => /negP /negP;rewrite -ltrNge.
+    rewrite oriented_surface_change1 oriented_surface_circular ltr_oppl oppr0.
+    move => c2.
+    move:c3;rewrite /is_left_or_on_line => /negP /negP;rewrite -ltrNge.
+    rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
+    move => c3.
+    apply is_lof_imply_is_lor_on_line in c2.
+    apply is_lof_imply_is_lor_on_line in c3.
+    have islor1 : is_left_or_on_line (vertex3 t) q (vertex1 t).
+      rewrite -is_left_or_on_line_circular in c1.
+      rewrite -is_left_or_on_line_circular in c2.
+      rewrite -is_left_or_on_line_circular in c3.
+      rewrite is_left_or_on_line_circular in vq23.
+      rewrite -is_left_or_on_line_circular in v12q.
+      by apply (@is_left_or_line_trans p q (vertex1 t) (vertex2 t) (vertex3 t)).
+    have abs1 : is_on_line (vertex3 t) q (vertex1 t).
+      admit.
+    have islor2 : is_left_or_on_line (vertex2 t) q (vertex3 t).
+      admit.
+    have abs2 :is_on_line (vertex3 t) q (vertex2 t).
+      admit.
+    have abs := is_on_line_trans abs1 abs2.
+    move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
+    
+Admitted.
 
 Hypothesis split_aux_in_triangle :
   forall t, forall p, in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
@@ -1382,33 +1468,7 @@ by apply:ler_lt_trans oriented_acb oriented_abc.
 by rewrite ltrr. 
 Qed.
 
-Hypothesis is_left_of_trans : forall a b c d q, is_left_of a b c ->
-                                           is_left_of a b d ->
-                                           is_left_of a b q ->
-                                           is_left_of q b d ->
-                                           is_left_of d b c ->
-                                           is_left_of q b c.
 
-Hypothesis is_left_or_line_trans : forall a b c d q, is_left_or_on_line a b c ->
-                                           is_left_or_on_line a b d ->
-                                           is_left_or_on_line a b q ->
-                                           is_left_or_on_line q b d ->
-                                           is_left_or_on_line d b c ->
-                                           is_left_or_on_line q b c.
-
-Hypothesis is_left_of_trans2 : forall a b c d q, is_left_of c b a ->
-                                           is_left_of d b a ->
-                                           is_left_of q b a ->
-                                           is_left_of d b q ->
-                                           is_left_of c b d ->
-                                           is_left_of c b q.
-
-Hypothesis is_left_or_line_trans2 : forall a b c d q, is_left_or_on_line c b a ->
-                                           is_left_or_on_line d b a ->
-                                           is_left_or_on_line q b a ->
-                                           is_left_or_on_line d b q ->
-                                           is_left_or_on_line c b d ->
-                                           is_left_or_on_line c b q.
 
 Lemma is_on_line_imply_is_lor : 
   forall a b c, is_on_line a b c -> is_left_or_on_line a b c.
