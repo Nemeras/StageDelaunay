@@ -447,12 +447,18 @@ Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 (*TODO*)
 Open Scope ring_scope.
 
-Ltac bycircular :=
+Ltac easy:=
+(try by []);
 (try by rewrite is_left_of_circular);
 (try by rewrite -is_left_of_circular);
 (try by rewrite is_left_or_on_line_circular);
 (try by rewrite -is_left_or_on_line_circular);
-(try by []).
+try by ((apply is_lof_imply_is_lor_on_line);
+(try by []);
+(try by rewrite is_left_of_circular);
+(try by rewrite -is_left_of_circular);
+(try by rewrite is_left_or_on_line_circular);
+(try by rewrite -is_left_or_on_line_circular)).
 
 Lemma three_triangles_cover_one t p :
 in_triangle t p ->forall p0, in_triangle_w_edges t p0 <-> 
@@ -460,13 +466,13 @@ in_triangle t p ->forall p0, in_triangle_w_edges t p0 <->
                              /\ (in_triangle_w_edges t1 p0).
 Proof.
 move => intp;move:(intp) => /andP [] /andP [] v12p vp23 v1p3 q.
-apply is_lof_imply_is_lor_on_line in v12p.
-apply is_lof_imply_is_lor_on_line in vp23.
-apply is_lof_imply_is_lor_on_line in v1p3.
 split.
   move => /andP [] /andP [] v12q vq23 v1q3.
   rewrite /split_triangle_aux.
   case c1 :(is_left_or_on_line (vertex1 t) p q).
+    apply is_lof_imply_is_lor_on_line in v12p.
+    apply is_lof_imply_is_lor_on_line in vp23.
+    apply is_lof_imply_is_lor_on_line in v1p3.
     case c3 :(is_left_or_on_line q p (vertex3 t)).
     have vc1p3:=vertices_to_triangle_correct v1p3.
     move:vc1p3 => [v1t [vp v3t]].    
@@ -498,18 +504,22 @@ split.
     apply is_lof_imply_is_lor_on_line in c2.
     apply is_lof_imply_is_lor_on_line in c3.
     have islor1 : is_left_or_on_line (vertex3 t) q (vertex1 t).
-      rewrite -is_left_or_on_line_circular in c1.
-      rewrite -is_left_or_on_line_circular in c2.
-      rewrite -is_left_or_on_line_circular in c3.
-      rewrite is_left_or_on_line_circular in vq23.
-      rewrite -is_left_or_on_line_circular in v12q.
-      by apply (@is_left_or_line_trans p q (vertex1 t) (vertex2 t) (vertex3 t)).
+      apply (@is_left_or_line_trans p q (vertex1 t) (vertex2 t) (vertex3 t));easy.
     have abs1 : is_on_line (vertex3 t) q (vertex1 t).
-      admit.
+      rewrite /is_on_line;apply/eqP; symmetry;apply/eqP;rewrite eqr_le.
+      rewrite /is_left_or_on_line in islor1.
+      apply/andP;split => //=.
+      by rewrite /is_left_or_on_line oriented_surface_change1 ler_oppr
+              -oriented_surface_circular oppr0 in v1q3.
     have islor2 : is_left_or_on_line (vertex2 t) q (vertex3 t).
-      admit.
-    have abs2 :is_on_line (vertex3 t) q (vertex2 t).
-      admit.
+      apply (@is_left_or_line_trans p q (vertex3 t) (vertex1 t) (vertex2 t));easy.
+    have abs2 :is_on_line (vertex2 t) q (vertex3 t) .
+      rewrite /is_on_line;apply/eqP; symmetry;apply/eqP;rewrite eqr_le.
+      rewrite /is_left_or_on_line  in islor2.
+      apply/andP;split => //=.
+      by rewrite /is_left_or_on_line oriented_surface_change1 ler_oppr
+              oriented_surface_circular oppr0 in vq23.
+    rewrite is_on_line_sym is_on_line_circular in abs2.
     have abs := is_on_line_trans abs1 abs2.
     move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
     have tne := triangle_not_empty intp.
@@ -518,6 +528,9 @@ split.
   rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
   move => c1.
   case c2:(is_left_or_on_line q (vertex2 t) p).
+    apply is_lof_imply_is_lor_on_line in v12p.
+    apply is_lof_imply_is_lor_on_line in vp23.
+    apply is_lof_imply_is_lor_on_line in v1p3.
     have vc12p:=vertices_to_triangle_correct v12p.
     move:vc12p => [v1t [v2t vp]].  
     exists (vertices_to_triangle (vertex1 t) (vertex2 t) p);split;first by apply /fset1UP;left.
@@ -532,6 +545,9 @@ split.
     rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
     move => c2.
     case c3 :(is_left_or_on_line p q (vertex3 t)).
+      apply is_lof_imply_is_lor_on_line in v12p.
+      apply is_lof_imply_is_lor_on_line in vp23.
+      apply is_lof_imply_is_lor_on_line in v1p3.
       have vcp23:=vertices_to_triangle_correct vp23.
       move:vcp23 => [vp [v2t v3t]].  
       exists(vertices_to_triangle p (vertex2 t) (vertex3 t));split;
@@ -542,7 +558,33 @@ split.
     try rewrite -!v3t;
     try rewrite -!v2t;
     try apply is_lof_imply_is_lor_on_line in c2.
-  admit.
+  suff:false;first by [].
+  move:c3;rewrite /is_left_or_on_line => /negP /negP;
+  rewrite -ltrNge oriented_surface_change1 ltr_oppl oppr0 => c3.
+  have islor1:is_left_or_on_line (vertex3 t) q (vertex1 t).
+    apply:(@is_left_or_line_trans2 p q (vertex3 t) (vertex2 t) (vertex1 t));easy.
+  have islor2:is_left_or_on_line (vertex2 t) q (vertex3 t).
+    apply:(@is_left_or_line_trans2 p q (vertex2 t) (vertex1 t) (vertex3 t));easy.
+  have abs1 : is_on_line (vertex3 t) q (vertex1 t).
+      rewrite /is_on_line;apply/eqP; symmetry;apply/eqP;rewrite eqr_le.
+      rewrite /is_left_or_on_line in islor1.
+      apply/andP;split => //=.
+      by rewrite /is_left_or_on_line oriented_surface_change1 ler_oppr
+              -oriented_surface_circular oppr0 in v1q3.
+  have abs2 :is_on_line (vertex2 t) q (vertex3 t) .
+      rewrite /is_on_line;apply/eqP; symmetry;apply/eqP;rewrite eqr_le.
+      rewrite /is_left_or_on_line  in islor2.
+      apply/andP;split => //=.
+      by rewrite /is_left_or_on_line oriented_surface_change1 ler_oppr
+              oriented_surface_circular oppr0 in vq23.
+  rewrite is_on_line_sym is_on_line_circular in abs2.
+  have abs := is_on_line_trans abs1 abs2.
+  move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
+  have tne := triangle_not_empty intp.
+  by rewrite /oriented_triangle_strict abs ltrr in tne.  
+apply is_lof_imply_is_lor_on_line in v12p.
+apply is_lof_imply_is_lor_on_line in vp23.
+apply is_lof_imply_is_lor_on_line in v1p3.
 have ve12p := vertices_to_triangle_correct v12p.
 rewrite /vertex1 /vertex2 /vertex3 in v12p.
 move:ve12p => [v112p [v212p v312p]].
@@ -561,27 +603,28 @@ move:(intp) => /andP [] /andP [] /is_lof_imply_is_lor_on_line islof12p;
 have islor123 :=(is_lof_imply_is_lor_on_line (triangle_not_empty intp));
 move:(islor123);rewrite is_left_or_on_line_circular => islor312;
 move:(islor123);rewrite -is_left_or_on_line_circular => islor231;
-move => /is_lof_imply_is_lor_on_line islofp23 /is_lof_imply_is_lor_on_line islof1p3;bycircular.
+move => /is_lof_imply_is_lor_on_line islofp23 /is_lof_imply_is_lor_on_line islof1p3;easy.
+
 
 by apply:(is_left_or_line_trans islor123 islof12p islor1).
 
 rewrite is_left_or_on_line_circular.
 rewrite is_left_or_on_line_circular in islof12p.
-apply:(is_left_or_line_trans2 islor312 islof12p);bycircular.
+apply:(is_left_or_line_trans2 islor312 islof12p);easy.
 
-apply:(is_left_or_line_trans2 islor123 islofp23);bycircular.
+apply:(is_left_or_line_trans2 islor123 islofp23);easy.
 
 rewrite -is_left_or_on_line_circular.
 rewrite -is_left_or_on_line_circular in islofp23.
-apply(is_left_or_line_trans islor231 islofp23);bycircular.
+apply(is_left_or_line_trans islor231 islofp23);easy.
 
 rewrite is_left_or_on_line_circular in islof1p3.
 rewrite is_left_or_on_line_circular.
-apply:(is_left_or_line_trans islor312 islof1p3);bycircular.
+apply:(is_left_or_line_trans islor312 islof1p3);easy.
 
 rewrite -is_left_or_on_line_circular.
 rewrite -is_left_or_on_line_circular in islof1p3.
-apply:(is_left_or_line_trans2 islor231 islof1p3);bycircular.
+apply:(is_left_or_line_trans2 islor231 islof1p3);easy.
 
 Qed.
 
