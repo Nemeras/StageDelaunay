@@ -69,7 +69,7 @@ Prouver que flip edge conserve triangulation
 	en cours :  verifier ce qui est reutilisable chez Wassim pour les preuves
 	non triviales sur les determinants notamment ?
 
-	Hypotheses :
+	Hypotheses prouvees:
 	vertices_to_triangle_correct : OK
 	vertices_to_edge_correct : OK
 	vertices_too_edge_sym : OK
@@ -77,29 +77,39 @@ Prouver que flip edge conserve triangulation
 	vertices_to_triangle_oriented : OK
 	oriented_surface_change1 : OK
  	oriented_surface_circular : OK
-	is_on_line_trans :
-	on_line_on_edge :
-	on_edge_on_line :
 	edges_set_vertices_to_triangle : OK
 	vertices_to_triangle_correct2 : OK
-	triangle_not_empty :
-	in_triangle_w_edge_edges :
-	vert_not_on_edges :
 	vertex_set_edge_triangle : OK
+
+
+	Hypotheses à supprimer (sont des lemmes) :
+	on_edge_split_triangle : semble etre un lemme : TODO
+	surface_non_empty : est un lemme, TODO.
+	triangle_not_empty : prouvable : TODO
+
+
+
+
+	Hypotheses restantes (Knuth et ci) :
+	is_on_line_trans :
 	is_left_of_trans :
 	is_left_or_line_trans :
 	is_left_of_trans2 :
 	is_left_or_line_trans2 :
-	split_aux_in_triangle : semble etre un lemme : TODO
-	split_aux_in_triangle_we : semble etre deja prouvé : TODO
-	on_edge_split_triangle : semble etre un lemme : TODO
-	surface_non_empty : est un lemme, TODO.
+	axiom4_knuth :
+
+	Autres Hypotheses restantes :
+	on_line_on_edge :
+	on_edge_on_line : 
+	vert_not_on_edges :	
 	in_triangle_on_edge :
 	in_triangle_barycentre :
 	vertex_set_vertices_to_triangle :
 	vertex_set_eq_in_triangle :
 	vertex_set_eq_in_triangle_w_edges :
-	
+	intersection_of_lines :
+	vertices_to_edge_in_edges_set:
+	all_triangle_oriented:
 	
 
 ~~~ Troisieme partie du travail ~~~
