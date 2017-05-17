@@ -61,17 +61,52 @@ Prouver que flip edge conserve triangulation
 	prouver TNE: OK		 
 	
 	prouver OR : OK
+
 ~~~ Deuxieme partie du travail ~~~
+	
+	Faire l'implementation (determinant, etc...) et prouver les hypotheses. 
+
+	en cours :  verifier ce qui est reutilisable chez Wassim pour les preuves
+	non triviales sur les determinants notamment ?
+
+	Hypotheses :
+	vertices_to_triangle_correct : OK
+	vertices_to_edge_correct : OK
+	vertices_too_edge_sym : OK
+	oriented_surface_x_x : OK
+	vertices_to_triangle_oriented : OK
+	oriented_surface_change1 : OK
+ 	oriented_surface_circular : OK
+	is_on_line_trans :
+	on_line_on_edge :
+	on_edge_on_line :
+	edges_set_vertices_to_triangle : OK
+	vertices_to_triangle_correct2 : OK
+	triangle_not_empty :
+	in_triangle_w_edge_edges :
+	vert_not_on_edges :
+	vertex_set_edge_triangle : OK
+	is_left_of_trans :
+	is_left_or_line_trans :
+	is_left_of_trans2 :
+	is_left_or_line_trans2 :
+	split_aux_in_triangle : semble etre un lemme : TODO
+	split_aux_in_triangle_we : semble etre deja prouvé : TODO
+	on_edge_split_triangle : semble etre un lemme : TODO
+	surface_non_empty : est un lemme, TODO.
+	in_triangle_on_edge :
+	in_triangle_barycentre :
+	vertex_set_vertices_to_triangle :
+	vertex_set_eq_in_triangle :
+	vertex_set_eq_in_triangle_w_edges :
+	
+	
+
+~~~ Troisieme partie du travail ~~~
 
 	Ecrire l'algorithme qui transforme en triangulation de Delaunay. 
 		La preuve qu'il cree bien une triangulation de Delaunay 
 		devrait etre simple, le probleme est de prouver qu'il 
 		termine, normalement ?
 
-	sera fait en troisieme si il y a le temps
-~~~ Troisieme partie du travail ~~~
-	
-	Faire l'implementation (determinant, etc...) et prouver les hypotheses. 
 
-	en cours :  verifier ce qui est reutilisable chez Wassim pour les preuves
-	non triviales sur les determinants notamment ?
