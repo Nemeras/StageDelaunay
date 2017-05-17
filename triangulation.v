@@ -253,10 +253,45 @@ move => /andP [intp intp3];move:intp => /andP [intp1 intp2].
 by apply /andP;split;first apply /andP;first split;apply ltrW.
 Qed.
 
-Hypothesis in_triangle_w_edge_edges : 
-  forall t, forall p, in_triangle_w_edges t p <->
-            (p \in vertex_set t) \/ (in_triangle t p) \/
-            (exists e, e \in edges_set t /\ on_edge e p). 
+Hypothesis in_triangle_on_edge : forall t, forall p,   in_triangle t p -> 
+                                 forall t2, (exists p2, in_triangle t2 p2) ->
+                                       forall e,  e \in edges_set t2 -> on_edge e p ->
+                                       exists q,  in_triangle t q /\ in_triangle t2 q.
+Hypothesis intersection_of_lines : forall a b c d,
+is_left_of a b c -> is_on_line a b d ->
+is_on_line a c d -> d =a.
+
+Lemma in_triangle_w_edge_edges t p: 
+  (*oriented_triangle t ->*) in_triangle_w_edges t p <->
+  (p \in vertex_set t) \/ (in_triangle t p) \/
+  (exists e, e \in edges_set t /\ on_edge e p). 
+Proof.
+(*move => or_t.
+case ors_t:(oriented_triangle_strict t);last first.
+  move:ors_t;rewrite /oriented_triangle_strict => /negP /negP; rewrite -lerNgt.
+  move => t_or.
+  have:oriented_surface (vertex1 t) (vertex2 t) (vertex3 t) == 0.
+    rewrite eqr_le t_or;apply/andP;split => //=.
+  Check on_line_on_edge.
+split.
+  move => /andP [] /andP[] islor12p islorp23 islor1p3.
+  case islo12p:(is_left_of (vertex1 t) (vertex2 t) p);
+  case islop23:(is_left_of p (vertex2 t) (vertex3 t));
+  case islo1p3:(is_left_of (vertex1 t) p (vertex3 t));
+  try (by right;left;apply/andP;split => //=;apply/andP;split);
+  try (move:islo1p3;rewrite /is_left_of => /negP /negP;
+  rewrite -lerNgt oriented_surface_change1 ler_oppl oppr0 -oriented_surface_circular
+  => isol1p3);
+  try (move:islo12p;rewrite /is_left_of => /negP /negP;
+  rewrite -lerNgt oriented_surface_change1 ler_oppl oppr0 -oriented_surface_circular
+  => isol12p);
+  try (move:islop23;rewrite /is_left_of => /negP /negP;
+  rewrite -lerNgt oriented_surface_change1 ler_oppl oppr0 -oriented_surface_circular
+  => isolp23).
+  Check on_line_on_edge.
+  try have test := on_line_on_edge.
+  *)
+Admitted.
 
 
 Lemma vert_in_triangle_w_edges : forall t, forall p,
@@ -312,15 +347,6 @@ Hypothesis vertex_set_edge_triangle :
   forall t, forall a, a \in vertex_set t ->  forall b, b \in vertex_set t -> a!=b ->
             (vertices_to_edge a b) \in edges_set t.
 
-
-Lemma on_edge_in_triangle_w_edges e p:
-   on_edge e p -> forall t, e \in edges_set t -> in_triangle_w_edges t p.
-Proof.
-move =>  e_p t e_t.
-apply in_triangle_w_edge_edges.
-right;right.
-by exists e;split.
-Qed.
 
 
 Definition hull (d: {fset P}) (x : P) := exists (a : d -> R), 
@@ -442,6 +468,12 @@ Hypothesis is_left_or_line_trans2 : forall a b c d q, is_left_or_on_line c b a -
                                            is_left_or_on_line d b q ->
                                            is_left_or_on_line c b d ->
                                            is_left_or_on_line c b q.
+
+Hypothesis axiom4_knuth : forall a b c d, is_left_of a b d ->
+                                     is_left_of b c d ->
+                                     is_left_of c a d ->
+                                     is_left_of a b c.
+
 Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
 (*TODO*)
@@ -628,15 +660,34 @@ apply:(is_left_or_line_trans2 islor231 islof1p3);easy.
 
 Qed.
 
-Hypothesis split_aux_in_triangle :
-  forall t, forall p, in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
+Lemma split_aux_in_triangle t p :
+in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
                             -> forall q, in_triangle t1 q -> in_triangle t q.
-
-Hypothesis split_aux_in_triangle_we :
-  forall t, forall p, in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
-                            -> forall q, in_triangle_w_edges t1 q 
-                            ->      in_triangle_w_edges t q.
-
+Proof.
+move => intp; move:(intp) => /andP [] /andP [] islo12p islop23 islo1p3 t1.
+have islor12p := is_lof_imply_is_lor_on_line islo12p.
+have islorp23 := is_lof_imply_is_lor_on_line islop23.
+have islor1p3 := is_lof_imply_is_lor_on_line islo1p3.
+have oriented_abc := triangle_not_empty intp.
+rewrite /oriented_triangle_strict in oriented_abc.
+move => /fset1UP [|/fset2P []] ->q /andP [] /andP [];
+[have vc := vertices_to_triangle_correct islor12p|
+have vc := vertices_to_triangle_correct islorp23|
+have vc := vertices_to_triangle_correct islor1p3];
+move:vc => [v1 [v2 v3]];rewrite /vertex1 /vertex2 /vertex3;
+(try rewrite -v1);(try rewrite -v2);(try rewrite -v3) => islof1 islof2 islo3;
+rewrite /in_triangle;apply/andP;split;try (apply/andP;split);easy;
+[apply:(@is_left_of_trans (vertex1 t) (vertex2 t) (vertex3 t) p q);easy|
+rewrite is_left_of_circular;
+apply:(@is_left_of_trans2 (vertex2 t) (vertex1 t) (vertex3 t) p q);easy|
+apply:(@is_left_of_trans2 (vertex3 t) (vertex2 t) (vertex1 t) p q);easy|
+rewrite -is_left_of_circular;
+apply:(@is_left_of_trans (vertex2 t) (vertex3 t) (vertex1 t) p q);easy|
+rewrite is_left_of_circular;
+apply:(@is_left_of_trans (vertex3 t) (vertex1 t) (vertex2 t) p q);easy|
+rewrite -is_left_of_circular;
+apply:(@is_left_of_trans2 (vertex1 t) (vertex3 t) (vertex2 t) p q);easy].
+Qed.
 
 Hypothesis on_edge_split_triangle : 
   forall t, forall p, in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
@@ -644,8 +695,29 @@ Hypothesis on_edge_split_triangle :
       (in_triangle t q \/ (exists e0, e0 \in edges_set t /\ on_edge e0 q)).
 
 
+Hypothesis vertex_set_vertices_to_triangle :
+  forall a b c, vertex_set (vertices_to_triangle a b c) = [fset a;b;c].
 
-Open Local Scope ring_scope.
+Lemma split_aux_in_triangle_we t p:
+ in_triangle t p -> forall t1, t1 \in split_triangle_aux t p 
+                 -> forall q, in_triangle_w_edges t1 q 
+                 ->      in_triangle_w_edges t q.
+move => intp t1 t1_spl q.
+rewrite in_triangle_w_edge_edges.
+move => [q_t1 | [int1q|e_t1]];last first.
+    move :e_t1 => [e [e_t1 e_q]].
+    have test :=on_edge_split_triangle intp t1_spl e_t1 e_q.
+    rewrite in_triangle_w_edge_edges.
+    move:test => [|];first by move => ->;right; left.
+    by right;right.
+  rewrite in_triangle_w_edge_edges;right;left.
+  by apply:(split_aux_in_triangle intp t1_spl int1q).
+move:q_t1;move:t1_spl => /fset1UP [|/fset2P []] ->;
+rewrite vertex_set_vertices_to_triangle => /fsetUP [/fset2P[]|/fset1P] ->;
+rewrite in_triangle_w_edge_edges;
+[left|left|right;left|right;left|left|left|left|right;left|left] => //=;
+apply/imfsetP;[exists ord30|exists ord31|exists ord31|exists ord32|exists ord30|exists ord32] => //=.
+Qed.
 
 
 Hypothesis surface_non_empty :
@@ -784,11 +856,7 @@ apply:addr_ge0 => //=.
 by apply:mulr_ge0 => //=.
 Qed.
 
-Hypothesis in_triangle_on_edge : forall t, forall p,   in_triangle t p -> 
-                                 forall t2, (exists p2, in_triangle t2 p2) ->
-                                       forall e,  e \in edges_set t2 -> on_edge e p ->
-                                       exists q,  in_triangle t q /\ in_triangle t2 q.
-                                                                    
+                                                                   
                                            
 
 (* Remarque Yves: la solution pour a est :
@@ -926,8 +994,6 @@ case (i == [` vert_0_d]); case (i == [` vert_1_d]);
 case (i == [` vert_2_d]) => //=.
 Qed.
 
-Hypothesis vertex_set_vertices_to_triangle :
-  forall a b c, vertex_set (vertices_to_triangle a b c) = [fset a;b;c].
 
 Lemma in_vertex_set p A B C:
     is_true (p \in (vertex_set (vertices_to_triangle A B C))) 
@@ -1172,7 +1238,7 @@ move:t2_spl => /fsetUP; move=>[t2_spl|t2_spl];last first.
     have intwetq := (split_aux_in_triangle_we intp t2_spl intwet2q).
     move:t1_spl => /fsetD1P [t1_nt t1_tr].
     have q_vt := (nps_tr_d t1 t t1_tr t_tr q qvt1 intwetq).
-    have test:= (in_triangle_w_edge_edges t2 q).
+    have test:= (in_triangle_w_edge_edges t2 q). (*PROBLEM*)
     move:(intwet2q) => /test q_disj.
     move:q_disj => [q_vt2 | [int2q | t2e]] => //=.
       have abs := in_triangle_not_vert (split_aux_in_triangle intp t2_spl int2q).
