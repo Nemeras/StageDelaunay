@@ -239,8 +239,12 @@ Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
                               is_left_of p (vertex2 t) (vertex3 t) &&
                               is_left_of (vertex1 t) p (vertex3 t).
 
+Hypothesis axiom4_knuth : forall a b c d, is_left_of a b d ->
+                                     is_left_of b c d ->
+                                     is_left_of c a d ->
+                                     is_left_of a b c.
 
-Hypothesis triangle_not_empty : forall t, forall p, in_triangle t p -> oriented_triangle_strict t.
+
 
 Definition in_triangle_w_edges t p := 
   is_left_or_on_line (vertex1 t) (vertex2 t) p &&
@@ -303,6 +307,13 @@ Ltac easygeo :=
 easygeo_aux;
 try (by apply is_lof_imply_is_lor_on_line;easygeo_aux);
 try (by apply is_ol_imply_islor;easygeo_aux).
+
+
+Lemma triangle_not_empty t p:  in_triangle t p -> oriented_triangle_strict t.
+Proof.
+move => /andP[] /andP [] islof1 islof2 islof3;rewrite /oriented_triangle_strict.
+apply:(axiom4_knuth islof1);easygeo.
+Qed.
 
 Hypothesis all_triangles_oriented :
 forall t, oriented_triangle_strict t -> t = vertices_to_triangle (vertex1 t) (vertex2 t) (vertex3 t).
@@ -562,10 +573,7 @@ Hypothesis is_left_or_line_trans2 : forall a b c d q, is_left_or_on_line c b a -
                                            is_left_or_on_line c b d ->
                                            is_left_or_on_line c b q.
 
-Hypothesis axiom4_knuth : forall a b c d, is_left_of a b d ->
-                                     is_left_of b c d ->
-                                     is_left_of c a d ->
-                                     is_left_of a b c.
+
 
 Definition split_triangle tr t p := (split_triangle_aux t p ) `|` (tr `\ t).
 
@@ -754,7 +762,7 @@ rewrite /oriented_triangle_strict in oriented_abc.
 move => /fset1UP [|/fset2P []] ->q /andP [] /andP [];
 [have vc := vertices_to_triangle_correct islor12p|
 have vc := vertices_to_triangle_correct islorp23|
-have vc := vertices_to_trianglease_correct islor1p3];
+have vc := vertices_to_triangle_correct islor1p3];
 move:vc => [v1 [v2 v3]];rewrite /vertex1 /vertex2 /vertex3;
 (try rewrite -v1);(try rewrite -v2);(try rewrite -v3) => islof1 islof2 islo3;
 rewrite /in_triangle;apply/andP;split;try (apply/andP;split);easygeo;
@@ -770,12 +778,14 @@ rewrite -is_left_of_circular;
 apply:(@is_left_of_trans2 (vertex1 t) (vertex3 t) (vertex2 t) p q);easygeo].
 Qed.
 
-Hypothesis on_edge_split_triangle : 
-  forall t, forall p, in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
+Hypothesis on_edge_split_triangle : forall t, forall p,
+  in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
   forall e, e \in edges_set t0 -> forall q, on_edge e q -> 
       (in_triangle t q \/ (exists e0, e0 \in edges_set t /\ on_edge e0 q)).
+(*Proof.
+move => intp t0 /fset1UP [|/fset2P[]] -> e e_t0 q e_q.*)
 
-
+ 
 Hypothesis vertex_set_vertices_to_triangle :
   forall a b c, vertex_set (vertices_to_triangle a b c) = [fset a;b;c].
 
@@ -816,9 +826,10 @@ by apply:(split_triangle_aux_oriented intp).
 Qed.
 
 
-Hypothesis surface_non_empty :
-  forall p1 p2 p3, oriented_surface p1 p2 p3 > 0 -> 
-        exists p', in_triangle (vertices_to_triangle p1 p2 p3) p'.
+Hypothesis surface_non_empty : forall p1 p2 p3,
+  oriented_surface p1 p2 p3 > 0 -> 
+  exists p', in_triangle (vertices_to_triangle p1 p2 p3) p'.
+
 
 
 

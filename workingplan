@@ -82,12 +82,7 @@ Prouver que flip edge conserve triangulation
 	vertex_set_edge_triangle : OK
 
 
-	Hypotheses à supprimer (sont des lemmes) :
-	on_edge_split_triangle : semble etre un lemme : TODO
-	surface_non_empty : est un lemme, TODO.
-	triangle_not_empty : prouvable : TODO
-
-
+ 
 
 
 	Hypotheses restantes (Knuth et ci) :
@@ -99,6 +94,8 @@ Prouver que flip edge conserve triangulation
 	axiom4_knuth :
 
 	Autres Hypotheses restantes :
+	on_edge_split_triangle : 
+	surface_non_empty :
 	on_line_on_edge :
 	on_edge_on_line : 
 	vert_not_on_edges :	
