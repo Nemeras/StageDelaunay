@@ -39,8 +39,6 @@ Variable yCoord : P -> R.
 
 Variable vertex : T -> 'I_3 -> P.
 
-Variable vertex_edge : E -> 'I_2 -> P.
-
 Definition ord30 := @Ordinal 3 0 isT.
 Definition ord31 := @Ordinal 3 1 isT.
 Definition ord32 := @Ordinal 3 2 isT.
@@ -52,9 +50,6 @@ Definition ord21 := @Ordinal 2 1 isT.
 Definition vertex1 t := vertex t ord30.
 Definition vertex2 t := vertex t ord31.
 Definition vertex3 t := vertex t ord32.
-
-Definition vertex_edge1 e := vertex_edge e ord20.
-Definition vertex_edge2 e := vertex_edge e ord21.
 
 Variable vertices_to_edge : P -> P -> E.
 
@@ -72,8 +67,6 @@ Open Local Scope ring_scope.
 
 Definition vertex_set t := (vertex t) @` 'I_3.
 Definition edges_set t := (edge t) @` 'I_3.
-Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
-
 Variable vertices_to_triangle : P -> P -> P -> T.
 
 Definition is_left_of p a b := oriented_surface p a b > 0%R.
@@ -86,9 +79,6 @@ Hypothesis vertices_to_triangle_correct : forall a b c,
     a = vertex (vertices_to_triangle a b c) ord30 /\
     b = vertex (vertices_to_triangle a b c) ord31 /\
     c = vertex (vertices_to_triangle a b c) ord32.
-
-Hypothesis vertices_to_edge_correct :
-  forall a b, vertex_set_edge (vertices_to_edge a b) = [fset a;b].
 
 Hypothesis vertices_to_edge_sym :
   forall a b, vertices_to_edge a b = vertices_to_edge b a.
@@ -149,14 +139,14 @@ Hypothesis is_on_line_trans :
   forall a b c d, a != b -> is_on_line a b c -> is_on_line a b d ->
     is_on_line a c d.
 
-
 Hypothesis on_line_on_edge :
   forall a b c, is_left_of a b c -> forall q, is_on_line a c q -> 
                                    is_left_of a b q -> is_left_of b c q ->
                                    on_edge (vertices_to_edge a c) q.
 
 Hypothesis on_edge_on_line :
-  forall a b c, is_left_of a b c -> forall q, on_edge (vertices_to_edge a c) q ->
+  forall a b c, is_left_of a b c -> 
+  forall q, on_edge (vertices_to_edge a c) q ->
            is_on_line a c q /\ is_left_of a b q /\ is_left_of b c q.
 
 Lemma  is_left_or_on_split a b c :
