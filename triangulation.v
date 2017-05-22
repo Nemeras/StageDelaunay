@@ -12,11 +12,12 @@ Import GRing.Theory Num.Theory.
 
 Open Scope fset_scope.
 
-Lemma leq_imfset_card (T K : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+Lemma leq_imfset_card (T K : choiceType) (f : T -> K) P (A : {fset T})
   (p : finmempred P A) : (#|` imfset f p| <= #|` A|)%N.
 Proof.
 have vP (x : A) : P (val x) by rewrite -(finmempredE p) (valP x).
-rewrite (leq_trans _ (leq_imset_card (fun x : A => [` in_imfset f p (vP x)]) _)) //.
+rewrite
+  (leq_trans _ (leq_imset_card (fun x : A => [` in_imfset f p (vP x)]) _)) //.
 apply/subset_leq_card/subsetP=> /= x _; apply/imsetP => /=.
 have /imfsetP [t Pt x_def] := valP x.
 have tA : t \in A by rewrite (finmempredE p).
@@ -40,13 +41,7 @@ Variable vertex : T -> 'I_3 -> P.
 
 Variable vertex_edge : E -> 'I_2 -> P.
 
-Open Scope nat_scope.
-Lemma lt03 : 0<3.
-Proof.
-  by [].
-Qed.
-
-Definition ord30 := @Ordinal 3 0 lt03.
+Definition ord30 := @Ordinal 3 0 isT.
 Definition ord31 := @Ordinal 3 1 isT.
 Definition ord32 := @Ordinal 3 2 isT.
 
@@ -62,10 +57,7 @@ Definition vertex_edge1 e := vertex_edge e ord20.
 Definition vertex_edge2 e := vertex_edge e ord21.
 
 Variable vertices_to_edge : P -> P -> E.
-Definition edge (t:T) := fun (i:'I_3) =>
-    if i == ord30 then vertices_to_edge (vertex1 t) (vertex2 t)
-    else if i== ord31 then vertices_to_edge (vertex2 t) (vertex3 t)
-         else vertices_to_edge (vertex3 t) (vertex1 t).
+
 Variable edge : T -> 'I_3 -> E.
 
 Definition edge1 t := edge t ord30.
@@ -76,10 +68,9 @@ Open Scope fset_scope.
 
 Variable oriented_surface : P -> P -> P -> R.
 
-
 Open Local Scope ring_scope.
 
-Definition vertex_set t := [fset vertex t i | i in 'I_3].
+Definition vertex_set t := (vertex t) @` 'I_3.
 Definition edges_set t := (edge t) @` 'I_3.
 Definition vertex_set_edge e:= (vertex_edge e) @` 'I_2.
 
@@ -106,28 +97,25 @@ Hypothesis vertices_to_edge_sym :
 
 Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
 
-Definition oriented_triangle t:= oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
+Definition oriented_triangle t:=
+  oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>=0.
 
-Definition oriented_triangle_strict t := oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0.
-
-
+Definition oriented_triangle_strict t :=
+  oriented_surface (vertex1 t) (vertex2 t) (vertex3 t)>0.
 
 Hypothesis vertices_to_triangle_oriented :
-forall a b c, oriented_triangle (vertices_to_triangle a b c).
+  forall a b c, oriented_triangle (vertices_to_triangle a b c).
 
-Hypothesis oriented_surface_change1 : forall a, forall b, forall c,
-        oriented_surface a b c = -oriented_surface a c b.
+Hypothesis oriented_surface_change1 :
+  forall a b c, oriented_surface a b c = -oriented_surface a c b.
 
+Hypothesis oriented_surface_circular :
+  forall a b c, oriented_surface a b c = oriented_surface c a b.
 
-
-Hypothesis oriented_surface_circular : forall a, forall b, forall c, oriented_surface a b c = oriented_surface c a b.
-
-Lemma is_left_of_circular : forall a, forall b, forall c, is_left_of a b c = is_left_of c a b.
+Lemma is_left_of_circular  a b c: is_left_of a b c = is_left_of c a b.
 Proof.
-move => a b c.
 by rewrite /is_left_of oriented_surface_circular.
 Qed.
-
 
 Lemma is_left_or_on_line_circular a b c: 
         is_left_or_on_line a b c = is_left_or_on_line c a b.
@@ -144,21 +132,18 @@ rewrite -[X in 0 <= X]opprK oppr_ge0 ler_oppl oppr0 ltr_def.
 by move => /andP[].
 Qed.
 
-
-
 Definition is_on_line a b c := oriented_surface a b c == 0.
 
 Lemma is_on_line_sym a b c : is_on_line a b c = is_on_line b a c.
 Proof.
-by rewrite /is_on_line oriented_surface_change1
-oriented_surface_circular oppr_eq0.
+rewrite /is_on_line oriented_surface_change1.
+by rewrite oriented_surface_circular oppr_eq0.
 Qed.
 
 Lemma is_on_line_circular a b c : is_on_line a b c = is_on_line c a b.
 Proof.
 by rewrite /is_on_line oriented_surface_circular.
 Qed.
-
 
 Hypothesis is_on_line_trans :
   forall a b c d, is_on_line a b c -> is_on_line a b d -> is_on_line a c d.
