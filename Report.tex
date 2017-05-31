@@ -95,14 +95,16 @@ In the plane (where we stayed during this internship), the triangulation of a se
 
 More particularly, during this internship, we were interested in Delaunay triangulations : in the plane, a triangulation T of a set P of points is said to be a Delaunay triangulation if no point of P is in the circumcircle of a triangle of T.
 
-This, for instance, is not a Delaunay triangulation :\\
+Figure \ref{notDelaunay} for instance, is not a Delaunay triangulation.
+
 \begin{figure}[h]
 \centering
 \caption{\label{notDelaunay} Instance of a triangulation that is not a Delaunay triangulation}
 
 \includegraphics[scale=1]{dessin2}
 
-\end{figure}\\
+\end{figure}
+
 Delaunay triangulations are very useful in robotics. One of the interesting byproducts of Delaunay triangulations is the Voronoi diagram : the Voronoi diagram is the dual graph of the Delaunay triangulation and can be very useful, for instance, to modelise cellular coverage maps \cite{CelCov}, or for path planning \cite{PathPla}.
 
 \subsection{Coq/The Mathematical Component library}
@@ -315,8 +317,6 @@ In both case, the properties are here to assure the fact that the first part of 
 
 Finally, the two last properties are here to avoid degenerate cases with the triangles of the triangulation (triangulation shouldn't contain degenerate triangles). It is to be noted that the second property implies the first.
 
-\newpage
-
 \subsection{Convex Hulls}
 
 The definition of what is a triangulation is in dimension 2 requires first to define what is a convex hull of a point set D.
@@ -500,7 +500,7 @@ For the implementation of the functions, with ord$nx$ being the $x+1{th}$ elemen
 1 & \text{{\tt xCoord  c}} & \text{{\tt yCoord  c}}
 \end{matrix}$$\\
 This makes it so that most proofs on {\tt oriented\_surface} are very nice to do : one only needs to expand the determinant and then use automatic tactics on rings. The only difficulty was to add the ring on which we worked ($\mathbb{R}$ with the usual operations) so that the automatic tactic {\tt ring} worked.
-\newpage
+
 \item The predicate {\tt in\_circle p a b c}, testing if p is in the circumcircle of the triangle {\tt abc} can also be defined as testing if the determinant of this matrix is negative :
 
   $$\begin{matrix}
