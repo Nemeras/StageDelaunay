@@ -72,7 +72,26 @@ In geometry, a triangulation T of an object X of $\mathbb{R}^d$ is the partition
   \item the union of the simplices of T is X itself.
 \end{itemize}
 
-In the plane (where we stayed during this internship), the triangulation of a set of points is the partition of this set of points into triangles.
+In the plane (where we stayed during this internship), the triangulation of a set of points is the partition of this set of points into triangles.\\
+
+\begin{figure}
+  \centering
+  \caption{\label{Trig1} This is a triangulation}
+  \includegraphics[scale=2]{Trig1}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \caption{\label{NotTrig1} This is not a triangulation}
+  \includegraphics[scale=2]{NotTrig1}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \caption{\label{NotTrig2} This is not a triangulation}
+  \includegraphics[scale=2]{NotTrig2}
+\end{figure}
+
 
 More particularly, during this internship, we were interested in Delaunay triangulations : in the plane, a triangulation T of a set P of points is said to be a Delaunay triangulation if no point of P is in the circumcircle of a triangle of T.
 
@@ -89,7 +108,6 @@ Delaunay triangulations are very useful in robotics. One of the interesting bypr
 \subsection{Coq/The Mathematical Component library}
 
 To make things simpler, I used the {\sc{Mathematical Component}} library and the extension of {\sc{Coq}}'s tactic language, {\sc{SSReflect}}. The goal of the {\sc{Mathematical Component}} library project is to create a library of mathematical results, so that those result are easily reusable in {\sc{Coq}}. Examples of successful application of the {\sc{Mathematical Component}} library and {\sc{SSReflect}} are the proof of the four-color theorem \cite{Gonthier08} and of the odd order theorem \cite{odd}.
-\newpage
 
 \section{The Algorithm}
 \label{algo}
@@ -127,7 +145,6 @@ For instance, while Figure \ref{notDelaunay} was not a Delaunay triangulation, t
 \includegraphics[scale=1]{dessin1}
 \end{figure}\\
 This makes it possible to create a ``flipping'' algorithm : for any set of points, it is possible to obtain the Delaunay triangulation of this set of point by creating a random triangulation then applying this flipping step as many times as necessary.
-\newpage
 \section{Formalization of the Delaunay triangulation}
 \rule{\linewidth}{0.5pt}
 
@@ -155,7 +172,7 @@ Then, any implementation should also contain some geometrical predicates :
   \item {\tt is\_on\_line} which tests is 3 points are aligned.
 
 \end{enumerate}
-\newpage
+
 Those predicates easily come from another predicate : {\tt oriented\_surface} $a$ $b$ $c$  which computes the oriented surface described by the three points $a$,$b$,$c$ :
 \begin{itemize}
 \item {\tt is\_left\_of a b c} = ({\tt oriented\_surface a b c > 0})
@@ -205,7 +222,7 @@ There are also assumptions on the functions that are made to link functions betw
                            (vertices\_to\_edge a c);
                            (vertices\_to\_edge b c) $]$}.
 
-\newpage 
+
 Some are harder, because they are generalizations of Knuth's axioms or just come from harder geometrical facts:
 \begin{itemize}
 \item {\tt \begin{tabular}{ll} Hypothesis is\_left\_of\_trans : 
