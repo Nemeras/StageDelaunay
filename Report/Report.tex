@@ -22,6 +22,10 @@
 \usepackage[nottoc, notlof, notlot]{tocbibind}
 \setcounter{tocdepth}{2}
 
+\def\hypothesis#1#2{{\color{purple}Hypothesis} {\color{blue}#1}: {\tt #2}}
+\def\definition#1#2{{\color{purple}Definition} {\color{blue}#1} := {\tt #2}}
+\def\ttt#1#2{{\tt{\color{black}#1} #2}}
+
 %opening
 \newtheorem{theorem}{Theorem}
 \title{
@@ -76,20 +80,21 @@ In the plane (where we stayed during this internship), the triangulation of a se
 
 \begin{figure}
   \centering
-  \caption{\label{Trig1} This is a triangulation}
+  
   \includegraphics[scale=2]{Trig1}
+  \caption{\label{Trig1} This is a triangulation}
 \end{figure}
 
 \begin{figure}
   \centering
-  \caption{\label{NotTrig1} This is not a triangulation}
   \includegraphics[scale=2]{NotTrig1}
+  \caption{\label{NotTrig1} This is not a triangulation}
 \end{figure}
 
 \begin{figure}
   \centering
-  \caption{\label{NotTrig2} This is not a triangulation}
   \includegraphics[scale=2]{NotTrig2}
+  \caption{\label{NotTrig2} This is not a triangulation}
 \end{figure}
 
 
@@ -99,9 +104,8 @@ Figure \ref{notDelaunay} for instance, is not a Delaunay triangulation.
 
 \begin{figure}[h]
 \centering
-\caption{\label{notDelaunay} Instance of a triangulation that is not a Delaunay triangulation}
-
 \includegraphics[scale=1]{dessin2}
+\caption{\label{notDelaunay} Instance of a triangulation that is not a Delaunay triangulation}
 
 \end{figure}
 
@@ -136,8 +140,8 @@ Thus, adding a new point P to a triangulation T, when the new point is in the co
 \end{enumerate}
 \begin{figure}[h]
 \centering
+\includegraphics[scale=1]{adding}
 \caption{Adding a point to a triangulation}
-\includegraphics[scale=1]{adding} 
 \end{figure}
 \subsection{Flipping edges}
 
@@ -146,9 +150,8 @@ It is possible , from any triangulation of a set of point, to obtain a Delaunay 
 For instance, while Figure \ref{notDelaunay} was not a Delaunay triangulation, the result of an edge-flipping step, Figure \ref{DelaunayTriangulation}, however, is a Delaunay triangulation
 \begin{figure}[h]
 \centering
-
-\caption{\label{DelaunayTriangulation} Result of an edge-flipping step : example of Delaunay triangulation}
 \includegraphics[scale=1]{dessin1}
+\caption{\label{DelaunayTriangulation} Result of an edge-flipping step : example of Delaunay triangulation}
 \end{figure}\\
 This makes it possible to create a ``flipping'' algorithm : for any set of points, it is possible to obtain the Delaunay triangulation of this set of point by creating a random triangulation then applying this flipping step as many times as necessary.
 \section{Formalisation of the Delaunay triangulation}
@@ -159,11 +162,11 @@ The goal of the formalisation is to stay as much as possible at a level where ge
 Here we describe a formalisation of the Delaunay triangulation. Any implementation should contain a type P for the points, a type T for the triangles, a type E for the edges, a type $\mathbb{R}$ for the coordinates of the points (a real integral domain where all elements are positive or negative).
 Then , any implementation should contain basic functions :
 \begin{itemize}
-\item A function {\tt vertices\_to\_edge} to create an edge from two points
-\item A function {\tt vertices\_to\_triangles} to create a triangle from three points
-\item A function {\tt vertex}  that returns the first, second or third vertex of a triangle
-\item A function {\tt xCoord} that returns the X coordinate of a point
-\item A function {\tt yCoord} that returns the Y coordinate of a point
+\item A function \ttt{vertices\_to\_edge}{} to create an edge from two points
+\item A function \ttt{vertices\_to\_triangles}{} to create a triangle from three points
+\item A function \ttt{vertex}{}  that returns the first, second or third vertex of a triangle
+\item A function \ttt{xCoord}{} that returns the X coordinate of a point
+\item A function \ttt{yCoord}{} that returns the Y coordinate of a point
 \end{itemize}
 
 Here, a choice has been made so that proofs are simpler : the order of the vertices of a triangle is important. This means that the triangle $abc$ won't be the same triangle than the triangle $bca$.
@@ -172,57 +175,55 @@ Here, a choice has been made so that proofs are simpler : the order of the verti
 
 Then, any implementation should also contain some geometrical predicates :
 \begin{enumerate}
-\item {\tt is\_left\_of} and {\tt is\_left\_or\_on\_line} $a$ $b$ $c$ which test if the point $c$ is (strictly) left of the points $a$,$b$ e.g. if $a$,$b$,$c$ form a (strictly) well-oriented (counter-clockwise) triangle.
-\item {\tt in\_circle} $p$ $a$ $b$ $c$ which tests if a point $p$ is in the circumcircle of the triangle described by $a$,$b$,$c$.
-\item {\tt in\_triangle} $t$ $p$ and {\tt in\_triangle\_w\_edges} $t$ $p$ which test if p is (strictly) in t.
-  \item {\tt is\_on\_line} which tests is 3 points are aligned.
+\item \ttt{is\_left\_of}{} and \ttt{is\_left\_or\_on\_line}{$a$ $b$ $c$} which test if the point $c$ is (strictly) left of the points $a$,$b$ e.g. if $a$,$b$,$c$ form a (strictly) well-oriented (counter-clockwise) triangle.
+\item \ttt{in\_circle}{$p$ $a$ $b$ $c$} which tests if a point $p$ is in the circumcircle of the triangle described by $a$,$b$,$c$.
+\item \ttt{in\_triangle}{$t$ $p$} and \ttt{in\_triangle\_w\_edges}{$t$ $p$} which test if $p$ is (strictly) in $t$.
+  \item \ttt{is\_on\_line}{} which tests is 3 points are aligned.
 
 \end{enumerate}
 
-Those predicates easily come from another predicate : {\tt oriented\_surface} $a$ $b$ $c$  which computes the oriented surface described by the three points $a$,$b$,$c$ :
+Those predicates easily come from another predicate : \ttt{oriented\_surface}{$a$ $b$ $c$}  which computes the oriented surface described by the three points $a$,$b$,$c$ :
 \begin{itemize}
-\item {\tt is\_left\_of a b c} = ({\tt oriented\_surface a b c > 0})
-  \item {\tt is\_left\_or\_on\_line a b c} = ({\tt oriented\_surface a b c $\geq$ 0})
-  \item {\tt is\_on\_line a b c } = {\tt oriented\_surface a b c = 0}
+\item \ttt{is\_left\_of}{a b c = oriented\_surface a b c > 0}
+  \item \ttt{is\_left\_or\_on\_line}{a b c = oriented\_surface a b c $\geq$ 0}
+  \item \ttt{is\_on\_line}{a b c = oriented\_surface a b c = 0}
 \item \begin{tabular}{ll}
-       {\tt in\_triangle t p} = & {\tt is\_left\_of (vertex1 t) (vertex2 t) p} $\wedge$\\
-        & {\tt is\_left\_of p  (vertex2 t) (vertex3 t)} $\wedge$\\
-  & {\tt is\_left\_of (vertex1 t) p (vertex3 t)}
+       \ttt {in\_triangle}{t p = }& \ttt{}{is\_left\_of (vertex1 t) (vertex2 t) p} $\wedge$\\
+        &\ttt{}{is\_left\_of p (vertex2 t) (vertex3 t)} $\wedge$\\
+  & \ttt{}{is\_left\_of (vertex1 t) p (vertex3 t)}
       \end{tabular}
 \item \begin{tabular}{ll}
-       {\tt in\_triangle\_w\_edges t p} = & {\tt is\_left\_or\_on\_line (vertex1 t) (vertex2 t) p} $\wedge$\\
-        & {\tt is\_left\_or\_on\_line p  (vertex2 t) (vertex3 t)} $\wedge$\\
-  & {\tt is\_left\_or\_on\_line (vertex1 t) p (vertex3 t)}
-        \end{tabular}
+       \ttt{in\_triangle\_w\_edges t p}{= }& \ttt{}{is\_left\_or\_on\_line (vertex1 t) (vertex2 t) p} $\wedge$\\
+        & \ttt{}{is\_left\_or\_on\_line p  (vertex2 t) (vertex3 t)} $\wedge$\\
+  & \ttt{}{is\_left\_or\_on\_line (vertex1 t) p (vertex3 t)}
+      \end{tabular}
+ \item \ttt{oriented\_triangle}{t = oriented\_surface (vertex1 t) (vertex2 t) (vertex3 t) $\geq$ 0} 
   \end{itemize}.
 
-  The {\tt is\_left\_of} predicate is inspired by Knuth's idea of CC systems \cite{Knuth92}.
-  However, unlike him, we don't considere that our points are necessarily in general position. Thus, the opposite of {\tt is\_left\_of a b c} is not {\tt is\_left\_of b a c} but {\tt is\_left\_or\_on\_line b a c}. A broader explanation of what happens to Knuth's axioms when degenerate cases (aligned points) can happen can be found in \cite{Hull}.
+  The \ttt{is\_left\_of}{} predicate is inspired by Knuth's idea of CC systems \cite{Knuth92}.
+  However, unlike him, we don't considere that our points are necessarily in general position. Thus, the opposite of \ttt{is\_left\_of}{a b c} is not \ttt{is\_left\_of}{b a c} but \ttt{is\_left\_or\_on\_line}{b a c}. A broader explanation of what happens to Knuth's axioms when degenerate cases (aligned points) can happen can be found in \cite{Hull}.
 
   \subsection{Hypotheses}
 \label{Hypothesis}
 We put assumptions (that have to be proven true for any implementation) on the implementations of the predicates/functions. Some are easy :
 \begin{itemize}
-\item {\tt Hypothesis oriented\_surface\_xx :  $\forall$ x y, oriented\_surface x x y} = 0.
-\item {\tt Hypothesis oriented\_surface\_circular $\forall$ a b c, oriented\_surface a b c = oriented\_surface c a b}.
-\item {\tt Hypothesis oriented\_surface\_change : \\$\forall$ a b c, oriented\_surface a b c = - oriented\_surface b a c}.
-\item {\tt Hypothesis vertices\_to\_edge\_sym :
-    $\forall$ a b, vertices\_to\_edge a b = vertices\_to\_edge b a}.
+\item \hypothesis{oriented\_surface\_xx}{$\forall$ x y, {\tt oriented\_surface x x y} = 0}.
+\item \hypothesis{oriented\_surface\_circular}{$\forall$ a b c, oriented\_surface a b c = oriented\_surface c a b}.
+\item \hypothesis{oriented\_surface\_change}{$\forall$ a b c, oriented\_surface a b c = - oriented\_surface b a c}.
+\item \hypothesis{vertices\_to\_edge\_sym}{$\forall$ a b, vertices\_to\_edge a b = vertices\_to\_edge b a}.
   \item 
-{\tt Hypothesis vertices\_to\_triangle\_oriented :\\
-  $\forall$ a b c, oriented\_triangle (vertices\_to\_triangle a b c).}\\
-{\tt oriented\_triangle t} meaning that the triangle t is either well-oriented or flat.
-\item {\tt Hypothesis is\_on\_line\_trans :\\
-  $\forall$ a b c d, a != b $\rightarrow$ is\_on\_line a b c $\rightarrow$ is\_on\_line a b d $\rightarrow$
+\hypothesis{vertices\_to\_triangle\_oriented}{$\forall$ a b c, oriented\_triangle (vertices\_to\_triangle a b c).}
+\item\hypothesis{is\_on\_line\_trans}{$\forall$ a b c d, a != b $\rightarrow$ is\_on\_line a b c $\rightarrow$ is\_on\_line a b d $\rightarrow$
   is\_on\_line a c d}.
-\item {\tt Hypothesis vertices\_to\_triangle\_correct2 : $\forall$ p1 p2 p3, $\forall$ t,
+\item \hypothesis{vertices\_to\_triangle\_correct2}{\\$\forall$ p1 p2 p3, $\forall$ t,
           (t = vertices\_to\_triangle p1 p2 p3) ->
   ((p1 $\in$ vertex\_set t) $\wedge$ (p2 $\in$ vertex\_set t) $\wedge$ (p3 $\in$ vertex\_set t))}.
 
 \end{itemize}
-There are also assumptions on the functions that are made to link functions between each other : for instance, to explain what is the edge set of a strictly well-oriented triangle created thanks to vertices-to-triangle :\\
-{\tt Hypothesis edges\_set\_vertices\_to\_triangle:\\ 
-  $\forall$ a b c, is\_left\_of a b c $\rightarrow$
+There are also assumptions on the functions that are made to link functions between each other : for instance, to explain what is the edge set of a strictly well-oriented triangle created thanks to vertices-to-triangle :
+
+\hypothesis{edges\_set\_vertices\_to\_triangle:}
+  {\\$\forall$ a b c, is\_left\_of a b c $\rightarrow$
     edges\_set (vertices\_to\_triangle a b c) =\\ 
                        $[$ fset (vertices\_to\_edge a b);
                            (vertices\_to\_edge a c);
@@ -231,22 +232,22 @@ There are also assumptions on the functions that are made to link functions betw
 
 Some assumptions are harder, because they are generalizations of Knuth's axioms or just come from harder geometrical facts. For instance:
 \begin{itemize}
-\item {\tt \begin{tabular}{ll} Hypothesis is\_left\_of\_trans : 
-             $\forall$ a b c d q, &is\_left\_of a b c $\rightarrow$\\
+\item \hypothesis{is\_left\_of\_trans}{\\  \begin{tabular}{lll}
+                                          $\forall$ a b c d q, &is\_left\_of a b c $\rightarrow$\\
                                            &is\_left\_of a b d $\rightarrow$\\
                                            &is\_left\_of a b q $\rightarrow$\\
                                            &is\_left\_of q b d $\rightarrow$\\
                                            &is\_left\_of d b c $\rightarrow$\\
                                            &is\_left\_of q b c 
-           \end{tabular}}.
+           \end{tabular} }.
 \\
 \begin{figure}[h]
 \centering
+\includegraphics[scale=2]{Axiom5}
 \caption{Knuth's 5$^{th}$ Axiom}
-\includegraphics[scale=2]{Axiom5}\\
 \end{figure}\\
 The idea to understand this hypothesis is that we're sorting {\tt c d} and {\tt q} in a semi-plane defined by {\tt a} and {\tt b}.
-\item {\tt \begin{tabular}{ll} Hypothesis Axiom4 : 
+\item \hypothesis{Axiom 4}{\\ \begin{tabular}{ll}
              $\forall$ a b c d,                  &is\_left\_of a b d $\rightarrow$\\
                                            &is\_left\_of b c d $\rightarrow$\\
                                            &is\_left\_of c a d $\rightarrow$\\
@@ -254,32 +255,32 @@ The idea to understand this hypothesis is that we're sorting {\tt c d} and {\tt 
            \end{tabular}}.
 \begin{figure}[h]
 \centering
-\caption{Knuth's 4$^{th}$ Axiom}
 \includegraphics[scale=2]{Axiom4}
+\caption{Knuth's 4$^{th}$ Axiom}
 \end{figure}\\
-\item {\tt Hypothesis on\_line\_on\_edge} (Figure \ref{edge_line}) :\\
-  {\tt $\forall$ a b c, is\_left\_of a b c $\rightarrow$ $\forall$ q, is\_on\_line a c q $\rightarrow$ 
+\item \hypothesis{on\_line\_on\_edge}{(Figure \ref{edge_line}) :\\
+  $\forall$ a b c, is\_left\_of a b c $\rightarrow$ $\forall$ q, is\_on\_line a c q $\rightarrow$ 
                                    is\_left\_of a b q $\rightarrow$\\ is\_left\_of b c q $\rightarrow$
                                    on\_edge (vertices\_to\_edge a c) q.}
 \\
 \begin{figure}[h]
 \centering
+\includegraphics[scale=2]{oloe}
 \caption{\label{edge_line} Link between the geometrical predicates and being on an edge}
-\includegraphics[scale=2]{oloe}\\
 \end{figure}
-\item {\tt Hypothesis on\_edge\_on\_line } (Figure \ref{edge_line}):\\
-  {\tt$\forall$ a b c, is\_left\_of a b c $\rightarrow$
+\item \hypothesis{on\_edge\_on\_line}{(Figure \ref{edge_line}):\\
+  $\forall$ a b c, is\_left\_of a b c $\rightarrow$
   $\forall$ q, on\_edge (vertices\_to\_edge a c) q $\rightarrow$ \\
            is\_on\_line a c q $\wedge$ is\_left\_of a b q $\wedge$ is\_left\_of b c q.}
 
-       \item {\tt Hypothesis intersection\_of\_lines} (Figure \ref{intersection_line}) :
-           {\tt $\forall$ a b c d,
+       \item \hypothesis{intersection\_of\_lines}{(Figure \ref{intersection_line}) :
+            $\forall$ a b c d,
 is\_left\_of a b c -> is\_on\_line a b d ->
 is\_on\_line a c d -> d = a.}
 \\\begin{figure}[h]
 \centering
+\includegraphics[scale=2]{il}
 \caption{\label{intersection_line} the intersection of two lines that are not parallel is a point !}
-\includegraphics[scale=2]{il}\\
 \end{figure}
 \end{itemize}
 
@@ -289,32 +290,32 @@ is\_on\_line a c d -> d = a.}
 \label{definition_triangulation}
 Then, we define a triangulation Tr on a data set D as a finite set of triangles with points of D as vertices which satisfies some properties :
 \begin{enumerate}
-\item {\tt covers\_hull Tr D} : the whole convex hull of D is covered by the triangles of Tr
-\item {\tt covers\_vertices Tr D} : the points of D are exactly the vertices of the triangle of Tr.
-\item {\tt no\_cover\_intersection} : there is no point which is (strictly) in two different triangles of the triangulation. This is written by saying that if two triangles of the triangulation have a common point, then the two triangles are actually the same.
-  \item{\tt no\_point\_on\_segment} : no point can be a vertex of a triangle, and on the edge of another triangle (remark : the vertex of a triangle is considered to not be on the edge of this triangle). This is written as: if a vertex of a triangle of the triangulation is in another triangle of the triangulation, then it is a vertex of this triangle.
-\item {\tt triangle\_3\_vertices Tr} : every triangle of the triangulation has 3 vertices.
-\item {\tt triangle\_nempty Tr} : no triangle of Tr is empty (no flat triangle).
-\item {\tt oriented\_triangle\_triangulation Tr} : all triangle of the triangulation are well-oriented.
+\item \ttt{covers\_hull}{Tr D} : the whole convex hull of D is covered by the triangles of Tr
+\item \ttt{covers\_vertices}{Tr D} : the points of D are exactly the vertices of the triangle of Tr.
+\item \ttt{no\_cover\_intersection}{} : there is no point which is (strictly) in two different triangles of the triangulation. This is written by saying that if two triangles of the triangulation have a common point, then the two triangles are actually the same.
+  \item\ttt{no\_point\_on\_segment}{} : no point can be a vertex of a triangle, and on the edge of another triangle (remark : the vertex of a triangle is considered to not be on the edge of this triangle). This is written as: if a vertex of a triangle of the triangulation is in another triangle of the triangulation, then it is a vertex of this triangle.
+\item \ttt{triangle\_3\_vertices}{Tr} : every triangle of the triangulation has 3 vertices.
+\item \ttt{triangle\_nempty}{Tr} : no triangle of {\tt Tr} is empty (no flat triangle).
+\item \ttt{oriented\_triangle\_triangulation}{Tr} : all triangle of the triangulation are well-oriented.
 
-  Remark : by hypothesis, we force {\tt vertices\_to\_triangle} to return a well-oriented triangle so this hypothesis is extremely simple to prove in general.
+  Remark : by hypothesis, we force \ttt{vertices\_to\_triangle}{} to return a well-oriented triangle so this hypothesis is extremely simple to prove in general.
 \end{enumerate}
 The two first properties are here to express that the finite set of triangles Tr is indeed a triangulation of the whole data set D, and covers its convex hull with triangles.
 Then, the two next properties are here to avoid problems with how the triangles are positioned : 
 \begin{enumerate}
-\item {\tt no\_cover\_intersection} is here to avoid problems like in Figure \ref{nci} where two triangles {\tt ABC} and {\tt DEF} aren't well positioned; there exists a point {\tt P} that is in both {\tt ABC} and {\tt DEF}.
+\item \ttt{no\_cover\_intersection}{} is here to avoid problems like in Figure \ref{nci} where two triangles {\tt ABC} and {\tt DEF} aren't well positioned; there exists a point {\tt P} that is in both {\tt ABC} and {\tt DEF}.
 \\
 \begin{figure}[h]
 \centering
+\includegraphics[scale=2]{nci}
 \caption{\label{nci} {\tt no\_cover\_intersection}}
-\includegraphics[scale=2]{nci}\\
 \end{figure}
-\item {\tt no\_point\_on\_segment} is here to avoid problems like in Figure \ref{nps}, where the vertice {\tt B} of the triangle {\tt ABC} is on the edge {\tt DE} of the triangle {\tt DEF}.
+\item \ttt{no\_point\_on\_segment}{} is here to avoid problems like in Figure \ref{nps}, where the vertice {\tt B} of the triangle {\tt ABC} is on the edge {\tt DE} of the triangle {\tt DEF}.
 \\
 \begin{figure}[h]
 \centering
+\includegraphics[scale=2]{nps}
 \caption{\label{nps} {\tt no\_point\_on\_segment}}
-\includegraphics[scale=2]{nps}\\
 \end{figure}
 \end{enumerate}
 In both case, the properties are here to assure the fact that the first part of the definition of a triangulation is respected : the intersection of two simplices should either be empty or a face of those simplices.
@@ -347,9 +348,10 @@ with : $x_A =\frac{ \text{\tt oriented\_surface B C x}}{\text{\tt oriented\_surf
 
 \begin{figure}[h]
   \centering
-  \caption{\label{cara} relation between coefficient and surface}
+
   \includegraphics[scale=2]{cara.png}
 
+  \caption{\label{cara} Relation between coefficient and surface}
 \end{figure}
 
 
@@ -360,8 +362,8 @@ with : $x_A =\frac{ \text{\tt oriented\_surface B C x}}{\text{\tt oriented\_surf
 Following the algorithm described in section \ref{algo} the first step was writing a way to add points to a triangulation : given a triangle $t = ABC$, a point $p$, a triangulation $tr$, {\tt split\_triangle $tr$ $t$ $p$} returns $tr \smallsetminus t \cup \{ABp;pBC;ApC\}$.
 \begin{figure}[h]
   \centering
-  \caption{\label{split_triangle} {\tt split\_triangle}}
   \includegraphics[scale=2]{split_triangle}
+    \caption{\label{split_triangle} {\tt split\_triangle}}
 \end{figure}
 
  The theorem proven was :\\
@@ -435,8 +437,8 @@ It returns $tr \smallsetminus t1 \smallsetminus t2 \cup \{abd;bcd\}$. It's meant
 
 \begin{figure}[h]
   \centering
-  \caption{\label{flip_edge} An edge-flipping step}
   \includegraphics[scale=2]{flip_edge}
+    \caption{\label{flip_edge} An edge-flipping step}
 \end{figure}
 
 I won't write here the theorem I proved in this report, but, basically, the idea is the same as before (prove that a triangulation in transformed into another triangulation, but with more conditions) :
@@ -466,8 +468,8 @@ The proof for {\tt no\_cover\_intersection} needed the proof of a two new lemmas
 The first one is : if $q$ was (strictly) in a deleted triangle then it is either in one of the new triangles or on the common edge of those triangles.
 \begin{figure}[h]
   \centering
-  \caption{Here, the point is on the common edge}
   \includegraphics[scale=2]{flip_edge_nci}
+    \caption{Here, the point is on the common edge}
 \end{figure}
 
 The second lemma proven is : if $a$, $b$ and $c$ are in the vertex set of a triangle $t$, if t is well oriented then forall $p$, p is in {\tt vertices\_to\_triangle $a$ $b$ $c$} if and only if $p$ is in $t$. This looks simple, but actually made me realize a theorem was missing in Cyril Cohen's finmap library , which was quickly added.
@@ -493,15 +495,15 @@ Indeed, {\tt Coq} stops us from using a big part of the mental shortcuts we use 
 
 The next step of the work was to do an instantiation of the model. For the types :
 \begin{itemize}
-\item A point is a vector of size 2 of reals : {\tt Definition P := $'rV[R]_2$. }
-\item A triangle is a vector of size 3 of points : {\tt Definition T := $'rV[P]_3$. }
-\item An edge is a vector of size 2 of points : {\tt Definition E := $'rV[P]_2$. }
+\item A point is a vector of size 2 of reals : \definition{P}{$'rV[R]_2$. }
+\item A triangle is a vector of size 3 of points : \definition{T}{$'rV[P]_3$. }
+\item An edge is a vector of size 2 of points : \definition{E}{$'rV[P]_2$. }
 \end{itemize}
 For the implementation of the functions, with ord$nx$ being the $x+1{th}$ element of the Ordinal $n$ (a well ordered set with $n$ elements )::
  \begin{itemize}
-  \item {\tt Definition xCoord (p : P) := p ord10 ord20} ( in {\tt MathComp}, a vector of elements of $\mathbb{R}$ of size 2 is a function of the Ordinal 1 in the Ordinal 2 in $\mathbb{R}$). 
-  \item {\tt Definition yCoord (p : P) := p ord10 ord21}.
-   \item {\tt Definition vertex (t : T) := t ord10} which gives a function of the Ordinal 3 in P.
+  \item \definition{xCoord (p : P)}{p ord10 ord20} \\( in {\tt MathComp}, a vector of elements of $\mathbb{R}$ of size 2 is a function of the Ordinal 1 in the Ordinal 2 in $\mathbb{R}$). 
+  \item \definition{yCoord (p : P)}{p ord10 ord21}.
+   \item \definition{vertex (t : T)}{t ord10} which gives a function of the Ordinal 3 in P.
 \item {\tt oriented\_surface a b c} can be defined as the determinant of the matrix :
   $$\begin{matrix}
 1 & \text{{\tt xCoord  a}} & \text{{\tt yCoord  a}}\\
