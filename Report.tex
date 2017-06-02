@@ -225,7 +225,7 @@ There are also assumptions on the functions that are made to link functions betw
                            (vertices\_to\_edge b c) $]$}.
 
 
-Some are harder, because they are generalizations of Knuth's axioms or just come from harder geometrical facts:
+Some assumptions are harder, because they are generalizations of Knuth's axioms or just come from harder geometrical facts. For instance:
 \begin{itemize}
 \item {\tt \begin{tabular}{ll} Hypothesis is\_left\_of\_trans : 
              $\forall$ a b c d q, &is\_left\_of a b c $\rightarrow$\\
@@ -319,7 +319,7 @@ Finally, the two last properties are here to avoid degenerate cases with the tri
 
 \subsection{Convex Hulls}
 
-The definition of what is a triangulation is in dimension 2 requires first to define what is a convex hull of a point set D.
+The definition of what is a triangulation in dimension 2 requires first to define what is a convex hull of a point set D.
 Two different approach exist :
 \begin{enumerate}
 \item The first possibility, used by Knuth,  is to define the convex hull as a cyclic sequence S : {\tt (S1; S2; ...; Sn; S1)} of elements of D such that every point of D is ``encompassed'' within S, with {\tt P} being ``encompassed'' within S iff {\tt is\_left\_or\_on\_line Si Si+1 P} is true.
@@ -400,7 +400,7 @@ This is proven by proving the preservation of the six properties described in th
   The first one is stating that if a triangle is (strictly) in a new triangle, then it was in $t$.
   Its proof is quite simple and mainly uses Knuth's $5^{th}$ axiom, the ``transitivity'' (see Section \ref{Hypothesis}).
   
-  The second one is stating that a point is in (large definition) one of the new three triangles if and only if it was in (large definition) the triangle deleted from the triangulation. The proof of this lemma was actually very hard and long. It's a case-based reasoning on the position of the point in the big triangle. A trick was used to do the proof : I was certain that some hypotheses were not consistent,but I couldn't find how to use Knuth's axioms to prove it. After a discussion with Yves, we used an automated tool made by some previous students that tested the consistency of a list of hypotheses (of the type {\tt is\_left\_of A B C} ...) using Knuth's axioms, and finally found how to finish my proof from analysing the results.
+  The second one is stating that a point is in (large definition) one of the new three triangles if and only if it was in (large definition) the triangle deleted from the triangulation. The proof of this lemma was actually very hard and long. It's a case-based reasoning on the position of the point in the big triangle. A trick was used to do the proof : I was certain that some hypotheses were not consistent (and thus I could do a proof by contradiction), but I couldn't find how to use Knuth's axioms to prove it. After a discussion with Yves, we used an automated tool made by some previous students that tested the consistency of a list of hypotheses (of the type {\tt is\_left\_of A B C} ...) using Knuth's axioms, and finally found how to finish my proof from analysing the results.
 
   
   
@@ -445,8 +445,8 @@ Again, this is proven by proving the preservation of the six properties.
 
 \subsubsection{For {\tt covers\_hull}} 
 
-For {\tt covers\_hull}, the idea proof is quite the same as in Section \ref{cvh1}, but much simpler.
-It relies on a lemma : if a point was strictly in one of the previous two triangles, then it is strictly in one of the two new triangles.
+For {\tt covers\_hull}, the idea of the proof is quite the same as in Section \ref{cvh1}, but much simpler.
+It relies on a lemma : if a point was strictly in one of the previous two triangles, then it is in one of the two new triangles.
 
 The proof of this lemma is also a big case-based reasoning, but it is better automated this time because of the experience I gained between proving all the lemmas necessary for the first theorem.
 
@@ -470,14 +470,18 @@ The second lemma proven is : if $a$, $b$ and $c$ are in the vertex set of a tria
 The rest of the proof is, as always, just a case-based reasoning.
 
 \subsubsection{For {\tt no\_point\_on\_segment}}
-The proof for {\tt no\_point\_on\_segment} is, as usual, a case-based reasoning which needed a new lemma: if a point was in (large definition) a triangle that was deleted from the triangulation, then it's in (still large definition) one of the two new triangles.
+The proof for {\tt no\_point\_on\_segment} is, as usual, a case-based reasoning which needed a new lemma: if a point was in (large definition) a triangle that was deleted from the triangulation, then it's in (large definition) one of the two new triangles.
 
 \subsubsection{For {\tt triangles\_3vertices}, {\tt triangles\_nempty} and {\tt oriented\_triangle\_triangulation}}
-The proof for {\tt triangles\_3vertices} is a simple case-based reasoning that I succeed in automating quite a lot, which made it very short.
+The proof for {\tt triangles\_3vertices} is a simple case-based reasoning that I succeed in automating quite a lot, which made it short.
 
 The proof for {\tt triangles\_nempty} was also very short since it was direct from the hypotheses (we know that the oriented surface of the new triangles are positive by hypothesis so, directly, we know that there exist some points in them).
 
 Finally, the proof for {\tt oriented\_triangle\_triangulation} is very direct for the same reason as in Section \ref{oriented_simple}
+
+Proving the conservation of these properties was the main part of the internship. While they looked very simple to prove by hand, proving them in {\tt Coq} was a way more difficult task.
+
+Indeed, {\tt Coq} stops us from using a big part of the mental shortcuts we use to shorten proofs in our head (and it's the good aspect about {\tt Coq}, because it's one of the things that can induce false proofs on paper). One of the most important thing to remember, when proving things with {\tt Coq} and the {\tt Mathematical Component} library, is that it's usually best to try and make a plan for the proof, on paper, and then try to follow this plan.  If something is wrong during the proof and it's not possible to follow the plan, it's that either there is a problem with the proof, or that there is something missing in the library. It's actually very easy to get trapped by {\tt Coq} and try to do the proof by following {\tt Coq} instead of a proof plan !
 
 \section{Instantiation of the model}
 \rule{\linewidth}{0.5pt}
