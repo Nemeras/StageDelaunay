@@ -83,8 +83,6 @@ Hypothesis vertices_to_triangle_correct : forall a b c,
 Hypothesis vertices_to_edge_sym :
   forall a b, vertices_to_edge a b = vertices_to_edge b a.
 
-
-
 Hypothesis oriented_surface_x_x : forall x y, oriented_surface x x y = 0%R.
 
 Definition oriented_triangle t:=
@@ -202,14 +200,9 @@ Proof.
 by apply ltrW.
 Qed.
 
-
 Hypothesis vertices_to_triangle_correct2 : forall p1 p2 p3, forall t,
           (t = vertices_to_triangle p1 p2 p3) ->
   ((p1 \in vertex_set t) /\ (p2 \in vertex_set t) /\ (p3 \in vertex_set t)).
-
-
-
-
 
 Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
                               is_left_of p (vertex2 t) (vertex3 t) &&
@@ -220,26 +213,27 @@ Hypothesis axiom4_knuth : forall a b c d, is_left_of a b d ->
                                      is_left_of c a d ->
                                      is_left_of a b c.
 
-
-
 Definition in_triangle_w_edges t p := 
   is_left_or_on_line (vertex1 t) (vertex2 t) p &&
   is_left_or_on_line p (vertex2 t) (vertex3 t) &&
   is_left_or_on_line (vertex1 t) p (vertex3 t).
 
-Lemma in_triangle_imply_w_edges t p : in_triangle t p -> in_triangle_w_edges t p.
+Lemma in_triangle_imply_w_edges t p : in_triangle t p ->
+   in_triangle_w_edges t p.
 Proof.
 move => /andP [intp intp3];move:intp => /andP [intp1 intp2].
 by apply /andP;split;first apply /andP;first split;apply ltrW.
 Qed.
 
-Hypothesis in_triangle_on_edge : forall t, forall p,   in_triangle t p -> 
-                                 forall t2, (exists p2, in_triangle t2 p2) ->
-                                       forall e,  e \in edges_set t2 -> on_edge e p ->
-                                       exists q,  in_triangle t q /\ in_triangle t2 q.
+Hypothesis in_triangle_on_edge :
+  forall t, forall p,   in_triangle t p ->
+  forall t2, (exists p2, in_triangle t2 p2) ->
+  forall e,  e \in edges_set t2 -> on_edge e p ->
+  exists q,  in_triangle t q /\ in_triangle t2 q.
+
 Hypothesis intersection_of_lines : forall a b c d,
-is_left_of a b c -> is_on_line a b d ->
-is_on_line a c d -> d =a.
+  is_left_of a b c -> is_on_line a b d ->
+  is_on_line a c d -> d = a.
 
 Lemma is_left_or_on_line_on_line a b c :
   is_left_or_on_line a b c -> is_left_or_on_line a c b -> is_on_line a b c.
@@ -250,9 +244,8 @@ by rewrite /is_on_line;apply/eqP;symmetry;apply/eqP;
 rewrite eqr_le Habc;apply/andP;split.
 Qed.
 
-
 Hypothesis vertices_to_edge_in_edges_set:
-forall a, forall t,  a\in vertex_set t -> forall b, b \in vertex_set t ->
+forall a, forall t,  a \in vertex_set t -> forall b, b \in vertex_set t ->
 (vertices_to_edge a b) \in edges_set t.
 
 Lemma is_ol_imply_islor a b c :is_on_line a b c -> is_left_or_on_line a b c.
@@ -284,15 +277,16 @@ easygeo_aux;
 try (by apply is_lof_imply_is_lor_on_line;easygeo_aux);
 try (by apply is_ol_imply_islor;easygeo_aux).
 
-
 Lemma triangle_not_empty t p:  in_triangle t p -> oriented_triangle_strict t.
 Proof.
-move => /andP[] /andP [] islof1 islof2 islof3;rewrite /oriented_triangle_strict.
+move => /andP[] /andP [] islof1 islof2 islof3.
+rewrite /oriented_triangle_strict.
 apply:(axiom4_knuth islof1);easygeo.
 Qed.
 
 Hypothesis all_triangles_oriented :
-forall t, oriented_triangle_strict t -> t = vertices_to_triangle (vertex1 t) (vertex2 t) (vertex3 t).
+forall t, oriented_triangle_strict t ->
+  t = vertices_to_triangle (vertex1 t) (vertex2 t) (vertex3 t).
 
 Lemma in_triangle_w_edge_edges t: 
   oriented_triangle_strict t -> forall p, in_triangle_w_edges t p <->
@@ -413,13 +407,13 @@ Qed.
 Hypothesis vert_not_on_edges: forall t p,   oriented_triangle t -> p \in vertex_set t -> 
                          forall e, (e \in edges_set t -> on_edge e p -> false).
 
-Definition adjacent t1 t2:= #|` ((vertex_set t1) `&` (vertex_set t2))| = 2.
+Definition adjacent t1 t2 := #|` ((vertex_set t1) `&` (vertex_set t2))| = 2.
 
 Variable in_circle_determinant : P -> P -> P -> P -> R.
 
-Definition in_circle p a b c  := in_circle_determinant p a b c >0.
-Definition in_circle_wboundaries p a b c := in_circle_determinant p a b c >= 0.
+Definition in_circle p a b c  := 0 < in_circle_determinant p a b c.
 
+Definition in_circle_wboundaries p a b c := in_circle_determinant p a b c >= 0.
 
 Definition in_circle_triangle p t := in_circle p (vertex1 t) (vertex2 t) (vertex3 t).
 
@@ -584,7 +578,6 @@ Lemma vertex3_vertices_to_triangle p1 p2 p3 :
 Proof.
   move => p123.
   rewrite /vertex3.
-Search _ vertex vertices_to_triangle.
 assert (p123' : is_left_or_on_line p1 p2 p3).
   by apply: is_lof_imply_is_lor_on_line.
 by case: (vertices_to_triangle_correct p123') => _ [_ <-].
