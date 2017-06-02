@@ -105,11 +105,15 @@ Figure \ref{notDelaunay} for instance, is not a Delaunay triangulation.
 
 \end{figure}
 
-Delaunay triangulations are very useful in robotics. One of the interesting byproducts of Delaunay triangulations is the Voronoi diagram : the Voronoi diagram is the dual graph of the Delaunay triangulation and can be very useful, for instance, to modelise cellular coverage maps \cite{CelCov}, or for path planning \cite{PathPla}.
+An example of domain where Delaunay triangulations are very useful is Robotics. Indeed, one of the interesting byproducts of Delaunay triangulations is the Voronoi diagram (the dual graph of the Delaunay triangulation) that can be very useful, for instance, to modelise cellular coverage maps \cite{CelCov}, or for path planning \cite{PathPla}.
 
 \subsection{Coq/The Mathematical Component library}
 
-To make things simpler, I used the {\sc{Mathematical Component}} library and the extension of {\sc{Coq}}'s tactic language, {\sc{SSReflect}}. The goal of the {\sc{Mathematical Component}} library project is to create a library of mathematical results, so that those result are easily reusable in {\sc{Coq}}. Examples of successful application of the {\sc{Mathematical Component}} library and {\sc{SSReflect}} are the proof of the four-color theorem \cite{Gonthier08} and of the odd order theorem \cite{odd}.
+Machine-checked proofs are a research domain which has more than forty years (see \cite{Automath}). As such, the domain acquired a certain maturity; however, the main problem stays the difficulty of use of proof assistants.
+
+I wrote my formalisation of the Delaunay triangulation in the proof assistant {\tt Coq}, an environment and a language in which you can express and prove mathematical assertions and which automatically checks them. The advantage of {\tt Coq} (and proof assistants in general) is that, as long as you trust {\tt Coq}'s kernel, you can trust any {\tt Coq} proof. The choice of {\tt Coq} was very simple : {\tt Coq} is the most accomplished proof assistant in my opinion, and has the enormous advantage of having access to the {\tt Mathematical Component} library.
+
+To make proofs simpler, I used the {\sc{Mathematical Component}} library and the extension of {\sc{Coq}}'s tactic language, {\sc{SSReflect}}. The goal of the {\sc{Mathematical Component}} library project is to create a library of mathematical results, so that those result are easily reusable in {\sc{Coq}}. Examples of successful application of the {\sc{Mathematical Component}} library and {\sc{SSReflect}} are the proof of the four-color theorem \cite{Gonthier08} and of the odd order theorem \cite{odd}.
 
 \section{The Algorithm}
 \label{algo}
