@@ -59,9 +59,9 @@ Advisor \dotfill Yves Bertot \\
 \section{Introduction}
 \rule{\linewidth}{0.5pt}
 
-I did my second year of master's degree internship under the supervision of Yves Bertot at the INRIA Sophia-Antipolis in the Marelle team. The goal of this internship was to formalize Delaunay triangulations in the proof assistant {\sc{Coq}}.
+I did my second year of master's degree internship under the supervision of Yves Bertot at the INRIA Sophia-Antipolis in the Marelle team. The goal of this internship was to formalise Delaunay triangulations in the proof assistant {\sc{Coq}}.
 
-The goal of this internship was to formalize the Delaunay triangulations in the {\sc{Coq}} proof assistant, that is, to try and find a minimal number of geometrical properties that had to be satisfied in order to get Delaunay triangulations. One of the goal of the internship was to stay as close as possible to Knuth's paradigm in \cite{Knuth92} with the CC system, by describing the biggest number of geometrical properties using only combinatorial properties such as the orientation predicate ``is left of''.
+The goal of this internship was to formalise the Delaunay triangulations in the {\sc{Coq}} proof assistant, that is, to try and find a minimal number of geometrical properties that had to be satisfied in order to get Delaunay triangulations. One of the goal of the internship was to stay as close as possible to Knuth's paradigm in \cite{Knuth92} with the CC system, by describing the biggest number of geometrical properties using only combinatorial properties such as the orientation predicate ``is left of''.
 
 \subsection{Triangulations and Applications}
 
@@ -127,7 +127,7 @@ The context of the algorithm studied is, given a set of points in a plane, how t
 
 \subsection{Adding points}
 
-In itself, adding the point to the existing triangulation is not a trivial problem, depending on whether the new point is in the convex hull of the existing points or not. In the litterature (\cite{Del}), for incremental algorithm, it is generally considered that the sites studied are inclosed within large triangles, which basically means that every new point will be in the convex hull of the previous ones. This was considered to be the case here. If this is not the case, then there is the need of an incremental algorithm to create convex hulls. The formalization of such an algorithm has been done by David Pichardie in \cite{Hull}.
+In itself, adding the point to the existing triangulation is not a trivial problem, depending on whether the new point is in the convex hull of the existing points or not. In the litterature (\cite{Del}), for incremental algorithm, it is generally considered that the sites studied are inclosed within large triangles, which basically means that every new point will be in the convex hull of the previous ones. This was considered to be the case here. If this is not the case, then there is the need of an incremental algorithm to create convex hulls. The formalisation of such an algorithm has been done by David Pichardie in \cite{Hull}.
 
 Thus, adding a new point P to a triangulation T, when the new point is in the convex hull of the triangulation, is a two step process :
 \begin{enumerate}
@@ -151,28 +151,28 @@ For instance, while Figure \ref{notDelaunay} was not a Delaunay triangulation, t
 \includegraphics[scale=1]{dessin1}
 \end{figure}\\
 This makes it possible to create a ``flipping'' algorithm : for any set of points, it is possible to obtain the Delaunay triangulation of this set of point by creating a random triangulation then applying this flipping step as many times as necessary.
-\section{Formalization of the Delaunay triangulation}
+\section{Formalisation of the Delaunay triangulation}
 \rule{\linewidth}{0.5pt}
 
-The goal of the formalization is to stay as much as possible at a level where geometrical properties, predicates, etc, speak about mathematical concepts (for instance, points) as concepts (for instance, a point being a point versus a point being a pair of coordinates). Basically, the formalization describes what properties every implementation of the concept should satisfy.
+The goal of the formalisation is to stay as much as possible at a level where geometrical properties, predicates, etc, speak about mathematical concepts (for instance, points) as concepts (for instance, a point being a point versus a point being a pair of coordinates). Basically, the formalisation describes what properties every implementation of the concept should satisfy.
 
-Here we describe a formalization of the Delaunay triangulation. Any implementation should contain a type P for the points, a type T for the triangles, a type E for the edges, a type $\mathbb{R}$ for the coordinates of the points (a real integral domain where all elements are positive or negative).
+Here we describe a formalisation of the Delaunay triangulation. Any implementation should contain a type P for the points, a type T for the triangles, a type E for the edges, a type $\mathbb{R}$ for the coordinates of the points (a real integral domain where all elements are positive or negative).
 Then , any implementation should contain basic functions :
 \begin{itemize}
 \item A function {\tt vertices\_to\_edge} to create an edge from two points
 \item A function {\tt vertices\_to\_triangles} to create a triangle from three points
-\item A function {\tt vertex}  that gives the first, second or third vertex of a triangle
-\item A function {\tt xCoord} that gives the X coordinate of a point
-\item A function {\tt yCoord} that gives the Y coordinate of a point
+\item A function {\tt vertex}  that returns the first, second or third vertex of a triangle
+\item A function {\tt xCoord} that returns the X coordinate of a point
+\item A function {\tt yCoord} that returns the Y coordinate of a point
 \end{itemize}
 
-Here, a choice has been made so that proofs are simpler : the order of the vertices of a triangle is important. This means that the triangle that has $a,b,c$ as vertices won't be the same triangle than the triangle that has $b,c,a$ as vertices.
+Here, a choice has been made so that proofs are simpler : the order of the vertices of a triangle is important. This means that the triangle $abc$ won't be the same triangle than the triangle $bca$.
 
 \subsection{Geometrical predicates}
 
 Then, any implementation should also contain some geometrical predicates :
 \begin{enumerate}
-\item {\tt is\_left\_of} and {\tt is\_left\_or\_on\_line} $a$ $b$ $c$ which test if the point $c$ is (strictly) left of the points $a$,$b$, e.g. if $a$,$b$,$c$ form a (strictly) well-oriented triangle.
+\item {\tt is\_left\_of} and {\tt is\_left\_or\_on\_line} $a$ $b$ $c$ which test if the point $c$ is (strictly) left of the points $a$,$b$ e.g. if $a$,$b$,$c$ form a (strictly) well-oriented (counter-clockwise) triangle.
 \item {\tt in\_circle} $p$ $a$ $b$ $c$ which tests if a point $p$ is in the circumcircle of the triangle described by $a$,$b$,$c$.
 \item {\tt in\_triangle} $t$ $p$ and {\tt in\_triangle\_w\_edges} $t$ $p$ which test if p is (strictly) in t.
   \item {\tt is\_on\_line} which tests is 3 points are aligned.
@@ -292,7 +292,7 @@ Then, we define a triangulation Tr on a data set D as a finite set of triangles 
 \item {\tt covers\_hull Tr D} : the whole convex hull of D is covered by the triangles of Tr
 \item {\tt covers\_vertices Tr D} : the points of D are exactly the vertices of the triangle of Tr.
 \item {\tt no\_cover\_intersection} : there is no point which is (strictly) in two different triangles of the triangulation. This is written by saying that if two triangles of the triangulation have a common point, then the two triangles are actually the same.
-  \item{\tt no\_point\_on\_segment} : no point can be a vertex of a triangle, and on the edge (but not a vertex) of another triangle. This is written that if a vertex of a triangle of the triangulation is in another triangle of the triangulation, then it is a vertex of this triangle.
+  \item{\tt no\_point\_on\_segment} : no point can be a vertex of a triangle, and on the edge of another triangle (remark : the vertex of a triangle is considered to not be on the edge of this triangle). This is written as: if a vertex of a triangle of the triangulation is in another triangle of the triangulation, then it is a vertex of this triangle.
 \item {\tt triangle\_3\_vertices Tr} : every triangle of the triangulation has 3 vertices.
 \item {\tt triangle\_nempty Tr} : no triangle of Tr is empty (no flat triangle).
 \item {\tt oriented\_triangle\_triangulation Tr} : all triangle of the triangulation are well-oriented.
@@ -324,11 +324,11 @@ Finally, the two last properties are here to avoid degenerate cases with the tri
 \subsection{Convex Hulls}
 
 The definition of what is a triangulation in dimension 2 requires first to define what is a convex hull of a point set D.
-Two different approach exist :
+Two different approachs exist :
 \begin{enumerate}
 \item The first possibility, used by Knuth,  is to define the convex hull as a cyclic sequence S : {\tt (S1; S2; ...; Sn; S1)} of elements of D such that every point of D is ``encompassed'' within S, with {\tt P} being ``encompassed'' within S iff {\tt is\_left\_or\_on\_line Si Si+1 P} is true.
   It's a more geometrical definition.
-\item The second possibility if via the notion of barycenter : it is the smallest subset {\tt H} of {\tt D} such that every point of {\tt D} is a barycenter of the points of {\tt H}.
+\item The second possibility is via the notion of barycenter : it is the smallest subset {\tt H} of {\tt D} such that every point of {\tt D} is a barycenter of the points of {\tt H}.
 \end{enumerate}
 
 It's the second approach that was used here. It has two main benefits :
@@ -362,7 +362,7 @@ Following the algorithm described in section \ref{algo} the first step was writi
   \caption{\label{split_triangle} {\tt split\_triangle}}
   \includegraphics[scale=2]{split_triangle}
 \end{figure}
-\newpage
+
  The theorem proven was :\\
 {\tt Theorem triangulation\_split\_triangle:\\
   $\forall$ tr, t, p, d, d != fset0 -> p $\notin$ d $\rightarrow$
@@ -395,7 +395,7 @@ This is proven by proving the preservation of the six properties described in th
   \subsubsection{For {\tt covers\_vertices}}
   \label{cvv1}
   
-  The proof for {\tt covers\_vertices} looks also quite simple. However, actually quite long to do with Coq : for instance, when we say that $q$ is the vertex of a triangle $t$, we write that $q$ is in {\tt edges\_set t} and then we have to do a case-based reasoning (is $q$ the first vertex of $t$ or the second or the third...).
+  The proof for {\tt covers\_vertices} looks also quite simple. However, it is actually quite long to do with Coq : for instance, when we say that $q$ is the vertex of a triangle $t$, we write that $q$ is in {\tt edges\_set t} and then we have to do a case-based reasoning (is $q$ the first vertex of $t$ or the second or the third...).
 
   \subsubsection{For {\tt no\_cover\_intersection}}
 
@@ -529,7 +529,7 @@ The proofs can be grouped in several types :
     \item A last type of proof is the proofs of Knuth's axioms. I didn't have time to begin proving these at all. However, some (most ?) of them could probably be recovered from previous work done by other students (for instance, the work on convex hulls y David Pichardie in \cite{Hull}
   \end{enumerate}
 
-  The instanciation of the model was a very interesting part of the internship. When I tried to do it, I realised a lot of problems about the first version of my formalization of the Delaunay triangulation : some hypothesis were not precise enough, some were even false (for instance, a problem I had was that it's sometimes hard to realisef than triangles can be flat when thinking about hypotheses).
+  The instanciation of the model was a very interesting part of the internship. When I tried to do it, I realised a lot of problems about the first version of my formalisation of the Delaunay triangulation : some hypothesis were not precise enough, some were even false (for instance, a problem I had was that it's sometimes hard to realisef than triangles can be flat when thinking about hypotheses).
 
 
 %\section{Examples of proofs}
@@ -546,8 +546,8 @@ There are some clear possible paths of improvement for my work. First, all the p
 
 Then, when this is finished, there are some other possibilities to extend my work :
 \begin{enumerate}
-\item First, a good way to extend this work could be to generalize the formalization of Delaunay Triangulations to algorithm that work in higher dimension. In fact, the method I formalized, the incremental construction using flips, can be generalized in dimension 3 or highed (\cite{CompGeoAlgo}). However, the complexity can be exponential in the dimension (as shown in \cite{IncrementalDimension})
-\item Another idea could be to try and formalize other Delaunay Triangulation algorithm. It is shown in \cite{Comparison} that the better method to compute Delaunay Triangulation is a Divide and Conquer algorithm presented in \cite{AlgoDivide}. An implementation of this algorithm is presented here :\\
+\item First, a good way to extend this work could be to generalize the formalisation of Delaunay Triangulations to algorithm that work in higher dimension. In fact, the method I formalised, the incremental construction using flips, can be generalized in dimension 3 or highed (\cite{CompGeoAlgo}). However, the complexity can be exponential in the dimension (as shown in \cite{IncrementalDimension})
+\item Another idea could be to try and formalise other Delaunay Triangulation algorithm. It is shown in \cite{Comparison} that the better method to compute Delaunay Triangulation is a Divide and Conquer algorithm presented in \cite{AlgoDivide}. An implementation of this algorithm is presented here :\\
   \href{http://www.geom.uiuc.edu/~samuelp/del_project.html}{{\tt http://www.geom.uiuc.edu/$\sim$samuelp/del\_project.html}}
 \end{enumerate}
 
