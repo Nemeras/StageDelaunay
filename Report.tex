@@ -404,7 +404,7 @@ This is proven by proving the preservation of the six properties described in th
   The first one is stating that if a triangle is (strictly) in a new triangle, then it was in $t$.
   Its proof is quite simple and mainly uses Knuth's $5^{th}$ axiom, the ``transitivity'' (see Section \ref{Hypothesis}).
   
-  The second one is stating that a point is in (large definition) one of the new three triangles if and only if it was in (large definition) the triangle deleted from the triangulation. The proof of this lemma was actually very hard and long. It's a case-based reasoning on the position of the point in the big triangle. A trick was used to do the proof : I was certain that some hypotheses were not consistent (and thus I could do a proof by contradiction), but I couldn't find how to use Knuth's axioms to prove it. After a discussion with Yves, we used an automated tool made by some previous students that tested the consistency of a list of hypotheses (of the type {\tt is\_left\_of A B C} ...) using Knuth's axioms, and finally found how to finish my proof from analysing the results.
+  The second one is stating that a point is in (large definition) one of the new three triangles if and only if it was in (large definition) the triangle deleted from the triangulation. The proof of this lemma was actually very hard and long. It's a case-based reasoning on the position of the point in the big triangle. A trick was used to do the proof : I was certain that some hypotheses were not consistent (and thus I could do a proof by contradiction in some cases), but I couldn't find how to use Knuth's axioms to prove it. After a discussion with Yves, we used an automated tool made by some previous students that tested the consistency of a list of hypotheses (of the type {\tt is\_left\_of A B C} ...) using Knuth's axioms, and finally found how to finish my proof from analysing the results.
 
   
   
@@ -441,8 +441,8 @@ It returns $tr \smallsetminus t1 \smallsetminus t2 \cup \{abd;bcd\}$. It's meant
 I won't write here the theorem I proved in this report, but, basically, the idea is the same as before (prove that a triangulation in transformed into another triangulation, but with more conditions) :
 \begin{itemize}
 \item $t_1$ and $t_2$ should be triangles of a triangulation $tr$ on a data set $d$.  
-\item $a$,$b$ and $c$ should be points of the data set, vertices of $t_1$ and form a well oriented triangle (we have {\tt is\_left\_of $a$ $b$ $c$}
-\item $a$,$c$ and $d$ should be points of the data set, vertices of $t_2$ and form a well oriented triangle (we have {\tt is\_left\_of $a$ $c$ $d$}
+\item $a$,$b$ and $c$ should be points of the data set, vertices of $t_1$ and form a well oriented triangle (we have {\tt is\_left\_of $a$ $b$ $c$})
+\item $a$,$c$ and $d$ should be points of the data set, vertices of $t_2$ and form a well oriented triangle (we have {\tt is\_left\_of $a$ $c$ $d$})
 \end{itemize}
 The way it was written helps with the proofs. It avoid writing things like $t1 = ${\tt vertices\_to\_triangle $a$ $b$ $c$} which would be a problem because of the fact that the order of the vertices of a triangle is important.\\
 Again, this is proven by proving the preservation of the six properties.
@@ -485,7 +485,7 @@ Finally, the proof for {\tt oriented\_triangle\_triangulation} is very direct fo
 
 Proving the conservation of these properties was the main part of the internship. While they looked very simple to prove by hand, proving them in {\tt Coq} was a way more difficult task.
 
-Indeed, {\tt Coq} stops us from using a big part of the mental shortcuts we use to shorten proofs in our head (and it's the good aspect about {\tt Coq}, because it's one of the things that can induce false proofs on paper). One of the most important thing to remember, when proving things with {\tt Coq} and the {\tt Mathematical Component} library, is that it's usually best to try and make a plan for the proof, on paper, and then try to follow this plan.  If something is wrong during the proof and it's not possible to follow the plan, it's that either there is a problem with the proof, or that there is something missing in the library. It's actually very easy to get trapped by {\tt Coq} and try to do the proof by following {\tt Coq} instead of a proof plan !
+Indeed, {\tt Coq} stops us from using a big part of the mental shortcuts we use to shorten proofs in our head (and it's the good aspect about {\tt Coq}, because it's one of the things that can induce false proofs on paper). One of the most important thing to remember, when proving things with {\tt Coq} and the {\tt Mathematical Component} library, is that it's usually best to try and make a plan for the proof, on paper, and then try to follow this plan.  If something is wrong during the proof and it's not possible to follow the plan, it's that either there is a problem with the proof, or that there is something missing in the library. It's actually very easy to get trapped by {\tt Coq} and try to do the proof by following {\tt Coq} instead of a proof plan!
 
 \section{Instantiation of the model}
 \rule{\linewidth}{0.5pt}
@@ -517,19 +517,26 @@ This makes it so that most proofs on {\tt oriented\_surface} are very nice to do
 1 & \text{{\tt xCoord  b}} & \text{{\tt yCoord  b}}& \text{{\tt (xCoord  b)$^2$ + (yCoord  b)$^2$}}\\
 1 & \text{{\tt xCoord  c}} & \text{{\tt yCoord  c}}& \text{{\tt (xCoord  c)$^2$ + (yCoord  c)$^2$}}
 \end{matrix}$$\\
+\item The implementations of {\tt vertices\_to\_triangle} and {\tt vertices\_to\_edge} were not trivial to do.
+
+  First, for {\tt vertices\_to\_triangle a b c}, since we require in the formalisation that any triangle obtained by {\tt vertices\_to\_triangle} should be well-oriented, we have to check if $abc$ form a well-oriented triangle. If yes, we return $abc$, else we return $bac$ which will be oriented by definition of the {\tt is\_left\_of} predicate.
+
+  Then, for {\tt vertices\_to\_edge}, we require, for every {\tt a} and {\tt b}, that {\tt vertices\_to\_edge a b } = {\tt vertices\_to\_edge b a}. To do that, we define a lexicographic order on the points. Then, if {\tt a} $\leq$ {\tt b} we return {\tt ab}, else we return {\tt ba}.
 \end{itemize}
 The proofs can be grouped in several types :
 \begin{enumerate}
-\item The proofs on the geometrical predicates (for instance, the fact that {\tt oriented\_surface a b c} = {\tt oriented\_surface b c a} = {- \tt oriented\_surface b a c}) were quite easy because of the fact that proofs on determinants only require to expand the determinants and then do some calculus (which is automatic with the tactic {\tt ring}. I reused some work done by a previous intern, Wassim Haffaf, in this part (the way he expanded 3 x 3 determinants for instance).
+\item The proofs on the geometrical predicates (for instance, the fact that {\tt oriented\_surface a b c} = {\tt oriented\_surface b c a} = {- \tt oriented\_surface b a c}) were quite easy because of the fact that proofs on determinants only require to expand the determinants and then do some calculus, which is automatic with the tactic {\tt ring}. I reused some work done by a previous intern, Wassim Haffaf, in this part (the way he expanded 3 x 3 determinants for instance).
 \item The proofs requiring more geometrical facts (a good example of this is the proof of the hypothesis {\tt on\_edge\_on\_line}, see Section \ref{Hypothesis}).
 
   Those were way harder and I didn't have the time to finish them all. {\tt on\_edge\_on\_line} and {\tt on\_line\_on\_edge} are two examples of proofs I tried to do but couldn't finish because I was running out of time and the proofs were very difficult.
   \item The proofs on the functions (for instance, the proofs on {\tt edge\_set} and {\tt vertices\_to\_triangle}). Those were generally simpler than the previous type of proofs (the difficulty coming more from the use of {\tt Coq} and how to do case-based reasoning in an intelligent/automatic way, more than from geometrical problems). I still couldn't finish them all , but I managed to do a good part of them. 
 
-    \item A last type of proof is the proofs of Knuth's axioms. I didn't have time to begin proving these at all. However, some (most ?) of them could probably be recovered from previous work done by other students (for instance, the work on convex hulls y David Pichardie in \cite{Hull}
+  \item The proofs of Knuth's axioms.
+
+    I didn't have time to begin proving these at all. However, some (most ?) of them could probably be recovered from previous work done by other students (for instance, the work on convex hulls done by David Pichardie (see \cite{Hull}).
   \end{enumerate}
 
-  The instanciation of the model was a very interesting part of the internship. When I tried to do it, I realised a lot of problems about the first version of my formalisation of the Delaunay triangulation : some hypothesis were not precise enough, some were even false (for instance, a problem I had was that it's sometimes hard to realisef than triangles can be flat when thinking about hypotheses).
+  The instanciation of the model was a very interesting part of the internship. When I tried to do it, I realised a lot of problems about the first version of my formalisation of the Delaunay triangulation : some hypothesis were not precise enough, some were even false (for instance, a problem I had was that it's sometimes hard to realise that triangles can be flat when thinking about hypotheses), and I had to rethink a lot of hypotheses and proofs.
 
 
 %\section{Examples of proofs}
@@ -556,14 +563,14 @@ Then, when this is finished, there are some other possibilities to extend my wor
 
 There are also some things that could be changed about the work I've done.
 
-First, my proficiency with {\tt Coq} and, especially, {\tt SSReflect} changed during the internship. I already followed, before it, a one week course on {\tt SSReflect} and I've done an internship in Rennes where I've used {\tt Coq} to do proofs on programs. However, this was not comparable to how I had to used {\tt Coq} during this internship. As such, at the beginning of the internship, I've taken lots of time to prove things that would have been very easy for me at the end of the internship.
+First, my proficiency with {\tt Coq} and, especially, {\tt SSReflect} changed during the internship. I already followed, before it, a one week course on {\tt SSReflect} and I've done an internship in IRISA,Rennes where I've used {\tt Coq} to do proofs on programs. However, this was not comparable to how I had to use {\tt Coq} during this internship. As such, at the beginning of the internship, I've taken lots of time to prove things that would have been very easy for me at the end of the internship.
 
   Moreover, the proofs I've done at the end of the internship are ``cleaner'' than the one I've done at the beginning at the internship, taking advantage from the use of the syntax of {\tt SSReflect} and of tricks like the use of the tactic {\tt try}.
 
-  Also, near the end of the internship, I wrote a little (very simple) tactic, which I named {\tt easygeo} \label{easygeo}. I realised, maybe a little too late, that I spent too much time thinking on how to use my hypotheses. Indeed, there are lots case where I wanted to use a theorem, with a pack of hypotheses, but, instead of having, for instance, {\tt is\_left\_of b c a}, I had, as an hypothesis, {\tt is\_left\_of a b c} (which is usually the same). Thus, before applying the theorem I wanted to apply, I had to spend time rewriting my hypothesis with lemmas. The goal of this tactis, {\tt easygeo}, was to basically use brute force to solve case : for instance, if I wanted to prove {\tt is\_left\_of a b c} and I had, {\tt is\_left\_of b c a}, the tactic would solve instantly the goal. Since I wrote this tactic very late in the internship, this tactic isn't (much) used in most of the proofs.
+  Also, near the end of the internship, I wrote a little (very simple) tactic, which I named {\tt easygeo} \label{easygeo}. I realised, maybe a little too late, that I spent too much time thinking on how to use my hypotheses. Indeed, there were lots of cases where I wanted to use a theorem, with a pack of hypotheses. But, instead of having, for instance, {\tt is\_left\_of b c a}, I had, as an hypothesis, {\tt is\_left\_of a b c} (which we know is equivalent). Thus, before applying the theorem I wanted to apply, I had to spend time rewriting my hypothesis with lemmas. The goal of this tactis, {\tt easygeo}, was to basically use brute force to solve some cases: for instance, if I wanted to prove {\tt is\_left\_of a b c} and I had, {\tt is\_left\_of b c a}, the tactic would solve instantly the goal. Since I wrote this tactic very late in the internship, this tactic isn't (much) used in most of the proofs.
 
 \section{Acknowledgements}
-I would like to thank a lot my supervisor, Yves Bertot for all the time he spent helping be during this internship, and all the good references he gave to help me. I would also like to acknowledge Cyril Cohen, who helped me a lot during the internship and Laurence Rideau, who helped me find this internship and also during it. I also want to thank all the other members of the MARELLE team at INRIA Sophia-Antipolis for their friendly welcome and help.
+I would like to thank a lot my supervisor, Yves Bertot for all the time he spent helping me during this internship, and all the good references he gave to help me. I would also like to acknowledge Cyril Cohen, who helped me a lot during the internship and Laurence Rideau, who helped me find this internship. I also want to thank all the other members of the MARELLE team at INRIA Sophia-Antipolis for their friendly welcome and help.
 
 I would also like to acknowledge Pierre Alliez, from the TITANE team at INRIA Sophia-Antipolis for the nice and helpful discussion he granted us which conforted us in the direction we were taking in this research.
 
