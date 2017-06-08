@@ -785,6 +785,41 @@ Proof.
 by apply/negP; rewrite /is_left_of oriented_surface_x_x ltrr.
 Qed.
 
+Lemma oriented_triangle_symmetry t p e :
+  oriented_triangle_strict t -> p \in vertex_set t -> e \in edges_set t ->
+  exists i : 'I_3, p = vertex t i /\
+     (e = vertices_to_edge (vertex t i) (vertex t (i + 1)) \/
+     e = vertices_to_edge (vertex t (i + 1)%R) (vertex t (i + 2%:R)) \/
+     e = vertices_to_edge (vertex t (i + 2%:R)%R) (vertex t i)).
+Proof.
+move => ot /imfsetP [i _ pi] es; exists i; split => //; move: es.
+have tt := all_triangles_oriented ot.
+rewrite [X in edges_set X]tt edges_set_vertices_to_triangle //.
+rewrite !inE; move/orP => [/orP [/eqP | /eqP] |/eqP ] e_q; rewrite e_q.
+    case: i pi => [[| [| [| i]]] ilt3] pi => //.
+        by left; congr (vertices_to_edge (vertex t _) (vertex t _));
+              apply/val_inj.
+      by right; right; congr (vertices_to_edge (vertex t _) (vertex t _));
+            apply/val_inj.
+    by right; left; congr (vertices_to_edge (vertex t _) (vertex t _));
+            apply/val_inj.
+  case: i pi =>  [[| [| [| i]]] ilt3] pi => //;
+     rewrite (vertices_to_edge_sym (vertex1 t)).
+      by right; right; congr (vertices_to_edge (vertex t _) (vertex t _));
+             apply /val_inj.
+    by right; left; congr (vertices_to_edge (vertex t _) (vertex t _));
+           apply /val_inj.
+  by left; congr (vertices_to_edge (vertex t _) (vertex t _));
+        apply/val_inj.
+case: i pi => [[| [| [| i]]] ilt3] pi => //.
+    by right; left; congr (vertices_to_edge (vertex t _) (vertex t _));
+          apply/val_inj.
+  by left; congr (vertices_to_edge (vertex t _) (vertex t _));
+        apply/val_inj.
+by right; right; congr (vertices_to_edge (vertex t _) (vertex t _));
+          apply/val_inj.
+Qed.
+
 Lemma on_edge_split_triangle t p :
   in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
   forall e, e \in edges_set t0 -> forall q, on_edge e q ->
