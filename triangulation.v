@@ -589,15 +589,15 @@ in_triangle t p ->forall p0, in_triangle_w_edges t p0 <->
                              /\ (in_triangle_w_edges t1 p0).
 Proof.
 move => intp;move:(intp) => /andP [] /andP [] v12p vp23 v1p3 q.
+have v12p' := is_lof_imply_is_lor_on_line v12p.
+have vp23' := is_lof_imply_is_lor_on_line vp23.
+have v1p3' := is_lof_imply_is_lor_on_line v1p3.
 split.
   move => /andP [] /andP [] v12q vq23 v1q3.
   rewrite /split_triangle_aux.
   case c1 :(is_left_or_on_line (vertex1 t) p q).
-    apply is_lof_imply_is_lor_on_line in v12p.
-    apply is_lof_imply_is_lor_on_line in vp23.
-    apply is_lof_imply_is_lor_on_line in v1p3.
     case c3 :(is_left_or_on_line q p (vertex3 t)).
-    have vc1p3:=vertices_to_triangle_correct v1p3.
+    have vc1p3:=vertices_to_triangle_correct v1p3'.
     move:vc1p3 => [v1t [vp v3t]].    
     exists (vertices_to_triangle (vertex1 t) p (vertex3 t));split;
       first apply /fset1UP.
@@ -609,7 +609,7 @@ split.
       try rewrite -!v3t.
     case c2 :(is_left_or_on_line p (vertex2 t) q).
       exists(vertices_to_triangle p (vertex2 t) (vertex3 t)).
-      have vcp23:=vertices_to_triangle_correct vp23.
+      have vcp23:=vertices_to_triangle_correct vp23'.
        move:vcp23 => [vp [v2t v3t]].  
       split;first apply/fset1UP;try (by right;apply/fset2P;left).
       rewrite /in_triangle_w_edges /vertex1 /vertex2 /vertex3 -!vp -!v2t -!v3t.
@@ -659,10 +659,7 @@ split.
   rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
   move => c1.
   case c2:(is_left_or_on_line q (vertex2 t) p).
-    apply is_lof_imply_is_lor_on_line in v12p.
-    apply is_lof_imply_is_lor_on_line in vp23.
-    apply is_lof_imply_is_lor_on_line in v1p3.
-    have vc12p:=vertices_to_triangle_correct v12p.
+    have vc12p:=vertices_to_triangle_correct v12p'.
     move:vc12p => [v1t [v2t vp]].  
     exists (vertices_to_triangle (vertex1 t) (vertex2 t) p);split;first by apply /fset1UP;left.
     rewrite /in_triangle_w_edges;apply/andP;split;try (apply/andP;split);
@@ -676,10 +673,7 @@ split.
     rewrite oriented_surface_change1 -oriented_surface_circular ltr_oppl oppr0.
     move => c2.
     case c3 :(is_left_or_on_line p q (vertex3 t)).
-      apply is_lof_imply_is_lor_on_line in v12p.
-      apply is_lof_imply_is_lor_on_line in vp23.
-      apply is_lof_imply_is_lor_on_line in v1p3.
-      have vcp23:=vertices_to_triangle_correct vp23.
+      have vcp23:=vertices_to_triangle_correct vp23'.
       move:vcp23 => [vp [v2t v3t]].  
       exists(vertices_to_triangle p (vertex2 t) (vertex3 t));split;
         first by apply /fset1UP;right;apply/fset2P;left.
@@ -714,8 +708,7 @@ split.
     apply vert_in_triangle_w_edges.
       move/andP: intp => [_ it]; rewrite /oriented_triangle.
       rewrite vertex1_vertices_to_triangle // vertex3_vertices_to_triangle //.
-      rewrite vertex2_vertices_to_triangle //.
-      by rewrite le0r; apply/orP; right.
+      by rewrite vertex2_vertices_to_triangle.
     move: (@vertices_to_triangle_correct2
                   (vertex1 t) p (vertex3 t) _ (erefl _)).
     by rewrite (eqP t3q); move => [_ [_ it]].
@@ -723,17 +716,14 @@ split.
   move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
   have tne := triangle_not_empty intp.
   by rewrite /oriented_triangle_strict abs ltrr in tne.
-apply is_lof_imply_is_lor_on_line in v12p.
-apply is_lof_imply_is_lor_on_line in vp23.
-apply is_lof_imply_is_lor_on_line in v1p3.
-have ve12p := vertices_to_triangle_correct v12p.
-rewrite /vertex1 /vertex2 /vertex3 in v12p.
+have ve12p := vertices_to_triangle_correct v12p'.
+rewrite /vertex1 /vertex2 /vertex3 in v12p'.
 move:ve12p => [v112p [v212p v312p]].
-have vep23 := vertices_to_triangle_correct vp23.
-rewrite /vertex1 /vertex2 /vertex3 in vp23.
+have vep23 := vertices_to_triangle_correct vp23'.
+rewrite /vertex1 /vertex2 /vertex3 in vp23'.
 move:vep23 => [v1p23 [v2p23 v3p23]].
-have ve1p3 := vertices_to_triangle_correct v1p3.
-rewrite /vertex1 /vertex2 /vertex3 in v1p3.
+have ve1p3 := vertices_to_triangle_correct v1p3'.
+rewrite /vertex1 /vertex2 /vertex3 in v1p3'.
 move:ve1p3 => [v11p3 [v21p3 v31p3]].
 move => [t1 []] => /fset1UP [|/fset2P []] -> /andP [] /andP [];
 rewrite /vertex1 /vertex2 /vertex3;
