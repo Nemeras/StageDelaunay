@@ -1,0 +1,154 @@
+\documentclass[handout]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usefonttheme{professionalfonts}
+
+\usetheme{Warsaw}
+
+\beamertemplatenavigationsymbolsempty
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+\useoutertheme{smoothbars}
+\useinnertheme[shadow=true]{rounded}
+\usecolortheme{whale}
+
+%\newtheorem{definition}{Definition}
+\begin{document}
+
+\title{Formalisation of the Delaunay triangulation}
+\author{Clément Sartori}
+\begin{frame}
+\maketitle
+\end{frame}
+\begin{frame}
+ \tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+ Goals of the internship :
+ \begin{enumerate}
+  \item<1,2> Formalise the Delaunay triangulations.
+  \item<2> Study some of the processes involved in constructing a Delaunay triangulation.
+ \end{enumerate}
+
+ 
+\end{frame}
+
+\subsection{Triangulations}
+\begin{frame}
+ Delaunay triangulations have lots of applications :
+ \begin{itemize}
+  \item<1,2,3> Shape morphing.
+  \item<2,3> Modelise cellular coverage maps.
+  \item<3> Path planning.
+ \end{itemize}
+ 
+ We anticipate the use of these algorithms in mission-critical software for autonomous vehicles: it is interesting to try and formalise Delaunay triangulations.
+ 
+ We tried to continue a previous work \cite{Bertot} by Yves Bertot and Jean-Francois Dufourd, but in a more abstract way.
+
+\end{frame}
+
+\begin{frame}
+ 
+ A triangulation $T$ of a subset $X$ of $\mathbb{R}^d$ is a tiling of this subset with simplices such
+that:
+\begin{itemize}
+ \item<1,2,3> the intersection of two distinct simplices is either empty or a common face of these simplices;
+ \item<2,3> every bounded set of R d cuts a finite number of simplices of T 2 ;
+ \item<3> the union of the simplices of T is X itself.
+\end{itemize}
+
+
+\end{frame}
+
+
+\subsection{{\sc Coq}}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\subsection{CC Systems}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\section{The Algorithm}
+
+\subsection{Adding Points}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\subsection{Flipping Edges}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\section{The Formalisation}
+
+\subsection{Functions}
+
+\begin{frame}
+ 
+\end{frame}
+
+\subsection{Geometrical Predicates}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\subsection{Hypotheses}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\subsection{Geometrical Properties}
+
+\begin{frame}
+ 
+\end{frame}
+
+
+\section{Operations and Proofs}
+
+\begin{frame}
+ 
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}
+\bibliographystyle{alpha}
+\bibliography{Report} 
+\end{frame}
+
+
+
+
+\end{document}

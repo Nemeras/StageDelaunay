@@ -48,7 +48,8 @@
 Advisor \dotfill Yves Bertot \\
 %\title{Formalisation of the Delaunay triangulation}
 %\author{Clément Sartori}
-
+\thispagestyle{empty}
+\setcounter{page}{0} 
 
 \maketitle
 
@@ -59,10 +60,7 @@ Advisor \dotfill Yves Bertot \\
 \tableofcontents{}
 
 \newpage
-
 \section{Introduction}
-\rule{\linewidth}{0.5pt}
-
 I did my Master's degree internship under the supervision of Yves Bertot at the INRIA Sophia-Antipolis in the Marelle team. 
 The goal of this internship was to formalise the Delaunay triangulations in the {\sc{Coq}} proof assistant, that is, to try and find a minimal number of geometrical properties that had to be satisfied by sets of triangles in order for them to be Delaunay triangulations and to study some of the processes involved in constructing a Delaunay triangulation. One of the goals of the internship was to stay as close as possible to Knuth's paradigm in \cite{Knuth92} with CC systems (see Section \ref{CC}), by describing as many geometrical properties as possible using only combinatorial properties such as the orientation predicate ``is left of''.
 
@@ -143,8 +141,6 @@ The Section \ref{algo} of this report explains the two steps of the algorithm to
 
 \section{The Algorithm}
 \label{algo}
-\rule{\linewidth}{0.5pt}
-
 One of the goals of the internship was to study and prove the correctness of an algorithm to compute Delaunay triangulations. The context of the studied algorithm is, given a set of points in a plane, how to compute a Delaunay triangulation of the convex hull of this set of points. It is an incremental algorithm in two parts. Given an existing triangulation and a point, the algorithm consists in:
 \begin{enumerate}
 \item adding the point to the existing triangulation to obtain a triangulation of the new set of points;
@@ -180,13 +176,19 @@ Adding a new point $P$ to a triangulation $T$, when $P$ is in the interior of an
 \caption{\label{adding} Adding a point to a triangulation.}
 \end{figure}
 
-There are multiple ways of finding the triangle in which P is. Since we are only interested in finite triangulations, one (naive) way is to just check every triangle to see if P is indeed in this triangle. The other (smarter and faster) way is to walk from triangle to triangle, selecting, each time, an edge separating this triangle from P, and carrying on the search by going to the neighbouring triangle across from this edge. An example of this method, where we begin in the red triangle and try to find point P, is described in Figure \ref{walk}.
-The most naive approach was adopted during this internship.
+There are multiple ways of finding the triangle in which P is. Since we are only interested in finite triangulations, one (naive) way is to just check every triangle to see if P is indeed in this triangle. The other (smarter and faster) way, Lawson's oriented walk, is to walk from triangle to triangle, selecting, each time, an edge separating this triangle from P, and carrying on the search by going to the neighbouring triangle across from this edge. An example of this method, where we begin in the red triangle and try to find point P, is described in Figure \ref{walk}. It is to be noted that this more advanced method can loop on a random triangulation (Figure \ref{loop} is an example of case where it loops). However, it does not loop on a Delaunay triangulation. The proof of this is not trivial \cite{lawson}, and doing it in {\sc Coq} was out of the scope of this internship.
+Thus, the most naive approach was adopted during this internship.
 
 \begin{figure}
   \centering
 \includegraphics[scale=1]{Walk}
   \caption{\label{walk} Example of walk.}
+\end{figure}
+
+\begin{figure}
+  \centering
+\includegraphics[scale=1]{Loop}
+  \caption{\label{loop} Example of case where the walk algorithm loops.}
 \end{figure}
 
 \subsection{Flipping edges}
@@ -206,9 +208,7 @@ This makes it possible to create a ``flipping'' algorithm: for any set of points
 
 As for the ``finding the triangle containing a particular point'' part, there are different possibilities: one can either check all triangles, at each step, to see if there is the need to flip some edges, or only check a subset of the triangles (those close enough to the new point of the triangulation). Again, we were only interested in the most naive approach during this internship.
 \section{Formalisation of triangulations}
-\rule{\linewidth}{0.5pt}
 \label{formalisation}
-
 In the last part, we explained the algorithm we are formalising. In the sequel, we present the way we formalised the notion of triangulation.
 
 The goal of this formalisation was to stay as much as possible at a very abstract level, avoiding, for instance, the use of complicated structures like hypermaps such as in the previous work of Yves Bertot and Jean-Francois Dufourd \cite{Bertot}. Basically, the formalisation describes what properties every implementation of the concept should satisfy.
@@ -233,7 +233,7 @@ Any implementation should not only contain the types and the previous functions,
 \item \ttt{is\_left\_or\_on\_line}{$a$ $b$ $c$} and \ttt{is\_left\_of}{} which test if the point $c$ is (strictly) left of the points $a$,$b$ e.g. if $a$,$b$,$c$ form a (strictly) well-oriented (counter-clockwise) triangle.
 \item \ttt{in\_circle}{$p$ $a$ $b$ $c$} which tests if a point $p$ is in the circumcircle of the triangle described by $a$,$b$,$c$.
 \item \ttt{in\_triangle\_w\_edges}{$t$ $p$} and \ttt{in\_triangle}{$t$ $p$} which test if $p$ is (strictly) in $t$.
-  \item \ttt{is\_on\_line}{} which tests is 3 points are aligned.
+  \item \ttt{is\_on\_line}{} which tests if 3 points are aligned.
 
 \end{enumerate}
 
@@ -464,18 +464,16 @@ Then, the next two properties are here to avoid problems with how the triangles 
 \end{enumerate}
 In both cases, the properties are here to ensure that the first part of the definition of a triangulation is respected: the intersection of two simplices should either be empty or a face of those simplices.
 
-The last three properties are here to avoid degenerate cases with the triangles of the triangulation (triangulation should not contain degenerate triangles). It is to be noted that the third property should imply the second one, which implies the first one. However, the proof of this result is not trivial, and I had to add those properties late during the internship, which means I did not have the time to prove it.
+The last three properties are here to avoid degenerate cases with the triangles of the triangulation (triangulation should not contain degenerate triangles). It is to be noted that the third property should imply the second one, which implies the first one (at a geometrical level). However, this is not true at a logical level.
 
 
 
 
 \section{Theorems}
-\rule{\linewidth}{0.5pt}
 \label{theorems}
-
 Now that we have presented how we formalised the notion of triangulations, we will try in the sequel to give an idea of the work that was done to prove the two main theorems during this internship, and of the main difficulties that were encountered.
 
-Near the end of the internship, I wrote a simple tactic, which I named {\tt easygeo} \label{easygeo}.I realised, perhaps too late, that I spent too much time thinking on how to use my hypotheses. Indeed, there were lots of cases where I wanted to use a theorem for which I already had the correct hypotheses. But, instead of having, for instance, {\tt is\_left\_of b c a}, I had, as an hypothesis, {\tt is\_left\_of a b c} (which we know is equivalent). Thus, before applying the theorem I wanted to apply, I had to spend time rewriting my hypothesis with lemmas. The goal of this tactic, {\tt easygeo}, was to basically use brute force to solve some cases: for instance, if I wanted to prove {\tt is\_left\_of a b c} and I had, {\tt is\_left\_of b c a}, the tactic would solve instantly the goal. Since I wrote this tactic in the final stages of the internship, it is not (much) used in most of the proofs. One can understand easygeo as an attempt to use the inherent symmetry of triangles (I will explain more about this problem in Section \ref{symmetry}).
+Near the end of the internship, I wrote a simple tactic, which I named {\tt easygeo}\label{easygeo}. Indeed, one of the common difficulties faced during the internship was that too much time was spent thinking on how to use the hypotheses. There were lots of cases where it was needed to use a theorem for which the correct hypotheses were already proven. But, instead of having, for instance, {\tt is\_left\_of b c a}, the hypothesis already proven was, for instance, {\tt is\_left\_of a b c} (which we know is equivalent). Thus, before applying the theorem, some time had to be spent rewriting hypotheses with lemmas. The goal of this tactic, {\tt easygeo}, was to use brute force to solve some of those cases: for instance, if one wanted to prove {\tt is\_left\_of a b c} and {\tt is\_left\_of b c a} was an hypothesis, the tactic would solve instantly the goal. Since this tactic was written in the final stages of the internship, it is not (much) used in most of the proofs. One could understand easygeo as an attempt to use the inherent symmetry of triangles (I will explain more about this problem in Section \ref{symmetry}).
 \label{easygeo}
 \subsection{Adding points}
 \label{theorem1}
@@ -564,9 +562,7 @@ Indeed, {\sc Coq} prevents us from using the mental shortcuts that we use uncons
 We presented the way we wrote the two operations of the algorithm. Now, we will present the instantiation written in the second part of the internship.
 
 \section{Instantiation of the model}
-\rule{\linewidth}{0.5pt}
 \label{implementation}
-
 The next step of the work was to do an instantiation of the model (choices for the implementation of the types like {\tt P} and functions like {\tt vertices\_to\_triangle}. For the types:
 \begin{itemize}
 \item a point is a vector of size 2 of reals: \definition{P}{$'rV[R]_2$; }
@@ -575,7 +571,7 @@ The next step of the work was to do an instantiation of the model (choices for t
 \end{itemize}
 For the implementation of the functions, with ord$nx$ being the $(x+1)^{\text{th}}$ element of the Ordinal n (the set containing the elements of $\mathbb{N}$ that are less than n).
  \begin{itemize}
-  \item \definition{xCoord (p: P)}{p ord10 ord20} \\(in {\sc MathComp}, a vector of elements of $\mathbb{R}$ of size 2 is a function from the Ordinal 1 to the Ordinal 2 in $\mathbb{R}$). 
+  \item \definition{xCoord (p: P)}{p ord10 ord20} \\In {\sc MathComp}, a vector of elements of $R$ is a matrix with one column and coefficients in $R$. Thus, applying {\tt p} to {\tt ord10} and {\tt ord20} gives the first element of the unique column of p.
   \item \definition{yCoord (p: P)}{p ord10 ord21}.
    \item \definition{vertex (t: T)}{t ord10} which gives a function from the Ordinal 3 to P.
 \item {\tt oriented\_surface a b c} \label{oriented_surface} can be defined as the determinant of the matrix:
@@ -615,14 +611,7 @@ The proofs can be grouped in several types:
 
   The instantiation of the model was a very interesting part of the internship. Doing it, I realised a lot of problems about the first version of my formalisation of Delaunay triangulations: some hypotheses were not precise enough, some were even false. For instance, I realised that, often, it was hard for me to keep in mind that triangles can be flat when thinking about the correctness of some hypotheses. Thus, I had to rewrite a lot of hypotheses and proofs.
 
-
-%\section{Examples of proofs}
-%\rule{\linewidth}{0.5pt}
-%\label{example}
-%\label{easygeo}*)
-
 \section{Conclusion}
-\rule{\linewidth}{0.5pt}
 The goal of this internship was to formalise the concept of Delaunay triangulations in {\sc Coq}, expressing a classical incremental algorithm to compute them and proving its correctness. During the internship, I managed to:
 \begin{enumerate}
 \item write the formalisation and an implementation of this formalisation;
