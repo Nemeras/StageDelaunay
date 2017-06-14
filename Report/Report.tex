@@ -67,18 +67,18 @@ The goal of this internship was to formalise the Delaunay triangulations in the 
 \subsection{Triangulations and Applications}
 Triangulations are a mathematical concept that is useful in a lot of domains. More particularly, Delaunay triangulations have quite a number of applications. For instance, they can be used to do shape morphing \cite{morphing}, or as their dual graph (the Voronoi diagram),  to modelise cellular coverage maps \cite{CelCov}, or for path planning \cite{PathPla}.
 
-Since Delaunay triangulations are used in a lot of domains, a need of optimized algorithm and implementations of these algorithms has arisen. For instance, the CGAL library \cite{cgal}, a software project aiming at providing access to efficient and reliable implementations of geometric algorithms provides a way to compute Delaunay triangulations\footnote{\href{http://doc.cgal.org/latest/Triangulation_2/index.html}{http://doc.cgal.org/latest/Triangulation$\_$2/index.html}}.
+Since Delaunay triangulations are used in a lot of domains, a need of optimized algorithms and implementations of these algorithms has arisen. For instance, the CGAL library \cite{cgal}, a software project aiming at providing access to efficient and reliable implementations of geometric algorithms, provides a way to compute Delaunay triangulations\footnote{\href{http://doc.cgal.org/latest/Triangulation_2/index.html}{http://doc.cgal.org/latest/Triangulation$\_$2/index.html}}.
 
-Moreover, because the use of these algorithms in mission-critical software for autonomous vehicles can be anticipated, the need of proofs of the correctness of these algorithms and their implementations has arisen. Jean-Francois Dufourd and Yves Bertot presented in \cite{Bertot} the first formalisation of the correctness of an algorithm to build a plane Delaunay Triangulation. Since Yves Bertot was my advisor during this internship, this work could be seen as trying to be the continuation of that previous work. However, in their work, they described triangles and other mathematical concept in a very ``low-level'' way, using complicated data structures as hypermaps. On the contrary, this work tried to use a very ``high-level'', abstract point of view.
+Moreover, because the use of these algorithms in mission-critical software for autonomous vehicles can be anticipated, the need of proofs of the correctness of these algorithms and their implementations has arisen. Jean-Francois Dufourd and Yves Bertot presented in \cite{Bertot} the first formalisation of the correctness of an algorithm to build a plane Delaunay Triangulation. Since Yves Bertot was my advisor during this internship, this work could be seen as trying to be the continuation of that previous work. However, in their work, they described triangles and other mathematical concept in a very ``low-level'' way, using complicated data structures such as hypermaps. On the contrary, this work tried to use a very ``high-level'', abstract point of view.
 
 In geometry, a \emph{triangulation} T of a subset X of $\mathbb{R}^d$ is a partition of this subset into simplices such that: 
 \begin{itemize}
-\item the intersection of two simplices is either empty or a face of those simplices;
+\item the intersection of two distinct simplices is either empty or a common face of these simplices;
 \item every bounded set of $\mathbb{R}^{d}$ cuts a finite number of simplices of T\footnote{In our work, we were only interested in finite triangulations so this is not relevant to the rest of this report.};
-\item the union of the simplices of T is X itself. \label{deftriangulation}.
+\item the union of the simplices of T is X itself. \label{deftriangulation}
 \end{itemize}
 
-In the plane (where we stayed during this internship for the sake of simplicity), a triangulation of a set of points is a partition of the convex hull of this set of points into triangles. Figure \ref{Trig1} is a triangulation, while Figure \ref{NotTrig1} and \ref{NotTrig2} are not triangulations: in Figure \ref{NotTrig1}, the whole convex hull is not covered and the Figure \ref{NotTrig2} isn't a partition.
+In the plane (where we stayed during this internship for the sake of simplicity), a triangulation of a set of points is a tiling of the convex hull of this set of points into triangles. Figure \ref{Trig1} is a triangulation, while Figures \ref{NotTrig1} and \ref{NotTrig2} are not triangulations: in Figure \ref{NotTrig1}, the whole convex hull is not covered and Figure \ref{NotTrig2} isn't a tiling.
 
 
 \begin{figure}
@@ -101,7 +101,7 @@ In the plane (where we stayed during this internship for the sake of simplicity)
 \end{figure}
 
 
-More particularly, during this internship, we were interested in \emph{Delaunay triangulations}: in the plane, a triangulation T of a set P of points is said to be a Delaunay triangulation if no point of P is in the circumcircle of a triangle of T. Figure \ref{notDelaunay} for instance, is not a Delaunay triangulation. Intuitively, a Delaunay triangulation is a triangulation that tries to maximise the smallest angle of any triangles, avoiding sliver triangles (triangles with one or two very acute angles).
+More particularly, during this internship, we were interested in \emph{Delaunay triangulations}: in the plane, a triangulation T of a set P of points is said to be a Delaunay triangulation if no point of P is in the circumcircle of a triangle of T. Figure \ref{notDelaunay} for instance, is not a Delaunay triangulation. Intuitively, a Delaunay triangulation is a triangulation that maximises the smallest angle of any triangles, avoiding sliver triangles (triangles with one or two very acute angles).
 \label{DelaunayCondition}
 \begin{figure}
 \centering
@@ -115,7 +115,7 @@ More particularly, during this internship, we were interested in \emph{Delaunay 
 
 Machine-checked proofs are a research domain which is more than forty years old (see \cite{Automath}). As such, the domain acquired a certain maturity; however, the main issue is the difficulty of use of proof assistants.
 
-I wrote my formalisation of the Delaunay triangulation in the proof assistant {\sc Coq}, an environment in which one can express and prove mathematical assertions and which automatically checks the proofs written in its language. The advantage of {\sc Coq} (and proof assistants in general) is that you can trust any {\sc Coq} proof as long as you trust {\sc Coq}'s kernel: {\sc Coq}'s correctness relies on a part of its code, its ``kernel'', which is intentionally kept small enough so it stays readable by a motivated reader. The choice of {\sc Coq} was very simple: {\sc Coq} has the enormous advantage of having access to the {\sc Mathematical Component} library and the whole Marelle team uses {\sc Coq} for its research.
+I wrote my formalisation of the Delaunay triangulation in the proof assistant {\sc Coq}, an environment in which one can express and prove mathematical assertions and which automatically checks the proofs written in its language. The advantage of {\sc Coq} (and proof assistants in general) is that you can trust any {\sc Coq} proof as long as you trust {\sc Coq}'s kernel: {\sc Coq}'s correctness relies on a part of its code, its ``kernel'', which is intentionally kept small enough so it stays readable by a motivated reader. The choice of {\sc Coq} was very simple: {\sc Coq} has the enormous advantage of having access to the {\sc Mathematical Component} library, the whole Marelle team uses {\sc Coq} for its research and {\sc Coq} is able to compile the programs you write into it as executables.
 
 To make proofs simpler, I used the {\sc{Mathematical Component}} library and the extension of {\sc{Coq}}'s tactic language, {\sc{SSReflect}}. The goal of the {\sc{Mathematical Component}} library project is to create a library of mathematical results, so that those results are easily reusable in {\sc{Coq}}. Examples of successful applications of the {\sc{Mathematical Component}} library and of {\sc{SSReflect}} are the proofs of the four-color theorem \cite{Gonthier08}, the formalisation of Karp-Miller tree construction on petri nets \cite{petri} and the creation of a formal library for elliptic curves \cite{elliptic}. The four-color theorem states that it is possible to color any map with only four different colors, if we want to color any two adjacent regions with different colors. This result was conjectured in 1852 by Francis Guthrie. Some proofs were published, but they were false \cite{falseproof}. Finally, the solution was found in \cite{proof4} but the proof, for the first time, required a computer program, which made it quite disputed: now, the formalisation of \cite{Gonthier08} lets any computer check the whole proof.
 
@@ -134,10 +134,16 @@ A CC system has to follow five axioms.
 \item Transitivity : $ abc \rightarrow abd \rightarrow abq \rightarrow cbd \rightarrow dbq \rightarrow cbq $, see figure \ref{knuth5} later.
 \end{enumerate}
 
-A broader explanation of how we used Knuth's axioms here (without having the general position hypothesis) can be found in Section \ref{knuthpic}.
+Knuth's approach has two levels:
+\begin{enumerate}
+\item a combinatorial presentation;
+\item an instantiation of this presentation using the concept of oriented surfaces.
+\end{enumerate}
 
-\subsection*{}
-The Section \ref{algo} of this report explains the two steps of the algorithm to create Delaunay triangulations we studied. Then, Section \ref{formalisation} presents the formalisation of Delaunay triangulations I did during this internship. Section \ref{theorems} explains the work I did to prove the main theorems on the two operations of the algorithm I wrote in {\sc Coq}. Finally, Section \ref{implementation} presents the instantiation of the model I did.
+We tried to mimic this approach for the formalisation of Delaunay triangulations but, since we don't follow the same hypotheses (the general position hypothesis, for instance), new axioms are necessary.
+A broader explanation of how we used Knuth's axioms here (without having the general position hypothesis) can be found in Section \ref{knuthpic}.
+\vspace{0.7 cm}
+Section \ref{algo} gives a rough sketch of an algorithm to create Delaunay triangulations, and a more precise description of two steps that we have studied more carefully.  Section \ref{formalisation} gives a formalisation of the concept of triangulation that was developed during this intership.  Section \ref{theorems} explains how we formalised the invariants preserved by the operations that we studied.  Section \ref{implementation} presents how we showed that our abstract model could be instantiated using coordinates and algebraic definitions.
 
 \section{The Algorithm}
 \label{algo}
@@ -147,7 +153,7 @@ One of the goals of the internship was to study and prove the correctness of an 
 \item flipping the illegal edges to obtain a Delaunay triangulation.
 \end{enumerate}
 
-In the following, I will explain in further details these two steps, and how the operations I wrote for them work.
+The sequel will explain in further details these two steps, and how the operations I wrote for them work.
 \subsection{Adding points}
 \label{step1}
 
@@ -158,7 +164,7 @@ There are three possible cases:
 \item the new point is on an edge of a triangle of the triangulation;
 \item the new point is not in the convex hull of the existing triangulation.
 \end{enumerate}
-Thus, to get a complete algorithm, we need three operations to treat these three cases. However, we chose, at first, to treat only one of this case: the one where the point we add is in the interior of an existing triangle.
+Thus, to get a complete algorithm, we need three operations to treat these three cases. However, we chose, at first, to treat only one of these cases: the one where the point we add is in the interior of an existing triangle.
 
 Indeed, in the literature, it is generally considered that points are in ``general position'' (which means no three points are aligned). Thus, if we followed this common hypothesis, the second case could not happen.
 We still chose to keep the possibility of degenerates case (three aligned points) in our axiomatics, in order to treat it in the future, but the focus of this internship was adding points that are in the interior of an existing triangle.
@@ -172,7 +178,7 @@ Adding a new point $P$ to a triangulation $T$, when $P$ is in the interior of an
 \end{enumerate}
 \begin{figure}
 \centering
-\includegraphics[scale=2]{adding}
+\includegraphics[scale=1]{adding}
 \caption{\label{adding} Adding a point to a triangulation.}
 \end{figure}
 
@@ -202,14 +208,14 @@ For instance, while Figure \ref{notDelaunay} is not a Delaunay triangulation, th
 \begin{figure}
 \centering
 \includegraphics[scale=1]{dessin1}
-\caption{\label{DelaunayTriangulation} Result of an edge-flipping step: example of Delaunay triangulation}
+\caption{\label{DelaunayTriangulation} Result of an edge-flipping step: from non-Delaunay triangulation to Delaunay triangulation}
 \end{figure}
-This makes it possible to create a ``flipping'' algorithm: for any set of points, it is possible to obtain the Delaunay triangulation of this set of point by creating a random triangulation then applying this flipping step as many times as necessary.
+This makes it possible to create a ``flipping'' algorithm: for any set of points, it is possible to obtain the Delaunay triangulation of this set of point by creating a random triangulation and then applying this flipping step as many times as necessary.
 
-As for the ``finding the triangle containing a particular point'' part, there are different possibilities: one can either check all triangles, at each step, to see if there is the need to flip some edges, or only check a subset of the triangles (those close enough to the new point of the triangulation). Again, we were only interested in the most naive approach during this internship.
+As was the case for the part on finding the triangle containing a particular point, there are different possibilities: one can either check all triangles, at each step, to see if there is the need to flip some edges, or only check a subset of the triangles (those close enough to the new point of the triangulation). Again, we were only interested in the most naive approach during this internship.
 \section{Formalisation of triangulations}
 \label{formalisation}
-In the last part, we explained the algorithm we are formalising. In the sequel, we present the way we formalised the notion of triangulation.
+In the previous part, we explained the algorithm we are formalising. In the sequel, we present the way we formalised the notion of triangulation.
 
 The goal of this formalisation was to stay as much as possible at a very abstract level, avoiding, for instance, the use of complicated structures like hypermaps such as in the previous work of Yves Bertot and Jean-Francois Dufourd \cite{Bertot}. Basically, the formalisation describes what properties every implementation of the concept should satisfy.
 
@@ -223,14 +229,14 @@ We describe in the sequel a formalisation of Delaunay triangulations. Any implem
 \end{itemize}
 
 For {\tt vertices\_to\_edge} and {\tt vertices\_to\_triangle}, two different choices were made:
-for all {\tt a}, {\tt b}, {\tt c}, {\tt vertices\_to\_edge a b} and {\tt vertices\_to\_edge b a} create the same edge, whereas {\tt vertices\_to\_triangle a b c} and {\tt vertices\_to\_triangle c a b} create different triangles. Indeed, a lemma was needed to get simpler proofs; this lemma states that, as long as {\tt a}, {\tt b} and {\tt c} form a well-oriented triangle, the first vertex of {\tt vertices\_to\_triangle a b c} will be {\tt a}, the second one will be {\tt b} and the last one {\tt c}. This added a condition on the implementation of triangles: for {\sc Coq}, the triangle {\tt abc} should not be equal to the triangle {\tt bca}. Even if can seem counter-intuitive, it was the most practical choice. 
+for all {\tt a}, {\tt b}, {\tt c}, {\tt vertices\_to\_edge a b} and {\tt vertices\_to\_edge b a} create the same edge, whereas {\tt vertices\_to\_triangle a b c} and {\tt vertices\_to\_triangle c a b} create different triangles. Indeed, a lemma was needed to get simpler proofs; this lemma states that, as long as {\tt a}, {\tt b} and {\tt c} form a well-oriented triangle, the first vertex of {\tt vertices\_to\_triangle a b c} will be {\tt a}, the second one will be {\tt b} and the last one {\tt c}. This added a condition on the implementation of triangles: for {\sc Coq}, triangle {\tt abc} should not be equal to the triangle {\tt bca}. Even if it can seem counter-intuitive, it was the most practical choice. 
 
 
 \subsection{Geometrical predicates}
 \label{predicate}
 Any implementation should not only contain the types and the previous functions, but also some geometrical predicates.
 \begin{enumerate}
-\item \ttt{is\_left\_or\_on\_line}{$a$ $b$ $c$} and \ttt{is\_left\_of}{} which test if the point $c$ is (strictly) left of the points $a$,$b$ e.g. if $a$,$b$,$c$ form a (strictly) well-oriented (counter-clockwise) triangle.
+\item \ttt{is\_left\_or\_on\_line}{$a$ $b$ $c$} (and \ttt{is\_left\_of}{}) which test if the point $c$ is (strictly) left of the points $a$,$b$ e.g. if $a$,$b$,$c$ form a (respectively strictly) well-oriented (counter-clockwise) triangle.
 \item \ttt{in\_circle}{$p$ $a$ $b$ $c$} which tests if a point $p$ is in the circumcircle of the triangle described by $a$,$b$,$c$.
 \item \ttt{in\_triangle\_w\_edges}{$t$ $p$} and \ttt{in\_triangle}{$t$ $p$} which test if $p$ is (strictly) in $t$.
   \item \ttt{is\_on\_line}{} which tests if 3 points are aligned.
@@ -238,7 +244,7 @@ Any implementation should not only contain the types and the previous functions,
 \end{enumerate}
 
   The predicate \ttt{is\_left\_of}{} is inspired by Knuth's idea of CC systems \cite{Knuth92}.
-  However, unlike him, we do not consider that our points are in general position (we recall that points are considered in general positions if no three points are aligned). Thus, the opposite of \ttt{is\_left\_of}{a b c} is not \ttt{is\_left\_of}{b a c} but \ttt{is\_left\_or\_on\_line}{b a c}. A broader explanation of what happens to Knuth's axioms when degenerate cases (aligned points) exist can be found in \cite{Hull}. \label{knuthpic}
+  However, unlike him, we do not consider that our points are in general position. Thus, the opposite of \ttt{is\_left\_of}{a b c} is not \ttt{is\_left\_of}{b a c} but \ttt{is\_left\_or\_on\_line}{b a c}. A broader explanation of what happens to Knuth's axioms when degenerate cases (aligned points) exist can be found in \cite{Hull}. \label{knuthpic}
 
   Then, from those predicates, we can define what it means to be in a triangle:
   \begin{itemize}
@@ -287,7 +293,7 @@ Indeed, we made a (possibly debatable) choice. The predicates from Section \ref{
  \end{itemize}
 
 {\tt oriented\_surface a b c} is the oriented surface (see Figure \ref{surface}) of the triangle {\tt abc}. It is non-negative if {\tt abc} is oriented counter-clockwise, non-positive otherwise (and null if {\tt a b} and {\tt c} are aligned).
-Usually, it is computed from a determinant, as seen in the implementation presented in Section \ref{implementation}. Thus, the hypotheses from Section \ref{Hypothesis} seems reasonable.
+Usually, it is computed from a determinant, as seen in the implementation presented in Section \ref{implementation}. Thus, the hypotheses from Section \ref{Hypothesis} seem reasonable.
 
 \begin{figure}
   \centering
@@ -295,14 +301,14 @@ Usually, it is computed from a determinant, as seen in the implementation presen
   \caption{\label{surface} Here, ABC has a positive oriented surface whereas ACB has a negative oriented surface.}
 \end{figure}
 
- There is an interesting property about the barycentric coefficients: if $x$ is in $ABC$ then we have:
+ There is an interesting property about the barycentric coefficients: if $x$ is in $ABC$ then we have
 $$x = x_AA + x_BB + x_CC$$
-with: $x_A =\frac{ \text{\tt oriented\_surface B C x}}{\text{\tt oriented\_surface A B C}}$,
+with $x_A =\frac{ \text{\tt oriented\_surface B C x}}{\text{\tt oriented\_surface A B C}}$,
 $x_B =\frac{ \text{\tt oriented\_surface C A x}}{\text{\tt oriented\_surface A B C}}$ and
 $x_C =\frac{ \text{\tt oriented\_surface A B x}}{\text{\tt oriented\_surface A B C}}$
 , which gives an elegant relation between the coefficients and the surface of the triangles (Figure \ref{cara}).
 
-We considere this as debatable since one could argue that the place of {\tt oriented\_surface} was in the implementation. We feel both were valid choices, but we made this one because we wanted to keep the possibility to use {\tt oriented\_surface} when needed.
+We consider the fact we put {\tt orientes\_surface} in the formalisation as debatable since one could argue that its place  was in the implementation. We feel both were valid choices, but we made this one because we wanted to keep the possibility to use {\tt oriented\_surface} when needed.
 
 \begin{figure}
   \centering
@@ -316,17 +322,17 @@ Now that we have defined what convex hulls are, we only need to present the hypo
   \subsection{Hypotheses}
   \label{Hypothesis}
 
-We put assumptions (which have to be proven for each implementation) on the implementations of the predicates/functions. The following ones are simple.
+We make assumptions on the predicates and functions, which have to be proven for each implementation. The properties of function {\tt oriented\_surface} with respect to predicates {\tt is\_left\_of}, {\tt is\_left\_or\_on\_line}, and {\tt is\_on\_line} are summarized as follows.  Also, we made the design choice that all triangles constructed from three points are made oriented.
 \begin{itemize}
 \item \hypothesis{oriented\_surface\_xx}{$\forall$ x y, {\tt oriented\_surface x x y} = 0}.
   
   The oriented surface of a segment is 0.
 \item \hypothesis{oriented\_surface\_circular}{$\forall$ a b c, oriented\_surface a b c = oriented\_surface c a b}.
   
-  The oriented surface of {\tt abc} is the same as the one of {\tt cab}, because we don't change the order of the points.
+  The oriented surface of {\tt abc} is the same as the one of {\tt cab}, because we don't change the cyclic order of the points.
 \item \hypothesis{oriented\_surface\_change}{$\forall$ a b c, oriented\_surface a b c = - oriented\_surface b a c}.
   
-  The oriented surface of {\tt abc} is the same as the one of {\tt bac}, because we change the order of the points.
+  The oriented surface of {\tt abc} is the same as the one of {\tt bac}, because we change the cyclic order of the points.
 \item \hypothesis{vertices\_to\_edge\_sym}{$\forall$ a b, vertices\_to\_edge a b = vertices\_to\_edge b a}.
 
   The order of the vertices is not important for edges.
@@ -371,8 +377,8 @@ There are also assumptions on the functions that are made to link functions betw
                        $[$ fset (vertices\_to\_edge a b);
                            (vertices\_to\_edge a c);
                            (vertices\_to\_edge b c) $]$}.
-
-                         "The edge set of a triangle created with {\tt vertices\_to\_triangle a b c} should be the set containing edge {\tt ab}, edge {\tt ac} and edge {\tt bc}."
+                         
+`` The edge set of a triangle created with {\tt vertices\_to\_triangle a b c} should be the set containing edge {\tt ab}, edge {\tt ac} and edge {\tt bc}.''
                          
 Some assumptions are harder, because they are generalizations of Knuth's axioms or just come from more elaborated geometrical facts. For instance:
 \begin{itemize}
@@ -443,10 +449,10 @@ We define a triangulation {\tt Tr} on a data set {\tt D} as a finite set of tria
 \item \ttt{triangle\_nempty}{Tr}: no triangle of {\tt Tr} is empty (no flat triangle).
 \item \ttt{oriented\_triangle\_triangulation}{Tr}: all triangles of the triangulation are strictly well-oriented.
 
-  Remark: for the sake of simplicity of the proofs, we force \ttt{vertices\_to\_triangle}{} to return a well-oriented triangle in our hypotheses on the implementation so this hypothesis is quite simple to prove in general.
+  Remark: for the sake of simplicity of the proofs, we force \ttt{vertices\_to\_triangle}{} to return a well-oriented triangle in our hypotheses on the implementation so this property is quite simple to prove in general.
 \end{enumerate}
 The first two properties express that the finite set of triangles Tr is indeed a triangulation of the whole data set D, and covers its convex hull with triangles, in order to respect the third part of the definition of a triangulation (see Section \ref{deftriangulation}).
-Then, the next two properties are here to avoid problems with how the triangles are positioned: 
+Then, the next two properties are here to avoid problems with how the triangles are positioned.
 \begin{enumerate}
 \item \ttt{no\_cover\_intersection}{} is here to avoid problems like in Figure \ref{nci} where two triangles {\tt ABC} and {\tt DEF} aren't well positioned; there exists a point {\tt P} that is both in the interior of {\tt ABC} and {\tt DEF}.
 \begin{figure}
@@ -455,16 +461,16 @@ Then, the next two properties are here to avoid problems with how the triangles 
 \caption{\label{nci} {\tt no\_cover\_intersection}}
 \end{figure}
 \item \ttt{no\_point\_on\_segment}{} is here to avoid problems like in Figure \ref{nps}, where the vertex {\tt B} of triangle {\tt ABC} is on the edge {\tt DE} of triangle {\tt DEF}.
-\\
+
 \begin{figure}
 \centering
 \includegraphics[scale=2]{nps}
 \caption{\label{nps} {\tt no\_point\_on\_segment}}
 \end{figure}
 \end{enumerate}
-In both cases, the properties are here to ensure that the first part of the definition of a triangulation is respected: the intersection of two simplices should either be empty or a face of those simplices.
+In both cases, the properties are here to ensure that the first part of the definition of a triangulation is respected: the intersection of two distinct simplices should either be empty or a face of those simplices.
 
-The last three properties are here to avoid degenerate cases with the triangles of the triangulation (triangulation should not contain degenerate triangles). It is to be noted that the third property should imply the second one, which implies the first one (at a geometrical level). However, this is not true at a logical level.
+The last three properties are here to avoid degenerate cases with the triangles of the triangulation (a triangulation should not contain degenerate triangles). It is to be noted that the third property should imply the second one, which implies the first one (at a geometrical level). However, this is not true at a logical level.
 
 
 
@@ -499,7 +505,7 @@ In english, this would be written as:
   {\tt split\_triangle tr t p} is a triangulation for the data set $d \cup \{p\}$.
 \end{theorem}
 
-As one could notice, the fact that we put {\tt in\_triangle t p} and not {\tt in\_triangle\_w\_edges t p} as hypothesis means that we don't treat the case where the point we add is on the edge of a triangle, as said before. 
+As one could notice, the fact that we put {\tt in\_triangle t p} and not {\tt in\_triangle\_w\_edges t p} as hypothesis means that we don't treat the case where the point we add is on the edge of a triangle.
 
 This theorem means that the seven properties described in the definition of a triangulation (Section \ref{definition_triangulation}) are invariant with respect to the operation {\tt split\_triangle}.
 
@@ -525,10 +531,10 @@ It returns $(tr \smallsetminus t1 \smallsetminus t2) \cup \{abd;bcd\}$. It is me
 \begin{figure}
   \centering
   \includegraphics[scale=2]{flip_edge}
-    \caption{\label{flip_edge} An edge-flipping step}
+    \caption{\label{flip_edge} An edge-flipping step.}
 \end{figure}
 
-I won't write here the theorem I proved, but the idea is the same as before (prove that the seven propertes of triangulation are invariant with respect to the operation {\tt flip\_edge}):
+I won't write here the theorem I proved, but the idea is the same as before (prove that the seven properties of triangulation are invariant with respect to the operation {\tt flip\_edge}):
 \begin{itemize}
 \item $t_1$ and $t_2$ should be triangles of a triangulation $tr$ on a data set $D$;
 \item $a$,$b$ and $c$ should be points of the data set, vertices of $t_1$ and form a well oriented triangle (we have {\tt is\_left\_of $a$ $b$ $c$});
@@ -549,9 +555,9 @@ As before, the proofs were all case-based reasoning that used some lemmas. Just 
 \end{figure}
 
 
-The first lemma is very similar to a previous lemma, already proven for {\tt split\_triangle}. Its proof is already a lot alike. However, thanks to the experience I gained proving other lemmas inbetween, I managed to do a better written proof (it is better automated and thus shorter).
+The first lemma is very similar to a previous lemma, already proven for {\tt split\_triangle}. Its proof is already a lot alike. However, thanks to the experience I gained proving other lemmas in between, I managed to do a better written proof (it is better automated and thus shorter).
 
-The third lemma looks very simple to prove since {\tt vertices\_to\_triangle} always returns oriented triangles by hypothesis. However, this proof wasn't actually simple, and made me realize that a theorem was missing in Cyril Cohen's {\sc Finmap} library \cite{finmap}, which was quickly added with his help.
+The third lemma looks very simple to prove since {\tt vertices\_to\_triangle} always returns oriented triangles by hypothesis. However, this proof wasn't actually simple, and made me realize that a theorem was missing in Cyril Cohen's {\sc Finmap} library \cite{finmap} (the fact that the cardinal of the image of a finite set by a function is less than or equal to the cardinal of this finite set), which was quickly added with his help.
 
 \subsection{Remarks}
 
@@ -563,7 +569,7 @@ We presented the way we wrote the two operations of the algorithm. Now, we will 
 
 \section{Instantiation of the model}
 \label{implementation}
-The next step of the work was to do an instantiation of the model (choices for the implementation of the types like {\tt P} and functions like {\tt vertices\_to\_triangle}. For the types:
+The next step of the work was to do an instantiation of the model (choices for the implementation of the types like {\tt P} and functions like {\tt vertices\_to\_triangle} in {\sc Coq}. For the types:
 \begin{itemize}
 \item a point is a vector of size 2 of reals: \definition{P}{$'rV[R]_2$; }
 \item a triangle is a vector of size 3 of points: \definition{T}{$'rV[P]_3$; }
@@ -606,22 +612,22 @@ The proofs can be grouped in several types:
 
   \item The proofs of Knuth's axioms.
 
-    I didn't have time to begin proving these at all. However, a number of them could probably be recovered from previous work done by other students (for instance, the work on convex hulls done by David Pichardie and Yves Bertot(see \cite{Hull}).
+    I didn't have time to begin proving these at all. However, a number of them could probably be recovered from previous work done by other researchers (for instance, the work on convex hulls done by David Pichardie and Yves Bertot in \cite{Hull}.
   \end{itemize}
 
-  The instantiation of the model was a very interesting part of the internship. Doing it, I realised a lot of problems about the first version of my formalisation of Delaunay triangulations: some hypotheses were not precise enough, some were even false. For instance, I realised that, often, it was hard for me to keep in mind that triangles can be flat when thinking about the correctness of some hypotheses. Thus, I had to rewrite a lot of hypotheses and proofs.
+  The instantiation of the model was a very interesting part of the internship. When doing it, I realised a lot of problems about the first version of my formalisation of Delaunay triangulations: some hypotheses were not precise enough, some were even false. For instance, I realised that, often, it was hard for me to keep in mind that triangles can be flat when thinking about the correctness of some hypotheses. Thus, I had to rewrite a lot of hypotheses and proofs.
 
 \section{Conclusion}
 The goal of this internship was to formalise the concept of Delaunay triangulations in {\sc Coq}, expressing a classical incremental algorithm to compute them and proving its correctness. During the internship, I managed to:
 \begin{enumerate}
 \item write the formalisation and an implementation of this formalisation;
 \item prove a part of the hypotheses and some useful lemmas;
-\item write two steps of the algorithm (but not the algorithm itself);
+\item write two steps of the algorithm (but not the full algorithm);
 \item prove the correctness of the two steps (the fact that they return a correct triangulation).
 \end{enumerate}
 
-There are some clear possible paths of improvement for my work. First, not all proofs are completed. Then, the next step for me would have been to implement the whole algorithm itself in {\sc Coq}, from the different steps ({\tt split\_triangle} and {\tt flip\_edge}) I wrote. The biggest difficulty would have been to prove the termination of the algorithm which transforms any triangulation into a Delaunay triangulation: the way it is done is by noticing that, during the execution of the algorithm, the lifted image of the triangulation on the unit paraboloid is a quantity that is decreasing \cite{Bertot}\footnote{A more detailed explanation of this possible proof can be found here:
-\href{https://www.ti.inf.ethz.ch/ew/Lehre/CG13/lecture/Chapter 6.pdf}{https://www.ti.inf.ethz.ch/ew/Lehre/CG13/lecture/Chapter 6.pdf}}.
+There are some clear possible paths of improvement for my work. First, not all proofs are completed. Then, the next step would be to implement the whole algorithm itself in {\sc Coq}, from the different steps ({\tt split\_triangle} and {\tt flip\_edge}) I wrote. The biggest difficulty would have been to prove the termination of the algorithm which transforms any triangulation into a Delaunay triangulation. The proof of termination should be derived from \cite{Bertot}\footnote{A more detailed explanation of this possible proof can be found here:
+\href{https://www.ti.inf.ethz.ch/ew/Lehre/CG13/lecture/Chapter 6.pdf}{https://www.ti.inf.ethz.ch/ew/Lehre/CG13/lecture/Chapter 6.pdf}}. The next step should be to implement the possibility of adding a point when it is on the edge of a triangle, and then to study formally the optimization of the algorithm (checking for the presence of flippable edges in the right order and doing the walk in the Delaunay triangulation instead of checking every triangle).
 
 Then, when this is finished, there are some other possibilities to extend my work.
 \begin{enumerate}
@@ -630,7 +636,7 @@ Then, when this is finished, there are some other possibilities to extend my wor
   \href{http://www.geom.uiuc.edu/~samuelp/del_project.html}{{\tt http://www.geom.uiuc.edu/$\sim$samuelp/del\_project.html}}
 \end{enumerate}
 
-There are also some changes that could be improve my work.
+There are also some changes that could improve in my work.
 
 First, my proficiency with {\sc Coq} and, especially, {\sc SSReflect}, changed during the internship. I already followed, before this internship, a one-week course on {\sc SSReflect} and I did an internship in IRISA Rennes where I used {\sc Coq} to do proofs on programs. However, this was not comparable to how I had to use {\sc Coq} during this internship. As such, at the beginning of this internship, I took a lot of time to prove results that would have been less time-consuming for me at the end of the internship.
 
@@ -646,7 +652,7 @@ I would like to thank a lot my supervisor, Yves Bertot, for all the time he spen
 
 I would also like to acknowledge Pierre Alliez, from the TITANE team at INRIA Sophia-Antipolis for the nice and helpful discussion he granted us, which conforted us in the direction we were taking in this research.
 
-Finally, I would like to thank Damien Rouhling from the Marelle team and Jean-Yves Franceschi from ENS Lyon for their help and the great advices they gave me regarding the writing of this report.
+Finally, I would like to thank Damien Rouhling from the Marelle team and Jean-Yves Franceschi from ENS Lyon for their help and the great advice they gave me regarding the writing of this report.
 
 \newpage
 \bibliographystyle{alpha}
