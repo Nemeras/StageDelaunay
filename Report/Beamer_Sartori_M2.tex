@@ -58,11 +58,11 @@ Continuation of a previous work by Yves Bertot and Jean-Francois Dufourd, in a m
 
 \begin{frame}{Definition}
 
- A triangulation $T$ of a subset $X$ of $\mathbb{R}^2$ is a tiling of this subset with triangles such
+ A triangulation $T$ of the convex hull of a point set $D$ in the plane is a subdivision of this convex hull into triangles such
 that:
 \begin{itemize}
  \item<2-> The intersection of two distinct triangles is either empty or a common edge of these triangles.
- \item<3-> The union of the triangles of $T$ is $X$ itself.
+ \item<3-> The set of vertices of triangles of $T$ is D.
 \end{itemize}
 
 \begin{overprint}
@@ -300,24 +300,24 @@ We derive three of those predicates from a function, {\tt oriented\_surface}:
 
  A triangulation {\tt Tr} on a data set {\tt D} is a finite set of triangles with points of {\tt D} as vertices which satisfies the following properties:
 \begin{enumerate}
-\item<2-> {\tt covers\_hull}  \tikzmark{start}
-\item<2-> {\tt covers\_vertices} \tikzmark{end}
-\item<3-> {\tt no\_cover\_intersection}\tikzmark{start2}
-\item<3-> {\tt no\_point\_on\_segment \hspace{0.2 cm}}\tikzmark{end2}
-\item<4-> {\tt triangle\_3\_vertices}\tikzmark{start3}
-\item<4-> {\tt triangle\_nempty}
-\item<4-> {\tt oriented\_triangle\_triangulation} \tikzmark{end3}
+\item<2-> {\tt covers\_hull}  \tikzmark{start} \hspace{1.76cm} $\rightarrow$ Subdivision of the convex hull.
+\item<3-> {\tt covers\_vertices} \tikzmark{end} \hspace{1cm} $\rightarrow$ The set of vertices of $Tr$ is D.
+\item<4-> {\tt no\_cover\_intersection}\tikzmark{start2}
+\item<4-> {\tt no\_point\_on\_segment \hspace{0.2 cm}}\tikzmark{end2}
+\item<5-> {\tt triangle\_3\_vertices}\tikzmark{start3}
+\item<5-> {\tt triangle\_nempty}
+\item<5-> {\tt oriented\_triangle\_triangulation} \tikzmark{end3}
 \end{enumerate}
-\begin{uncoverenv}<2->
-\begin{tikzpicture}[remember picture,overlay]
-\draw[decorate,decoration={brace,raise=12pt}]
-  ([yshift=2ex]{{pic cs:end}|-{pic cs:start}}) --
-    node[xshift=15pt,anchor=west] {Tiling of the convex hull.} 
-  ([yshift=-0.5ex]pic cs:end);
-\end{tikzpicture}
-\end{uncoverenv}
+% \begin{uncoverenv}<2->
+% \begin{tikzpicture}[remember picture,overlay]
+% \draw[decorate,decoration={brace,raise=12pt}]
+%   ([yshift=2ex]{{pic cs:end}|-{pic cs:start}}) --
+%     node[xshift=15pt,anchor=west] {Tiling of the convex hull.} 
+%   ([yshift=-0.5ex]pic cs:end);
+% \end{tikzpicture}
+% \end{uncoverenv}
 
-\begin{uncoverenv}<3->
+\begin{uncoverenv}<4->
 
 \begin{tikzpicture}[remember picture,overlay]
 \draw[decorate,decoration={brace,raise=12pt}]
@@ -327,7 +327,7 @@ We derive three of those predicates from a function, {\tt oriented\_surface}:
 \end{tikzpicture}
 \end{uncoverenv}
 
-\begin{uncoverenv}<4->
+\begin{uncoverenv}<5->
 \begin{tikzpicture}[remember picture,overlay]
 \draw[decorate,decoration={brace,raise=12pt}]
   ([yshift=2ex]{{pic cs:end3}|-{pic cs:start3}}) --
