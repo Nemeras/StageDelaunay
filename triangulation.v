@@ -820,6 +820,30 @@ by right; right; congr (vertices_to_edge (vertex t _) (vertex t _));
           apply/val_inj.
 Qed.
 
+Lemma oriented_triangle_symmetry' t p e :
+  oriented_triangle_strict t -> p \in vertex_set t -> e \in edges_set t ->
+  (p, e) \in
+   [fset (vertex t (fst i),
+    vertices_to_edge
+      (vertex t (fst i + snd i)) (vertex t (fst i + snd i + 1))) |
+      i : ('I_3 * 'I_3)%type].
+Proof.
+move => ot pp.
+have tt := all_triangles_oriented ot.
+rewrite [X in edges_set X]tt edges_set_vertices_to_triangle // !inE.
+rewrite (vertices_to_edge_sym (vertex1 t) (vertex3 t))
+   /vertex1 /vertex2 /vertex3 => e_eqs.
+have ev : e \in
+   [fset vertices_to_edge (vertex t i) (vertex t (i + 1)) | i : 'I_3].
+  by apply/imfsetP; case/orP: e_eqs;[case/orP => /eqP | move =>/eqP ] => e_eq;
+    [exists ord30 | exists ord32 | exists ord31] => //; rewrite e_eq;
+    congr (vertices_to_edge (vertex t _) (vertex t _)); apply/val_inj.
+move/imfsetP: pp {e_eqs} => [i _ pi]; move/imfsetP: ev => [i' _ pi'].
+apply/imfsetP; exists (i, i' - i) => //=; congr (_, _) => //.
+by rewrite pi'; congr (vertices_to_edge (vertex t _) (vertex t (_ + 1)));
+rewrite addrC addrNK.
+Qed.
+
 Lemma on_edge_split_triangle t p :
   in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
   forall e, e \in edges_set t0 -> forall q, on_edge e q ->
