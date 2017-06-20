@@ -246,7 +246,7 @@ Qed.
 
 Hypothesis vertices_to_edge_in_edges_set:
 forall a, forall t,  a \in vertex_set t -> forall b, b \in vertex_set t ->
-(vertices_to_edge a b) \in edges_set t.
+b != a -> (vertices_to_edge a b) \in edges_set t.
 
 Lemma is_ol_imply_islor a b c :is_on_line a b c -> is_left_or_on_line a b c.
 Proof.
@@ -294,6 +294,15 @@ Lemma in_triangle_w_edge_edges t:
   (exists e, e \in edges_set t /\ on_edge e p). 
 Proof.
 move => or_t p.
+have d31 : vertex3 t != vertex1 t.
+  apply/negP => /eqP abs; move: or_t; rewrite /oriented_triangle_strict.
+  by rewrite oriented_surface_circular abs oriented_surface_x_x ltrr.
+have d23 : vertex2 t != vertex3 t.
+  apply/negP => /eqP abs; move: or_t; rewrite /oriented_triangle_strict.
+  by rewrite 2!oriented_surface_circular abs oriented_surface_x_x ltrr.
+have d12 : vertex1 t != vertex2 t.
+  apply/negP => /eqP abs; move: or_t; rewrite /oriented_triangle_strict.
+  by rewrite abs oriented_surface_x_x ltrr.
 split.
   move => /andP [] /andP[] islor12p islorp23 islor1p3.
   case islo12p:(is_left_of (vertex1 t) (vertex2 t) p);
@@ -312,8 +321,7 @@ split.
   try (have isol1p3 := is_left_or_on_line_on_line islor1p3 islor13p);
   try (have isol12p := is_left_or_on_line_on_line islor12p islor1p2);
   try (have isolp23 := is_left_or_on_line_on_line islorp23 islorp32);
-  
-  [move|move|
+  [ | |
   by rewrite is_on_line_sym is_on_line_circular in isolp23;
   rewrite is_on_line_circular in isol1p3;
   rewrite /oriented_triangle_strict oriented_surface_circular in or_t;
@@ -334,13 +342,13 @@ split.
   left;rewrite temp;apply/imfsetP;exists ord31];right;right;
   [exists (vertices_to_edge (vertex1 t) (vertex3 t))|exists (vertices_to_edge (vertex3 t) (vertex2 t))|
    exists (vertices_to_edge (vertex2 t) (vertex1 t))];split => //=;
-  try (apply vertices_to_edge_in_edges_set;apply/imfsetP);
+  try (apply: vertices_to_edge_in_edges_set => //;apply/imfsetP);
   try (by exists ord30;rewrite/vertex1);
   try (by exists ord31;rewrite/vertex2);
-  try (by exists ord32;rewrite/vertex3) => //=;
-  [apply:(@on_line_on_edge (vertex1 t) (vertex2 t) (vertex3 t) _ p);easygeo|
-  apply:(@on_line_on_edge (vertex3 t) (vertex1 t) (vertex2 t) _ p);easygeo|
-  apply:(@on_line_on_edge (vertex2 t) (vertex3 t) (vertex1 t) _ p);easygeo].
+  try (by exists ord32;rewrite/vertex3) => //=.
+      apply:(@on_line_on_edge (vertex1 t) (vertex2 t) (vertex3 t) _ p);easygeo.
+    apply:(@on_line_on_edge (vertex3 t) (vertex1 t) (vertex2 t) _ p);easygeo.
+  apply:(@on_line_on_edge (vertex2 t) (vertex3 t) (vertex1 t) _ p);easygeo.
 move => [|[|]];try by apply in_triangle_imply_w_edges.
   apply is_lof_imply_is_lor_on_line in or_t.
   move => /imfsetP [[[|[|[|x']]] px] _] ptx=> //=;
