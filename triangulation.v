@@ -375,7 +375,6 @@ rewrite /in_triangle_w_edges /vertex1 /vertex2 /vertex3 -vc1 -vc2 -vc3;
 apply/andP;split;try (apply/andP;split);easygeo.
 Qed.
 
-
 Lemma vert_in_triangle_w_edges : forall t, forall p,
       oriented_triangle t -> p \in vertex_set t
                                   -> in_triangle_w_edges t p.
@@ -846,11 +845,99 @@ have ev : e \in
   by apply/imfsetP; case/orP: e_eqs;[case/orP => /eqP | move =>/eqP ] => e_eq;
     [exists ord30 | exists ord32 | exists ord31] => //; rewrite e_eq;
     congr (vertices_to_edge (vertex t _) (vertex t _)); apply/val_inj.
-move/imfsetP: pp {e_eqs} => [i _ pi]; move/imfsetP: ev => [i' _ pi'].
+move/imfsetP: pp {e_eqs} => [i _ pi]; move/imfsetP: ev => [i' _ ->].
 apply/imfsetP; exists (i, i' - i) => //=; congr (_, _) => //.
-by rewrite pi'; congr (vertices_to_edge (vertex t _) (vertex t (_ + 1)));
-rewrite addrC addrNK.
+by congr (vertices_to_edge (vertex t _) (vertex t (_ + 1)));
+   rewrite addrC addrNK.
 Qed.
+
+Lemma edges_of_triangle_circular p1 p2 p3 :
+  is_left_of p1 p2 p3 ->
+  edges_set (vertices_to_triangle p1 p2 p3)
+    = edges_set (vertices_to_triangle p2 p3 p1).
+Proof.
+move => lof; rewrite !edges_set_vertices_to_triangle //.
+  by rewrite fsetUC fsetUA !(vertices_to_edge_sym p1).
+by rewrite is_left_of_circular.
+Qed.
+
+Lemma in_triangle_circular  p1 p2 p3 p :
+  is_left_of p1 p2 p3 ->
+  in_triangle (vertices_to_triangle p1 p2 p3) p =
+  in_triangle (vertices_to_triangle p2 p3 p1) p.
+Proof.
+move => lof; rewrite /in_triangle !vertex1_vertices_to_triangle //; last first.
+  by rewrite is_left_of_circular.
+rewrite !vertex2_vertices_to_triangle //; last first.
+  by rewrite is_left_of_circular.
+rewrite !vertex3_vertices_to_triangle //; last first.
+  by rewrite is_left_of_circular.
+do 2 rewrite andbC andbA.
+by rewrite !(is_left_of_circular _ p) !(is_left_of_circular _ _ p).
+Qed.
+
+Lemma vertex_set_vertices_to_triangle p1 p2 p3 :
+  is_left_of p1 p2 p3 ->
+  vertex_set (vertices_to_triangle p1 p2 p3) = [fset p1; p2; p3].
+Proof.
+move => lof; apply/fsetP => i; apply/imfsetP/idP.
+  move => [[[ | [ | [ | k]]] pk] _ ->] //.
+      rewrite (_ : Ordinal pk = ord30); last by apply/val_inj.
+      rewrite 2!in_fsetU; apply/orP; left; apply/orP; left.
+      by rewrite in_fset1; apply/eqP/vertex1_vertices_to_triangle.
+    rewrite (_ : Ordinal pk = ord31); last by apply/val_inj.
+    rewrite 2!in_fsetU; apply/orP; left; apply/orP; right.
+    by rewrite in_fset1; apply/eqP/vertex2_vertices_to_triangle.
+  rewrite (_ : Ordinal pk = ord32); last by apply/val_inj.
+  rewrite in_fsetU; apply/orP; right.
+  by rewrite in_fset1; apply/eqP/vertex3_vertices_to_triangle.
+rewrite 2!in_fsetU !in_fset1;move/orP=> [/orP [/eqP -> | /eqP ->] | /eqP ->].
+    by exists ord30 => //; symmetry; apply vertex1_vertices_to_triangle.
+  by exists ord31 => //; symmetry; apply vertex2_vertices_to_triangle.
+by exists ord32 => //; symmetry; apply vertex3_vertices_to_triangle.
+Qed.
+
+Lemma is_left_of_oriented_triangle_strict p1 p2 p3 :
+  is_left_of p1 p2 p3 ->
+  oriented_triangle_strict (vertices_to_triangle p1 p2 p3).
+Proof.
+move => lof; rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
+  vertex2_vertices_to_triangle // vertex3_vertices_to_triangle //.
+Qed.
+
+Lemma ord30_inj : forall (j : (0 < 3)%N), Ordinal j = ord30.
+Proof. by move => j; apply/val_inj. Qed.
+
+Lemma ord31_inj : forall (j : (1 < 3)%N), Ordinal j = ord31.
+Proof. by move => j; apply/val_inj. Qed.
+
+Lemma ord32_inj : forall (j : (2 < 3)%N), Ordinal j = ord32.
+Proof. by move => j; apply/val_inj. Qed.
+
+Lemma ord30p1 : ord30 + 1 = ord31.
+Proof. by apply/val_inj. Qed.
+
+Lemma ord31p1 : ord31 + 1 = ord32.
+Proof. by apply/val_inj. Qed.
+
+Lemma ord32p1 : ord32 + 1 = ord30.
+Proof. by apply/val_inj. Qed.
+
+Lemma ord30p2 : ord30 + 2%:R = ord32.
+Proof. by apply/val_inj. Qed.
+
+Lemma ord31p2 : ord31 + 2%:R = ord30.
+Proof. by apply/val_inj. Qed.
+
+Lemma ord32p2 : ord32 + 2%:R = ord31.
+Proof. by apply/val_inj. Qed.
+
+Lemma add3K (x : 'I_3) : x + 1 + 1 + 1 = x.
+Proof. by rewrite -!addrA (_ : 1 + (1 + 1) = 0) ?addr0 //; apply/val_inj. Qed.
+
+Definition mod3rules :=
+  (ord30_inj, (ord31_inj, (ord32_inj, (ord30p1, (ord31p1, (ord32p1, (ord30p2,
+   (ord31p2, (ord32p2, add3K))))))))).
 
 Lemma on_edge_split_triangle t p :
   in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
@@ -858,169 +945,58 @@ Lemma on_edge_split_triangle t p :
       (in_triangle t q \/ (exists e0, e0 \in edges_set t /\ on_edge e0 q)).
 Proof.
 move => intp t'.
-have otst : oriented_triangle_strict t.
-  by apply: triangle_not_empty intp.
-case/andP: (intp) => /andP [o1 o2] o3 t'split.
-move: (t'split) => /fset1UP [t12p | /fset2P [t2p3 | tp31]] e et' q qe.
-    have otst' : oriented_triangle_strict t'.
-      rewrite /oriented_triangle_strict t12p.
-      rewrite vertex1_vertices_to_triangle // vertex2_vertices_to_triangle //.
-      by rewrite vertex3_vertices_to_triangle //.
-    have : exists t1, t1 \in split_triangle_aux t p /\
-                            in_triangle_w_edges t1 q.
-      exists t'; split => //.
-      by rewrite in_triangle_w_edge_edges //; right; right; exists e.
-    rewrite -three_triangles_cover_one //.
-    rewrite in_triangle_w_edge_edges // => [[vs | it]]; last by [].
-    right; have ot' : oriented_triangle t'.
-      by apply/ltrW/otst'.
-    have tmp:= vert_not_on_edges ot' _ et' qe.
-    move/imfsetP: vs => [[[| [| [| k]]] px] inp] //= qq.
-        suff : false by []; apply: tmp; rewrite t12p.
-        have q1 : q = vertex1 t.
-          by rewrite qq; congr (vertex _); apply/val_inj.
-        apply/imfsetP; exists ord30 => //.
-        by rewrite -/(vertex1 _) vertex1_vertices_to_triangle.
-      suff : false by []; apply: tmp; rewrite t12p.
-      have q2 : q = vertex2 t.
-        by rewrite qq; congr (vertex _); apply/val_inj.
-      apply/imfsetP; exists ord31 => //.
-      by rewrite -/(vertex2 _) vertex2_vertices_to_triangle.
-    move: et'; rewrite t12p edges_set_vertices_to_triangle //.
-    have q3 : q = vertex3 t.
-      by rewrite qq; congr (vertex _); apply/val_inj.
-    rewrite !inE => /orP [/orP [ | ] | ] /eqP e_q.
-        have otst1 : is_left_of (vertex2 t) (vertex3 t) (vertex1 t).
-          by rewrite is_left_of_circular; exact otst.
-        have := on_edge_on_line otst1.
-        rewrite vertices_to_edge_sym -e_q.
-        move => tm2; move: (tm2 (vertex3 t)) => {tm2}.
-        rewrite -q3 => tm2; have := (tm2 qe); rewrite q3 => [[_ [a2 a3]]] {tm2}.
-        case/negP: (is_left_of_no_dup (vertex3 t) (vertex1 t)).
-        by rewrite 2!is_left_of_circular.
-      have otst2 : is_left_of p (vertex3 t) (vertex1 t).
-        by rewrite is_left_of_circular.
-      have := on_edge_on_line otst2.
-      rewrite vertices_to_edge_sym -e_q.
-      move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-      rewrite q3 2!is_left_of_circular => a2.
-      by case/negP: (is_left_of_no_dup (vertex3 t) p).
-    have otst2 : is_left_of (vertex2 t) (vertex3 t) p.
-      by rewrite is_left_of_circular.
-    have := on_edge_on_line otst2.
-    rewrite -e_q.
-    move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-    rewrite q3 2!is_left_of_circular => a2.
-    by case/negP: (is_left_of_no_dup (vertex3 t) (vertex2 t)).
-  have otst' : oriented_triangle_strict t'.
-    rewrite /oriented_triangle_strict t2p3.
-    rewrite vertex1_vertices_to_triangle // vertex2_vertices_to_triangle //.
-    by rewrite vertex3_vertices_to_triangle //.
-  have : exists t1, t1 \in split_triangle_aux t p /\
-                            in_triangle_w_edges t1 q.
-    exists t'; split => //.
-    by rewrite in_triangle_w_edge_edges //; right; right; exists e.
-  rewrite -three_triangles_cover_one //.
-  rewrite in_triangle_w_edge_edges // => [[vs | it]]; last by [].
-  right; have ot' : oriented_triangle t'.
-    by apply/ltrW/otst'.
-  have tmp:= vert_not_on_edges ot' _ et' qe.
-  move/imfsetP: vs => [[[| [| [| k]]] px] inp] //= qq; first 1 last.
-      suff : false by []; apply: tmp; rewrite t2p3.
-      have q2 : q = vertex2 t.
-        by rewrite qq; congr (vertex _); apply/val_inj.
-      apply/imfsetP; exists ord31 => //.
-      by rewrite -/(vertex2 _) vertex2_vertices_to_triangle.
-    suff : false by []; apply: tmp; rewrite t2p3.
-    have q3 : q = vertex3 t.
-      by rewrite qq; congr (vertex _); apply/val_inj.
-    apply/imfsetP; exists ord32 => //.
-    by rewrite -/(vertex3 _) vertex3_vertices_to_triangle.
-  have q1 : q = vertex1 t.
-    by rewrite qq; congr (vertex _); apply/val_inj.
-  move: et'; rewrite t2p3 edges_set_vertices_to_triangle //.
-  rewrite !inE => /orP [/orP [ | ] | ] /eqP e_q.
-      have otst2 : is_left_of p (vertex1 t) (vertex2 t).
-        by rewrite 2!is_left_of_circular.
-      have := on_edge_on_line otst2; rewrite - e_q.
-      move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-      rewrite q1 2!is_left_of_circular => a2.
-      by case/negP: (is_left_of_no_dup (vertex1 t) p).
-    have otst2 : is_left_of   (vertex3 t) (vertex1 t) p.
-      by rewrite 2!is_left_of_circular.
-    have := on_edge_on_line otst2; rewrite vertices_to_edge_sym -e_q.
-    move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-    rewrite q1 2!is_left_of_circular => a2.
-    by case/negP: (is_left_of_no_dup (vertex1 t) (vertex3 t)).
-  have otst1 : is_left_of (vertex3 t) (vertex1 t) (vertex2 t).
-    by rewrite 2!is_left_of_circular; exact otst.
-  have := on_edge_on_line otst1; rewrite vertices_to_edge_sym -e_q.
-  move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-  rewrite q1 2!is_left_of_circular => a2.
-  by case/negP: (is_left_of_no_dup (vertex1 t) (vertex3 t)).
-have otst' : oriented_triangle_strict t'.
-  rewrite /oriented_triangle_strict tp31.
-  rewrite vertex1_vertices_to_triangle // vertex2_vertices_to_triangle //.
-  by rewrite vertex3_vertices_to_triangle //.
-have : exists t1, t1 \in split_triangle_aux t p /\
-                            in_triangle_w_edges t1 q.
-  exists t'; split => //.
-  by rewrite in_triangle_w_edge_edges //; right; right; exists e.
-rewrite -three_triangles_cover_one //.
-rewrite in_triangle_w_edge_edges // => [[vs | it]]; last by [].
-right; have ot' : oriented_triangle t'.
-  by apply/ltrW/otst'.
-have tmp:= vert_not_on_edges ot' _ et' qe.
-move/imfsetP: vs => [[[| [| [| k]]] px] inp] //= qq.
-    have q1 : q = vertex1 t.
-      by rewrite qq; congr (vertex _); apply/val_inj.
-    suff : false by []; apply: tmp; rewrite tp31.
-    apply/imfsetP; exists ord30 => //.
-    by rewrite -/(vertex1 _) vertex1_vertices_to_triangle.
-  have q2 : q = vertex2 t.
-    by rewrite qq; congr (vertex _); apply/val_inj.
-  move: et'; rewrite tp31 edges_set_vertices_to_triangle //.
-  rewrite !inE => /orP [/orP [ | ] | ] /eqP e_q.
-      have otst2 : is_left_of (vertex1 t) (vertex2 t) p.
-        by rewrite 3!is_left_of_circular.
-      have := on_edge_on_line otst2; rewrite -e_q.
-      move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-      rewrite -q2 2!is_left_of_circular => a2.
-      by case/negP: (is_left_of_no_dup q (vertex1 t)).
-    have otst2 : is_left_of (vertex1 t) (vertex2 t) (vertex3 t).
-      by rewrite 3!is_left_of_circular.
-    have := on_edge_on_line otst2; rewrite -e_q.
-    move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-    rewrite -q2 2!is_left_of_circular => a2.
-    by case/negP: (is_left_of_no_dup q (vertex1 t)).
-  have otst1 : is_left_of p (vertex2 t) (vertex3 t).
-    by rewrite 3!is_left_of_circular.
-  have := on_edge_on_line otst1; rewrite -e_q.
-  move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-  rewrite -q2 2!is_left_of_circular => a2.
-  by case/negP: (is_left_of_no_dup q p).
-have q3 : q = vertex3 t.
-  by rewrite qq; congr (vertex _); apply/val_inj.
-move: et'; rewrite tp31 edges_set_vertices_to_triangle //.
-rewrite !inE => /orP [/orP [ | ] | ] /eqP e_q.
-    have otst2 : is_left_of p (vertex3 t) (vertex1 t).
-      by rewrite is_left_of_circular.
-     have := on_edge_on_line otst2; rewrite vertices_to_edge_sym -e_q.
-      move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-      rewrite -q3 2!is_left_of_circular => a2.
-      by case/negP: (is_left_of_no_dup q p).
-  have otst2 : is_left_of (vertex1 t) (vertex2 t) (vertex3 t).
-    by rewrite 3!is_left_of_circular.
-  have := on_edge_on_line otst2; rewrite  -e_q.
-  move => tm2; move : (tm2 q qe) => [[_ [_ a2]]] {tm2}; move: a2.
-  rewrite -q3 2!is_left_of_circular => a2.
-  by case/negP: (is_left_of_no_dup q (vertex2 t)).
-have otst2 : is_left_of (vertex3 t) (vertex1 t) p.
-  by rewrite 2!is_left_of_circular.
-have := on_edge_on_line otst2; rewrite vertices_to_edge_sym -e_q.
-move => tm2; move : (tm2 q qe) => [[_ [a2 _]]] {tm2}; move: a2.
-rewrite -q3 1!is_left_of_circular => a2.
-by case/negP: (is_left_of_no_dup q (vertex1 t)).
+have otst : oriented_triangle_strict t by apply: triangle_not_empty intp.
+have eq_to_imp (a b : bool) : a = b -> a -> b by move ->.
+have step x y z := eq_to_imp _ _ (is_left_of_circular x y z).
+case/andP: (intp) => /andP [/step o1 o2] /step /step o3 t'split.
+have o1' : is_left_of (vertex1 t) (vertex2 t) p by apply/step/step.
+have otst1 : oriented_triangle_strict
+                (vertices_to_triangle (vertex1 t) (vertex2 t) p).
+  by rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
+   vertex2_vertices_to_triangle // vertex3_vertices_to_triangle.
+have lofpj : forall j, is_left_of p (vertex t j) (vertex t (j + 1)).
+  by case => [ [ | [ | [ | j]]] pj] //; rewrite ?mod3rules.
+have lofj : forall j, is_left_of (vertex t j) (vertex t (j + 1))
+              (vertex t (j + 2%:R)).
+  by move => [[ | [ | [ | j]]] pj] //; rewrite !mod3rules //
+       is_left_of_circular // is_left_of_circular.
+have edge_to_triangle : forall j,
+   forall q, on_edge (vertices_to_edge (vertex t j) p) q -> in_triangle t q.
+  move => j q qe.
+  rewrite /in_triangle (is_left_of_circular _ _ q) -(is_left_of_circular q).
+  case: (on_edge_on_line (step _ _ _ (step _ _ _ (lofpj j))) qe) => _.
+  rewrite !(is_left_of_circular _ _ q) => [][A B].
+  have lofpjp1 : is_left_of p (vertex t (j + 1)) (vertex t (j + 2%:R)).
+    by rewrite addrA.
+  have qj1j2 := is_left_of_trans (lofj j)
+      (step _ _ _ (step _ _ _ (lofpj j)))
+      (step _ _ _ (step _ _ _ A)) B lofpjp1.
+  have := (on_edge_on_line (lofpj (j + 2%:R))).
+  rewrite vertices_to_edge_sym !addrA mod3rules.
+  move/(_ _ qe) => [] _ [] A' /step B'.
+  case: j A B' qj1j2 {qe B lofpjp1 A'} => [[ | [ | [ | j]]] pj] //;
+  by rewrite !mod3rules => -> -> ->.
+move => e et'.
+have [j pj] :
+   exists j, e = vertices_to_edge (vertex t j) (vertex t (j + 1)) \/
+                     e = vertices_to_edge (vertex t j) p.
+  have tmp := (step _ _ _ o3).
+  by move: t'split et'; rewrite !inE => /orP [/eqP -> | /orP [/eqP -> | /eqP ->]];
+  rewrite edges_set_vertices_to_triangle // ?(vertices_to_edge_sym p)
+  ?(vertices_to_edge_sym (vertex2 t) (vertex1 t))
+  ?(vertices_to_edge_sym (vertex3 t) (vertex2 t))
+  ?(vertices_to_edge_sym (vertex1 t) (vertex3 t)) ?inE;
+  try (case /orP => [/orP [/eqP -> |/eqP -> ] | /eqP ->];
+  rewrite /vertex1 /vertex2 /vertex3;
+  try match goal with |- context[vertices_to_edge (vertex t ?x) _ = _] =>
+     exists x; rewrite !mod3rules; auto
+  end).
+case: pj => [pjt | -> ]; last by move => q /edge_to_triangle; left.
+move => q qe; right; exists e; split; last by [].
+rewrite (all_triangles_oriented otst) edges_set_vertices_to_triangle //.
+rewrite (vertices_to_edge_sym (vertex1 t) (vertex3 t)) !inE /vertex1 /vertex2
+  /vertex3 pjt {pjt}.
+by case: j => [[ | [ | [ | j]]] pj] //; rewrite !mod3rules eqxx ?orbT.
 Qed.
 
 Hypothesis vertex_set_vertices_to_triangle :
