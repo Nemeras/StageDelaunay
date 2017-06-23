@@ -918,14 +918,6 @@ apply/imfsetP;[exists ord30|exists ord31|exists ord31|exists ord32|exists ord30|
 by apply:(split_triangle_aux_oriented intp).
 Qed.
 
-
-Hypothesis surface_non_empty : forall p1 p2 p3,
-  oriented_surface p1 p2 p3 > 0 -> 
-  exists p', in_triangle (vertices_to_triangle p1 p2 p3) p'.
-
-
-
-
 Lemma vertex_in_split_triangle t p:
 in_triangle t p -> forall t0, t0 \in split_triangle_aux t p ->
 forall q, q \in vertex_set t0 -> (q \in vertex_set t \/ q=p).
@@ -1716,6 +1708,9 @@ apply covv_tr_d.
 by exists t0.
 Qed.
 
+Hypothesis surface_non_empty : forall p1 p2 p3,
+  oriented_surface p1 p2 p3 > 0 ->
+  exists p', in_triangle (vertices_to_triangle p1 p2 p3) p'.
 
 Lemma triangulation_tne:
   forall tr, forall t , forall p, forall d, d != fset0 -> p \notin d ->
