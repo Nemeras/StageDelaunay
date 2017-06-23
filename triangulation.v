@@ -1844,10 +1844,19 @@ by case: i => [[ | [ | [ | i]]] pi] //;
  case/andP=>[/andP [ h1 h2] h3]; rewrite ?h1 ?h2 ?h3.
 Qed.
 
-Hypothesis vertex_set_eq_in_triangle_w_edges :
-  forall t1, forall t2, oriented_triangle_strict t1 -> oriented_triangle_strict t2 ->
+
+Lemma vertex_set_eq_in_triangle_w_edges t1 t2:
+  oriented_triangle_strict t1 -> oriented_triangle_strict t2 ->
               vertex_set t1 = vertex_set t2 ->
         {subset in_triangle_w_edges t1 <= in_triangle_w_edges t2}.
+Proof.
+move => otst1 otst2; rewrite /in_triangle_w_edges.
+case/oriented_strict_same_vertices => // [i [-> [-> ->]]] p.
+by case: i => [[ | [ | [ | i]]] pi] //;
+ rewrite !unfold_in !mod3rules /vertex1 /vertex2 /vertex3
+   !(is_left_or_on_line_circular _ p) -!(is_left_or_on_line_circular _ _ p);
+ case/andP=>[/andP [ h1 h2] h3]; rewrite ?h1 ?h2 ?h3.
+Qed.
 
 Lemma in_vert_to_triangle_in_triangle a b c :
   is_left_of a b c -> forall t, a \in vertex_set t ->
