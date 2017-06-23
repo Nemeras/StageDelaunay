@@ -200,9 +200,17 @@ Proof.
 by apply ltrW.
 Qed.
 
-Hypothesis vertices_to_triangle_correct2 : forall p1 p2 p3, forall t,
-          (t = vertices_to_triangle p1 p2 p3) ->
-  ((p1 \in vertex_set t) /\ (p2 \in vertex_set t) /\ (p3 \in vertex_set t)).
+
+Hypothesis vertex_set_vertices_to_triangle :
+  forall a b c, vertex_set (vertices_to_triangle a b c) = [fset a;b;c].
+
+Lemma vertices_to_triangle_correct2 : forall p1 p2 p3 t,
+  t = vertices_to_triangle p1 p2 p3 ->
+  p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t.
+Proof.
+by move => p1 p2 p3 t tv; rewrite tv vertex_set_vertices_to_triangle !inE
+  !eqxx !orbT.
+Qed.
 
 Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
                               is_left_of p (vertex2 t) (vertex3 t) &&
@@ -878,9 +886,6 @@ rewrite (vertices_to_edge_sym (vertex1 t) (vertex3 t)) !inE /vertex1 /vertex2
   /vertex3 pjt {pjt}.
 by case: j => [[ | [ | [ | j]]] pj] //; rewrite !mod3rules eqxx ?orbT.
 Qed.
-
-Hypothesis vertex_set_vertices_to_triangle :
-  forall a b c, vertex_set (vertices_to_triangle a b c) = [fset a;b;c].
 
 Lemma split_triangle_aux_oriented t p:
 in_triangle t p -> forall t1, t1 \in split_triangle_aux t p ->
