@@ -836,12 +836,8 @@ move => intp t'.
 have otst : oriented_triangle_strict t by apply: triangle_not_empty intp.
 have eq_to_imp (a b : bool) : a = b -> a -> b by move ->.
 have step x y z := eq_to_imp _ _ (is_left_of_circular x y z).
-case/andP: (intp) => /andP [/step o1 o2] /step /step o3 t'split.
-have o1' : is_left_of (vertex1 t) (vertex2 t) p by apply/step/step.
-have otst1 : oriented_triangle_strict
-                (vertices_to_triangle (vertex1 t) (vertex2 t) p).
-  by rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
-   vertex2_vertices_to_triangle // vertex3_vertices_to_triangle.
+have step' x y z := eq_to_imp _ _ (Logic.eq_sym (is_left_of_circular x y z)).
+case/andP: (intp) => /andP [/step o1 o2] /step' o3 t'split.
 have lofpj : forall j, is_left_of p (vertex t j) (vertex t (j + 1)).
   by case => [ [ | [ | [ | j]]] pj] //; rewrite ?mod3rules.
 have lofj : forall j, is_left_of (vertex t j) (vertex t (j + 1))
@@ -852,13 +848,12 @@ have edge_to_triangle : forall j,
    forall q, on_edge (vertices_to_edge (vertex t j) p) q -> in_triangle t q.
   move => j q qe.
   rewrite /in_triangle (is_left_of_circular _ _ q) -(is_left_of_circular q).
-  case: (on_edge_on_line (step _ _ _ (step _ _ _ (lofpj j))) qe) => _.
+  case: (on_edge_on_line (step' _ _ _ (lofpj j)) qe) => _.
   rewrite !(is_left_of_circular _ _ q) => [][A B].
   have lofpjp1 : is_left_of p (vertex t (j + 1)) (vertex t (j + 2%:R)).
     by rewrite addrA.
-  have qj1j2 := is_left_of_trans (lofj j)
-      (step _ _ _ (step _ _ _ (lofpj j)))
-      (step _ _ _ (step _ _ _ A)) B lofpjp1.
+  have qj1j2 := is_left_of_trans (lofj j) (step' _ _ _ (lofpj j))
+      (step' _ _ _ A) B lofpjp1.
   have := (on_edge_on_line (lofpj (j + 2%:R))).
   rewrite vertices_to_edge_sym !addrA mod3rules.
   move/(_ _ qe) => [] _ [] A' /step B'.
@@ -878,7 +873,7 @@ have [j pj] :
   rewrite /vertex1 /vertex2 /vertex3;
   try match goal with |- context[vertices_to_edge (vertex t ?x) _ = _] =>
      exists x; rewrite !mod3rules; auto
-  end).
+  end); apply/step'.
 case: pj => [pjt | -> ]; last by move => q /edge_to_triangle; left.
 move => q qe; right; exists e; split; last by [].
 rewrite (all_triangles_oriented otst) edges_set_vertices_to_triangle //.
