@@ -63,7 +63,7 @@ Open Scope fset_scope.
 
 Variable oriented_surface : P -> P -> P -> R.
 
-Open Local Scope ring_scope.
+Open Scope ring_scope.
 
 Definition vertex_set t := (vertex t) @` 'I_3.
 Definition edges_set t := (edge t) @` 'I_3.
@@ -439,7 +439,7 @@ Definition encompassed x h := ucycle (is_left_or_on_line x) h.
 
 Definition all_left_of (d : {fset P}) x y  := [forall p : d, is_left_or_on_line x y (val p)].
 
-Open Local Scope nat_scope.
+Open Scope nat_scope.
 
 Definition CH (s : seq P) (d : {fset P}) := ((seq_fset s) `<=` d) /\
                                             (forall x, x \in d -> encompassed x s) /\
@@ -563,7 +563,6 @@ Lemma vertex1_vertices_to_triangle p1 p2 p3 :
 Proof.
   move => p123.
   rewrite /vertex1.
-Search _ vertex vertices_to_triangle.
 assert (p123' : is_left_or_on_line p1 p2 p3).
   by apply: is_lof_imply_is_lor_on_line.
 by case: (vertices_to_triangle_correct p123') => <- [_ _].
@@ -572,9 +571,8 @@ Qed.
 Lemma vertex2_vertices_to_triangle p1 p2 p3 :
   is_left_of p1 p2 p3 -> vertex2 (vertices_to_triangle p1 p2 p3) = p2.
 Proof.
-  move => p123.
-  rewrite /vertex2.
-Search _ vertex vertices_to_triangle.
+move => p123.
+rewrite /vertex2.
 assert (p123' : is_left_or_on_line p1 p2 p3).
   by apply: is_lof_imply_is_lor_on_line.
 by case: (vertices_to_triangle_correct p123') => _ [<- _].
@@ -583,8 +581,8 @@ Qed.
 Lemma vertex3_vertices_to_triangle p1 p2 p3 :
   is_left_of p1 p2 p3 -> vertex3 (vertices_to_triangle p1 p2 p3) = p3.
 Proof.
-  move => p123.
-  rewrite /vertex3.
+move => p123.
+rewrite /vertex3.
 assert (p123' : is_left_or_on_line p1 p2 p3).
   by apply: is_lof_imply_is_lor_on_line.
 by case: (vertices_to_triangle_correct p123') => _ [_ <-].
