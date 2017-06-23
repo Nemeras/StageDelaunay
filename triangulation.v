@@ -1773,9 +1773,9 @@ Lemma oriented_strict_same_vertices t1 t2 :
     vertex3 t2 = vertex t1 (i + 2%:R).
 Proof.
 move => otst1 otst2; rewrite (all_triangles_oriented otst1)
-  (all_triangles_oriented otst2); move/fsetP=> vq.
-rewrite vertex1_vertices_to_triangle // vertex2_vertices_to_triangle //.
-rewrite vertex3_vertices_to_triangle //.
+  (all_triangles_oriented otst2); move/fsetP.
+rewrite vertex1_vertices_to_triangle // vertex2_vertices_to_triangle //
+  vertex3_vertices_to_triangle // /vertex1 /vertex2 /vertex3 => vq.
 have abs1 : forall j p, ~is_left_of (vertex t1 j) (vertex t1 j) p.
   by move=> j p; rewrite /is_left_of oriented_surface_x_x ltrr.
 have abs2 : forall i, ~is_left_of (vertex t1 ord30) (vertex t1 ord32)
@@ -1793,26 +1793,24 @@ have abs2' : forall i p j, is_left_of p (vertex t1 i) (vertex t1 j) ->
     case => [[ | [ | [ | j]]] pj] //; rewrite !mod3rules;
      (try by rewrite is_left_of_circular; (case/abs1 || case /abs2));
      by rewrite -is_left_of_circular; (case/abs1 || case/abs2).
-have c2 : forall j, vertex1 t2 = vertex t1 j -> vertex2 t2 = vertex t1 (j + 1).
-  rewrite /vertex1.
-  move => j v2q; have:= vq (vertex t2 ord31);
-  rewrite /vertex1 /vertex2 /vertex3.
+have c2 : forall j, vertex t2 ord30 = vertex t1 j ->
+         vertex t2 ord31 = vertex t1 (j + 1).
+  move => j v2q; have:= vq (vertex t2 ord31).
   rewrite !vertex_set_vertices_to_triangle !inE eqxx ?(orbT, orTb).
   by case/orP=> [/orP [/eqP ha |/eqP ha] | /eqP ha ];
   case: j v2q => [ [ | [ | [ | j]]] pj] //; rewrite ?mod3rules => v2q;
   move: otst2;
     rewrite -[oriented_triangle_strict _]/
-                (is_left_of (vertex1 t2) (vertex2 t2) (vertex3 t2));
-  rewrite /vertex1 /vertex2 /vertex3 ha v2q;
+            (is_left_of (vertex t2 ord30) (vertex t2 ord31) (vertex t2 ord32));
+  rewrite ha v2q;
     (try case/abs1) => //;
-      try by move: (vq (vertex t2 ord32)); rewrite /vertex1 /vertex2 /vertex3
-        !vertex_set_vertices_to_triangle !inE eqxx ?(orbT, orTb) =>
+      try by move: (vq (vertex t2 ord32));
+          rewrite !vertex_set_vertices_to_triangle !inE eqxx ?(orbT, orTb) =>
         /orP [/orP [/eqP -> | /eqP ->] | /eqP ->]; case/abs2';
         rewrite mod3rules.
-have c3 : forall j, vertex1 t2 = vertex t1 j ->
-             vertex3 t2 = vertex t1 (j + 2%:R).
-rewrite /vertex1; move => j v2q; have := vq (vertex t2 ord32).
-  rewrite /vertex1 /vertex2 /vertex3.
+have c3 : forall j, vertex t2 ord30 = vertex t1 j ->
+             vertex t2 ord32 = vertex t1 (j + 2%:R).
+  move => j v2q; have := vq (vertex t2 ord32).
   rewrite !vertex_set_vertices_to_triangle !inE eqxx ?(orbT, orTb).
   by case/orP => [/orP [/eqP ha | /eqP ha] | /eqP ha];
   case: j v2q => [ [ | [ | [ | j]]] pj] //; rewrite ?mod3rules => v1q;
@@ -1823,13 +1821,12 @@ rewrite /vertex1; move => j v2q; have := vq (vertex t2 ord32).
   rewrite /vertex1 /vertex2 /vertex3 ha v1q v2q;
   try (rewrite is_left_of_circular; case/abs1);
   (rewrite -is_left_of_circular; case/abs1).
-have [j v1q] : exists j, vertex1 t2 = vertex t1 j.
+have [j v1q] : exists j, vertex t2 ord30 = vertex t1 j.
   have:= (vq (vertex t2 ord30)); rewrite /vertex1 /vertex2 /vertex3
     !vertex_set_vertices_to_triangle !inE eqxx !orTb.
   by case/orP => [/orP [ha | ha] | ha]; eapply ex_intro; eapply (eqP ha).
 exists j; rewrite v1q (c2 _ v1q) (c3 _ v1q) {v1q}.
-by case: j => [[ | [ | [ | j]]] pj] //;
-   rewrite /vertex1 /vertex2 /vertex3 ?mod3rules;
+by case: j => [[ | [ | [ | j]]] pj] //; rewrite ?mod3rules;
    (split; [ | split ]; symmetry; try apply:vertex1_vertices_to_triangle => //;
      try apply:vertex2_vertices_to_triangle => //;
       apply vertex3_vertices_to_triangle => //).
