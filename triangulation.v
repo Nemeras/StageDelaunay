@@ -1845,7 +1845,7 @@ by case: i => [[ | [ | [ | i]]] pi] //;
 Qed.
 
 Hypothesis vertex_set_eq_in_triangle_w_edges :
-  forall t1, forall t2, oriented_triangle t1 -> oriented_triangle t2 ->
+  forall t1, forall t2, oriented_triangle_strict t1 -> oriented_triangle_strict t2 ->
               vertex_set t1 = vertex_set t2 ->
         {subset in_triangle_w_edges t1 <= in_triangle_w_edges t2}.
 
@@ -2743,13 +2743,18 @@ last first.
       by move=>/fsetUP [/fset2P [->|->]|/fset1P ->  //=].
 
 
-
+    have otstabc : oriented_triangle_strict (vertices_to_triangle a b c).
+      by rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
+          vertex2_vertices_to_triangle // vertex3_vertices_to_triangle.
+    have otstacd : oriented_triangle_strict (vertices_to_triangle a c d).
+      by rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
+          vertex2_vertices_to_triangle // vertex3_vertices_to_triangle.
     by move:intp => [Hintp|Hintp];
     [have intp : in_triangle_w_edges t1 p|have intp : in_triangle_w_edges t2 p];
-      [by apply:(vertex_set_eq_in_triangle_w_edges (vertices_to_triangle_oriented a b c)
-       (is_lof_imply_is_lor_on_line (or_tr_d t1 t1_tr)) v_abc_t1)|
-       move|by apply:(vertex_set_eq_in_triangle_w_edges (vertices_to_triangle_oriented a c d)
-       (is_lof_imply_is_lor_on_line (or_tr_d t2 t2_tr)) v_acd_t2)|move];
+      [by apply:(vertex_set_eq_in_triangle_w_edges otstabc
+       (or_tr_d t1 t1_tr) v_abc_t1)|
+       move|by apply:(vertex_set_eq_in_triangle_w_edges otstacd
+                      (or_tr_d t2 t2_tr) v_acd_t2)| ];
     [have p_t := nps_tr_d t3 t1 t3_tr t1_tr p p_t3 intp|
      have p_t := nps_tr_d t3 t2 t3_tr t2_tr p p_t3 intp];
     [rewrite -v_abc_t1 in p_t|rewrite -v_acd_t2 in p_t];
