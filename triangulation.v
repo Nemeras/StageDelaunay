@@ -54,12 +54,6 @@ Variable vertices_to_edge : P -> P -> E.
 
 Variable edge : T -> 'I_3 -> E.
 
-Definition edge1 t := edge t ord30.
-Definition edge2 t := edge t ord31.
-Definition edge3 t := edge t ord32.
-
-Open Scope fset_scope.
-
 Variable oriented_surface : P -> P -> P -> R.
 
 Open Scope ring_scope.
