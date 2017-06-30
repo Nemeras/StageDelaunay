@@ -1829,28 +1829,21 @@ Lemma vertices_vt : forall a b, b != a -> forall c, b != c -> a != c ->
                              a \in vertex_set t ->
                              b \in vertex_set t ->
                              c \in vertex_set t ->
-                               a |` [fset b;c] =i vertex_set t.
+                               [fset a; b;c] =i vertex_set t.
 Proof.
 move => a b a_nb c b_nc a_nc t injvt a_t b_t c_t.
-have card_abc: #|` a |` [fset b;c] | = 3.
-  rewrite cardfsU1.
-  have a_nin_bc :(a \notin [fset b; c]).
-    apply/fset2P.
-    apply /Decidable.not_or_iff.
-    split => temp.
-      by rewrite temp in a_nb;move:a_nb => /eqP.
-    by rewrite temp in a_nc;move:a_nc => /eqP.
-  by rewrite a_nin_bc cardfs2 b_nc.
+have card_abc: #|` [fset a; b; c] | = 3.
+  rewrite cardfsU.
+  have cnab :(c \notin [fset a; b]).
+    by rewrite !inE; rewrite !(eq_sym c) negb_or a_nc b_nc.
+  by rewrite fsetI1 (negbTE cnab) cardfs0 subn0 cardfs1 cardfs2 eq_sym a_nb.
 have card_vt : #|` vertex_set t | = #|` finset 'I_3 |.
   by apply:card_imfset=> //=.
-rewrite card_finset card_ord in card_vt.
-have card_abc_vt : #|` a |` [fset b; c]| = #|` vertex_set t|
-  by rewrite card_abc.
-have abc_incl_vt :  a |` [fset b; c] `<=` vertex_set t.
-  apply/fsubsetP.
-  by move => x /fset1UP [-> //= | /fset2P [-> | ->] ].
-apply fsubset_cardP in card_abc_vt.
-by apply /card_abc_vt.
+move: card_vt; rewrite card_finset card_ord => card_vt.
+have abc_incl_vt :  [fset a; b; c] `<=` vertex_set t.
+  apply/fsubsetP=> i.
+  by rewrite !inE => /orP [/orP [/eqP -> | /eqP ->] | /eqP ->].
+by apply/fsubset_cardP; first rewrite card_vt.
 Qed.
 
 Lemma in_flip_edge_aux tr data:
@@ -2225,10 +2218,9 @@ move => p.
         apply vertices_to_triangle_correct2 in u2_v;
         move:u1_v => [u1_v1 [u1_v2 u1_v3]];
         move:u2_v => [u2_v1 [u2_v2 u2_v3]].
-        move:p_vt => /fset1UP [-> | /fset2P [-> | ->]];
-        [exists u1 | exists u1 | exists u2];split => //=; apply /fsetUP;left;
-        apply /fset1UP;rewrite /u1;[left|left|right] => //=.
-        by apply /fset1P.
+        by move:p_vt; rewrite !inE => /orP [/orP [/eqP -> | /eqP ->]| /eqP ->];
+          [exists u1 | exists u1 | exists u2]; split => //=; apply/fsetUP;
+        left; apply/fset1UP; try (left; done); right; apply/fset1P.
       have injvt2 := tr3v_tr_d t2 t2_tr.
       rewrite eq_sym in a_nc.
       rewrite eq_sym in d_nc.
@@ -2243,7 +2235,7 @@ move => p.
       apply vertices_to_triangle_correct2 in u2_v;
       move:u1_v => [u1_v1 [u1_v2 u1_v3]];
       move:u2_v => [u2_v1 [u2_v2 u2_v3]].
-      move:p_vt => /fset1UP [-> | /fset2P [-> | ->]];
+      move:p_vt; rewrite !inE => /orP [/orP [/eqP -> | /eqP ->] |/eqP ->];
       [exists u1 | exists u2 | exists u2];split => //=; apply /fsetUP;left;
       apply /fset1UP;rewrite /u1;[left|right|right] => //=;by apply /fset1P.
     exists t.
