@@ -1434,107 +1434,42 @@ Lemma triangulation_cvv tr t p d :
    d != fset0 -> p \notin d -> triangulation tr d -> t \in tr ->
      in_triangle t p -> covers_vertices (split_triangle tr t p) (p |` d).
 Proof.
-move => dne p_nin_d tr_d t_tr intp.
+move => dne p_nin_d tr_d t_tr intp q.
 move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]]].
-move => q.
 split.
-  move=>q_in_p.
-  case p_q:(q==p);move:p_q=>/eqP p_q.
+  move=> q_in_p.
+  move: q_in_p => /fset1UP [q_p | q_in_d].
     pose t0 := (vertices_to_triangle (vertex1 t) (vertex2 t) p); exists t0.
     split;first by apply /fsetUP;left;apply/fset1UP;left.
-    rewrite /t0.
-    have temp : (t0 = vertices_to_triangle (vertex1 t) (vertex2 t) p) by [].
-    apply vertices_to_triangle_correct2 in temp.
-      by rewrite p_q; move:temp => [_ [_ temp]].
-  move:q_in_p => /fset1UP q_in_d.
-  move:q_in_d => [q_p|q_in_d]; first  by rewrite q_p in p_q.
+    by rewrite /t0 vertex_set_vertices_to_triangle -q_p !inE eqxx ?orbT.
   apply covv_tr_d in q_in_d;move:q_in_d=>[t1 [t1_tr v_t1]].
-  case t_t1:(t==t1);move:t_t1=> /eqP t_t1.
+  case t_t1 :(t==t1) v_t1;move:t_t1=> /eqP t_t1; first rewrite -t_t1 => v_t.
     pose t0 := (vertices_to_triangle (vertex1 t) (vertex2 t) p).
     pose t2 := vertices_to_triangle p (vertex2 t) (vertex3 t).
-    have t0_spl : t0 \in split_triangle tr t p
+    have t0_spl : t0 \in split_triangle tr t p.
       by apply/fsetUP;left;apply/fset1UP;left.
-    have t2_spl : t2  \in split_triangle tr t p
+    have t2_spl : t2  \in split_triangle tr t p.
       by apply/fsetUP;left;apply/fset1UP;right;apply/fset2P;left.
-    move:v_t1 => /imfsetP [[[|[|[|x']]] px] _] x_v => //=.
-      exists t0.
-      split=> //=.
-      have v1_t0 :vertex1 t \in vertex_set t0.
-        have temp:t0 = t0 by [].
-        apply vertices_to_triangle_correct2 in temp.
-        by move:temp=>[temp _].
-      have q_v1t : (q = vertex1 t).
-        rewrite x_v t_t1.
-        congr(vertex t1 _).
-        by apply ord_inj.
-      by rewrite q_v1t.
-    exists t0.
-    split=> //=.
-    have v2_t0 :vertex2 t \in vertex_set t0.
-      have temp:t0 = t0 by [].
-      apply vertices_to_triangle_correct2 in temp.
-      by move:temp=>[_ [temp _]].
-    have q_v2t : (q = vertex2 t).
-      rewrite x_v t_t1.
-      congr(vertex t1 _).
-      by apply ord_inj.
-    by rewrite q_v2t.
-  exists t2.
-  split=> //=.
-  have v3_t0 :vertex3 t \in vertex_set t2.
-    have temp:t2 = t2 by [].
-    apply vertices_to_triangle_correct2 in temp.
-    by move:temp=>[_ [_ temp]].
-  have q_v3t : (q = vertex3 t).
-    rewrite x_v t_t1.
-    congr(vertex t1 _).
-    by apply ord_inj.
-  by rewrite q_v3t.
-
-rewrite /split_triangle /split_triangle_aux.
-exists t1;split=>//=;apply /fsetUP;right.
-by apply /fsetD1P;split=>//=; move:t_t1=>/eqP t_t1; rewrite eq_sym.
-move=> [t0 [spl_t0 v_t0]].
-move:spl_t0 => /fsetUP H.
-move:H => [H|H].
-  have vert_set:q = p \/ q=vertex1 t \/ q = vertex2 t \/ q = vertex3 t.
-     move:(intp) => /andP [/andP [islo1 islo2] islo3].
-     apply is_lof_imply_is_lor_on_line in islo1.
-     apply is_lof_imply_is_lor_on_line in islo2.
-     apply is_lof_imply_is_lor_on_line in islo3.
-     have vc12p := vertices_to_triangle_correct islo1.
-     have vcp23 := vertices_to_triangle_correct islo2.
-     have vc1p3 := vertices_to_triangle_correct islo3.
-     move:islo1 islo2 islo3 => _ _ _.
-     rewrite in_fset1U in H; move:H => /predU1P H;rewrite in_fset2 in H;
-     move:H => [H|H];last move :H => /predU1P [H|/eqP H].
-         rewrite -H in vc12p.
-         move:vc12p v_t0=> [temp1 [temp2 temp3]] /imfsetP.
-         move => [[[|[|[|x']]] px] _] v_t0 => //=;
-         [right;left|right;right;left|left];rewrite v_t0;
-         [rewrite temp1|rewrite temp2|rewrite temp3];
-         by congr((vertex t0) _);apply ord_inj.
-       rewrite -H in vcp23.
-       move:vcp23 v_t0=> [temp1 [temp2 temp3]] /imfsetP.
-       move => [[[|[|[|x']]] px] _] v_t0 => //=;
-       [left|right;right;left|right;right;right]; rewrite v_t0;
-       [rewrite temp1|rewrite temp2|rewrite temp3];
-       by congr((vertex t0) _);apply ord_inj.
-     rewrite -H in vc1p3.
-     move:vc1p3 v_t0=> [temp1 [temp2 temp3]] /imfsetP.
-     move => [[[|[|[|x']]] px] _] v_t0 => //=;
-     [right;left|left|right;right;right]; rewrite v_t0;
-     [rewrite temp1|rewrite temp2|rewrite temp3];
-       by congr((vertex t0) _);apply ord_inj.
-  by move:vert_set=>[vt|[vt|[vt|vt]]];rewrite vt; apply/fset1UP;
-  first left=>//=;right; apply covv_tr_d;exists t;split=>//=;
-  apply/imfsetP;[exists ord30|exists ord31|exists ord32].
-have t0_tr :t0 \in tr by move:H => /fsetD1P [_ H].
-rewrite /covers_vertices in covv_tr_d.
-have temp: t0 \in tr /\ q \in vertex_set t0 by [].
-apply/fset1UP;right.
-apply covv_tr_d.
-by exists t0.
+    move:v_t => /imfsetP [[[|[|[|x']]] px] _] x_v => //=.
+        exists t0; split => //; rewrite /t0 vertex_set_vertices_to_triangle.
+        by rewrite x_v mod3rules !inE eqxx.
+      exists t0; split => //; rewrite /t0 vertex_set_vertices_to_triangle.
+      by rewrite x_v mod3rules !inE eqxx ?orbT.
+    exists t2; split=> //=; rewrite /t2 vertex_set_vertices_to_triangle.
+    by rewrite x_v mod3rules !inE eqxx ?orbT.
+  move => v_t1; rewrite /split_triangle /split_triangle_aux.
+  exists t1;split=>//=;apply /fsetUP;right.
+  by apply /fsetD1P;split=>//=; move:t_t1=>/eqP t_t1; rewrite eq_sym.
+move=> [t0 [/fsetUP [H | H] v_t0]]; last first.
+  have t0_tr : t0 \in tr by move:H => /fsetD1P [_ H].
+  by apply/fset1UP; right; apply/covv_tr_d; exists t0.
+case qp : (q == p); first by rewrite (eqP qp); apply/fset1UP; left.
+have q_vt : q \in vertex_set t.
+  move:H v_t0; rewrite !inE => /orP [/eqP -> | /orP [/eqP -> | /eqP ->]];
+  rewrite vertex_set_vertices_to_triangle !inE qp ?orbF ?orFb
+     => /orP [/eqP -> | /eqP ->]; apply/imfsetP;
+    solve[exists ord30 => // | exists ord31 => // | exists ord32 => //].
+by apply/fset1UP; right;apply/covv_tr_d; exists t.
 Qed.
 
 Hypothesis surface_non_empty : forall p1 p2 p3,
