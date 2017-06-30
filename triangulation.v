@@ -1415,35 +1415,19 @@ Lemma triangulation_cvh:
                         in_triangle t p ->
                         covers_hull (split_triangle tr t p) (p |` d).
 Proof.
-move => tr t p d dne p_nin_d tr_d t_tr intp.
-move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]]].
-move => q hull_pdq.
+move => tr t p d dne p_nin_d tr_d t_tr intp q hull_pdq.
+move:(tr_d) => [_ [covh_tr_d [_ [_ _]]]].
 have hull_d_q : hull d q.
-  move:(p_nin_d)=>/hull_add_point temp.
-  apply temp;move:temp => _.
-  move:(dne)=>/hull_from_triangle temp.
-  move:(tr_d)=>/temp temp2.
-  by apply (temp2 t).
-  by [].
-  apply covh_tr_d in hull_d_q as [t0 [t0_tr intwe_to_q]].
-  case t_t0 : (t0 == t).
-    move:t_t0 => /eqP t_t0.
-    have temp:(forall p0 : P,in_triangle_w_edges t p0 ->
-                        exists t1 : T,
-                          t1 \in split_triangle_aux t p /\
-                                 in_triangle_w_edges t1 p0)
-      by apply three_triangles_cover_one.
-    have temp2 :(exists t1 : T, t1 \in split_triangle_aux t p /\
-                                  in_triangle_w_edges t1 q)
-    by apply temp;rewrite -t_t0.
-    move:temp => _. move:temp2 => [t1 [split_aux_t1_tp intwe_t1_q]].
-    exists t1;split=>//=.
-  by apply /fsetUP;left.
-exists t0.
-split=>//=.
-apply /fsetUP;right.
-apply /fsetD1P.
-split;first apply/eqP;move:t_t0=>/eqP //=.
+  have h_d_p : hull d p by apply:(hull_from_triangle dne tr_d t_tr).
+  by apply: (hull_add_point p_nin_d).
+move/covh_tr_d: hull_d_q => [t0 [t0_tr intwe_to_q]].
+case t_t0 : (t0 == t);
+   first move/eqP:t_t0 t0_tr intwe_to_q => -> t0_tr intwe_to_q.
+  have [t1 [sp intq]]:(exists t1 : T, t1 \in split_triangle_aux t p /\
+                                  in_triangle_w_edges t1 q).
+    by apply three_triangles_cover_one.
+  by exists t1; split => //; apply /fsetUP;left.
+by exists t0; split=> //; apply /fsetUP/or_intror/fsetD1P; rewrite t_t0 t0_tr.
 Qed.
 
 Lemma triangulation_cvv tr t p d :
