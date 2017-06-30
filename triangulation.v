@@ -1491,23 +1491,18 @@ by move:(t'_spl) => /fset1UP [Ht' | /fset2P [Ht' |Ht']];
 rewrite Ht'; apply surface_non_empty.
 Qed.
 
-Lemma triangulation_or:
-  forall tr, forall t , forall p, forall d, d != fset0 -> p \notin d ->
-                        triangulation tr d -> t \in tr ->
-                        in_triangle t p ->
-                        oriented_triangle_triangulation
-                          (split_triangle tr t p).
+Lemma triangulation_or tr t p d:
+   triangulation tr d -> in_triangle t p ->
+   oriented_triangle_triangulation (split_triangle tr t p).
 Proof.
-move => tr t p d dne p_nin_d tr_d t_tr intp t' t'_spl.
-move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
+move => [_ [_ [_ [_ [_ [_ or_tr_d]]]]]] intp t' t'_spl.
 move:t'_spl;rewrite /split_triangle => /fsetUP [];
    last by move => /fsetD1P [] _;apply:or_tr_d.
-move:intp => /andP [] /andP [] islof1 islof2 islof3.
+have [h g] := (is_lof_imply_is_lor_on_line, vertices_to_triangle_correct).
+move:intp => /andP [] /andP [] islo1 islo2 islo3.
 by rewrite /split_triangle_aux => /fset1UP [-> | /fset2P [] ->];
 rewrite /oriented_triangle_strict;
-[have vc := vertices_to_triangle_correct (is_lof_imply_is_lor_on_line islof1)|
-have vc := vertices_to_triangle_correct (is_lof_imply_is_lor_on_line islof2)|
-have vc := vertices_to_triangle_correct (is_lof_imply_is_lor_on_line islof3)];
+[move/h/g:(islo1) => vc| move/h/g:(islo2) => vc| move/h/g:(islo3) => vc];
 move:vc => [vc1 [vc2 vc3]];rewrite /vertex1 /vertex2 /vertex3 -vc1 -vc2 -vc3.
 Qed.
 
@@ -1516,6 +1511,7 @@ Lemma triangulation_split_triangle:
                         triangulation tr d -> t \in tr ->
                         in_triangle t p ->
                         triangulation (split_triangle tr t p) (p |` d).
+Proof.
 move => tr t p d dne p_nin_d tr_d t_tr intp.
 move:(tr_d) => [tr3v [covh_tr_d [covv_tr_d [nci_tr_d nps_tr_d]]]].
 split;first by apply:triangulation_tr3v dne p_nin_d tr_d t_tr intp.
@@ -1524,10 +1520,7 @@ split;first by apply triangulation_cvv.
 split;first by apply triangulation_nci.
 split;first by apply:triangulation_nps.
 split;first by apply:(triangulation_tne dne).
-apply:triangulation_or => //=.
-by apply dne.
-by apply p_nin_d.
-by apply tr_d.
+by apply: (triangulation_or tr_d).
 Qed.
 
 Lemma oriented_strict_same_vertices t1 t2 :
