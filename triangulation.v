@@ -2203,60 +2203,36 @@ move : (vc_abd) => [a_abd [b_abd d_abd]].
 move : (vc_bcd) => [b_bcd [c_bcd d_bcd]].
 move => p.
   split.
+    pose u1 := vertices_to_triangle a b d;
+    pose u2 := vertices_to_triangle b c d.
     move => p_d; move/cvv_tr_d:(p_d)=> [t [t_tr p_vt]].
     case t_t1 : (t==t1);case t_t2 : (t==t2);
       move:t_t1 => /eqP t_t1;move:t_t2 => /eqP t_t2.
         by move: t1_nt2; rewrite -t_t1 t_t2 eqxx.
       have injvt1 := tr3v_tr_d t1 t1_tr.
       have abc_vt1 := (vertices_vt b_na b_nc a_nc injvt1 a_t1 b_t1 c_t1).
-          rewrite t_t1 -abc_vt1 in p_vt.
-        pose u1 := vertices_to_triangle a b d;
-        pose u2 := vertices_to_triangle b c d;
-        have u1_v : u1 = vertices_to_triangle a b d by [];
-        have u2_v : u2 = vertices_to_triangle b c d by [];
-        apply vertices_to_triangle_correct2 in u1_v;
-        apply vertices_to_triangle_correct2 in u2_v;
-        move:u1_v => [u1_v1 [u1_v2 u1_v3]];
-        move:u2_v => [u2_v1 [u2_v2 u2_v3]].
-        by move:p_vt; rewrite !inE => /orP [/orP [/eqP -> | /eqP ->]| /eqP ->];
-          [exists u1 | exists u1 | exists u2]; split => //=; apply/fsetUP;
-        left; apply/fset1UP; try (left; done); right; apply/fset1P.
-      have injvt2 := tr3v_tr_d t2 t2_tr.
-      rewrite eq_sym in a_nc.
-      rewrite eq_sym in d_nc.
-      rewrite eq_sym in d_na.
-      have abc_vt2 := (vertices_vt a_nc d_nc d_na injvt2 a_t2 c_t2 d_t2).
-      rewrite t_t2 -abc_vt2 in p_vt.
-      pose u1 := vertices_to_triangle a b d;
-      pose u2 := vertices_to_triangle b c d;
-      have u1_v : u1 = vertices_to_triangle a b d by [];
-      have u2_v : u2 = vertices_to_triangle b c d by [];
-      apply vertices_to_triangle_correct2 in u1_v;
-      apply vertices_to_triangle_correct2 in u2_v;
-      move:u1_v => [u1_v1 [u1_v2 u1_v3]];
-      move:u2_v => [u2_v1 [u2_v2 u2_v3]].
-      move:p_vt; rewrite !inE => /orP [/orP [/eqP -> | /eqP ->] |/eqP ->];
-      [exists u1 | exists u2 | exists u2];split => //=; apply /fsetUP;left;
-      apply /fset1UP;rewrite /u1;[left|right|right] => //=;by apply /fset1P.
-    exists t.
-    split => //=.
-    apply/fsetUP;right;apply/fsetD1P;split;first by apply/eqP.
-    by apply/fsetD1P; split;first apply /eqP.
-  move => [t [t_spl p_vset_t]].
-move:t_spl=>/fsetUP [Ht |  /fsetD1P [t_nt2 /fsetD1P [t_nt1 t_tr]]];apply cvv_tr_d.
-  move:vc_abd => [abd0 [abd1 abd2]].
-  move:vc_bcd => [bcd0 [bcd1 bcd2]].
-  by move : Ht => /fset2P [t_v | t_v];rewrite t_v in p_vset_t;
-  move:p_vset_t => /imfsetP [[[|[|[|x']]] px] _] p_vx => //=;
-  [have ordpx:Ordinal px = ord30|have ordpx:Ordinal px = ord31|
-   have ordpx:Ordinal px = ord32|have ordpx:Ordinal px = ord30|
-   have ordpx:Ordinal px = ord31|have ordpx:Ordinal px = ord32];
-  (try  apply ord_inj) => //=; rewrite ordpx in p_vx;
-  [exists t1 | exists t1 | exists t2 |exists t1|exists t1|exists t2];split => //=;
-  rewrite p_vx;
-  [rewrite -abd0|rewrite -abd1|rewrite -abd2|
-   rewrite -bcd0|rewrite -bcd1|rewrite -bcd2].
-exists t;split => //=.
+      by move: p_vt; rewrite t_t1 -abc_vt1 !inE =>
+           /orP [/orP [/eqP -> | /eqP ->] | /eqP ->];
+      [exists u1 | exists u1 | exists u2];
+      rewrite ?vertex_set_vertices_to_triangle !inE ?eqxx ?orbT ?orTb.
+    have injvt2 := tr3v_tr_d t2 t2_tr.
+    move: a_nc d_nc d_na; rewrite !(eq_sym d) (eq_sym a c) => a_nc d_nc d_na.
+    have abc_vt2 := (vertices_vt a_nc d_nc d_na injvt2 a_t2 c_t2 d_t2).
+    by move: p_vt; rewrite t_t2 -abc_vt2 !inE =>
+        /orP [/orP [/eqP -> | /eqP ->] | /eqP ->];
+      [exists u1 | exists u2 | exists u1];
+      rewrite ?vertex_set_vertices_to_triangle !inE ?eqxx ?orbT ?orTb.
+  exists t; split => //=.
+  apply/fsetUP;right;apply/fsetD1P;split;first by apply/eqP.
+  by apply/fsetD1P; split;first apply /eqP.
+move => [t [t_spl p_vset_t]].
+move:t_spl=>/fsetUP [Ht |  /fsetD1P [t_nt2 /fsetD1P [t_nt1 t_tr]]]; apply cvv_tr_d;
+  last by exists t;split => //=.
+by move : Ht p_vset_t => /fset2P [-> | ->];
+  move/imfsetP => [[[|[|[|x']]] px] _]; rewrite ?mod3rules => -> //;
+  [exists t1 | exists t1 | exists t2 |exists t1|exists t1|exists t2];split => //;
+  [rewrite -a_abd|rewrite -b_abd|rewrite -d_abd|
+   rewrite -b_bcd|rewrite -c_bcd|rewrite -d_bcd].
 Qed.
 
 Lemma flip_edge_nci tr data: triangulation tr data ->
