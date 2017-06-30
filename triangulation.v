@@ -1461,7 +1461,7 @@ have q_vt : q \in vertex_set t.
   rewrite vertex_set_vertices_to_triangle !inE qp ?orbF ?orFb
      => /orP [/eqP -> | /eqP ->]; apply/imfsetP;
     solve[exists ord30 => // | exists ord31 => // | exists ord32 => //].
-by apply/fset1UP; right;apply/covv_tr_d; exists t.
+by apply/fset1UP; right; apply/covv_tr_d; exists t.
 Qed.
 
 Hypothesis surface_non_empty : forall p1 p2 p3,
