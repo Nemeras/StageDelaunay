@@ -180,14 +180,6 @@ Qed.
 Hypothesis vertex_set_vertices_to_triangle :
   forall a b c, vertex_set (vertices_to_triangle a b c) = [fset a;b;c].
 
-Lemma vertices_to_triangle_correct2 : forall p1 p2 p3 t,
-  t = vertices_to_triangle p1 p2 p3 ->
-  p1 \in vertex_set t /\ p2 \in vertex_set t /\ p3 \in vertex_set t.
-Proof.
-by move => p1 p2 p3 t tv; rewrite tv vertex_set_vertices_to_triangle !inE
-  !eqxx !orbT.
-Qed.
-
 Definition in_triangle t p := is_left_of (vertex1 t) (vertex2 t) p &&
                               is_left_of p (vertex2 t) (vertex3 t) &&
                               is_left_of (vertex1 t) p (vertex3 t).
