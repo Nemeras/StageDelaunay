@@ -2208,16 +2208,14 @@ have vc_bcd := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_bcd).
 move : (vc_abd) => [a_abd [b_abd d_abd]].
 move : (vc_bcd) => [b_bcd [c_bcd d_bcd]].
- move => p.
-    split.
-      move => p_d.
-      move:(p_d) => /cvv_tr_d [t [t_tr p_vt]].
-      case t_t1 : (t==t1);case t_t2 : (t==t2);
-        move:t_t1 => /eqP t_t1;move:t_t2 => /eqP t_t2.
-          rewrite t_t1 in t_t2.
-            by rewrite t_t2 in t1_nt2;move:t1_nt2 => /eqP.
-          have injvt1 := tr3v_tr_d t1 t1_tr.
-          have abc_vt1 := (vertices_vt b_na b_nc a_nc injvt1 a_t1 b_t1 c_t1).
+move => p.
+  split.
+    move => p_d; move/cvv_tr_d:(p_d)=> [t [t_tr p_vt]].
+    case t_t1 : (t==t1);case t_t2 : (t==t2);
+      move:t_t1 => /eqP t_t1;move:t_t2 => /eqP t_t2.
+        by move: t1_nt2; rewrite -t_t1 t_t2 eqxx.
+      have injvt1 := tr3v_tr_d t1 t1_tr.
+      have abc_vt1 := (vertices_vt b_na b_nc a_nc injvt1 a_t1 b_t1 c_t1).
           rewrite t_t1 -abc_vt1 in p_vt.
         pose u1 := vertices_to_triangle a b d;
         pose u2 := vertices_to_triangle b c d;
