@@ -606,9 +606,8 @@ split.
         move/andP: intp => [_ it]; rewrite /oriented_triangle.
         rewrite vertex1_vertices_to_triangle // vertex3_vertices_to_triangle //.
         by rewrite vertex2_vertices_to_triangle.
-      move: (@vertices_to_triangle_correct2
-                    (vertex1 t) p (vertex3 t) _ (erefl _)).
-      by rewrite (eqP t3q); move => [_ [_ it]].
+      by rewrite vertex_set_vertices_to_triangle !inE
+          -(eq_sym (vertex3 _)) t3q orbT.
     have abs := is_on_line_trans (negbT t3q) abs1 abs2.
     move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
     have tne := triangle_not_empty intp.
@@ -667,9 +666,8 @@ split.
       move/andP: intp => [_ it]; rewrite /oriented_triangle.
       rewrite vertex1_vertices_to_triangle // vertex3_vertices_to_triangle //.
       by rewrite vertex2_vertices_to_triangle.
-    move: (@vertices_to_triangle_correct2
-                  (vertex1 t) p (vertex3 t) _ (erefl _)).
-    by rewrite (eqP t3q); move => [_ [_ it]].
+    by rewrite vertex_set_vertices_to_triangle
+              !inE -(eq_sym (vertex3 _)) t3q orbT.
   have abs := is_on_line_trans (negbT t3q) abs1 abs2.
   move:abs;rewrite /is_on_line - oriented_surface_circular => /eqP abs.
   have tne := triangle_not_empty intp.
@@ -1677,14 +1675,10 @@ Proof.
   move => a b c p islo_abc intabcp.
   pose t := vertices_to_triangle c a b.
   have t_abc : t = vertices_to_triangle c a b by [].
-  have vc_cab := vertices_to_triangle_correct2 t_abc.
-  move:vc_cab => [c_cab [a_cab b_cab]].
-  rewrite /t in c_cab.
-  rewrite /t in a_cab.
-  rewrite /t in b_cab.
   (apply:in_vert_to_triangle_in_triangle_w_edges; first apply islo_abc;
     rewrite is_left_of_circular in islo_abc;
-  first apply (vertices_to_triangle_oriented_strict islo_abc)) => //=.
+  first apply (vertices_to_triangle_oriented_strict islo_abc)) => //=;
+  by rewrite vertex_set_vertices_to_triangle !inE eqxx ?orbT ?orTb.
 Qed.
 
 Definition flip_edge_aux a b c d :=
@@ -2017,8 +2011,7 @@ move : intq => [q_t | [intq | q_e]].
   exists (vertices_to_edge a c).
   split => //=.
   by apply vertex_set_edge_triangle => //=;
-     have : (vertices_to_triangle a b c) = (vertices_to_triangle a b c) by [];
-     apply vertices_to_triangle_correct2.
+    rewrite vertex_set_vertices_to_triangle !inE eqxx ?orbT ?orTb.
 move:q_e => [e [e_t q_e]].
 move:t_fl => /fset2P [Ht|Ht];
 rewrite Ht in e_t;rewrite edges_set_vertices_to_triangle in e_t => //=;
