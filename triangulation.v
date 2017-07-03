@@ -2228,195 +2228,148 @@ by move : Ht p_vset_t => /fset2P [-> | ->];
 Qed.
 
 Lemma flip_edge_nci tr data: triangulation tr data ->
-                               forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
-                               forall a, forall c, a != c -> a \in vertex_set t1 ->
-                               a \in vertex_set t2 ->
-                               c \in vertex_set t1 -> c \in vertex_set t2 ->
-                               forall b, b \in vertex_set t1 -> b != a -> b != c ->
-                               is_left_of a b c ->
-                               forall d, d \in vertex_set t2 -> d != a -> d != c ->
-                               is_left_of a c d -> is_left_of b c d ->
-                               is_left_of a b d ->
-                               no_cover_intersection (flip_edge tr t1 t2 a b c d) data.
+                   forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
+                   forall a, forall c, a != c -> a \in vertex_set t1 ->
+                   a \in vertex_set t2 ->
+                   c \in vertex_set t1 -> c \in vertex_set t2 ->
+                   forall b, b \in vertex_set t1 -> b != a -> b != c ->
+                   is_left_of a b c ->
+                   forall d, d \in vertex_set t2 -> d != a -> d != c ->
+                   is_left_of a c d -> is_left_of b c d ->
+                   is_left_of a b d ->
+                   no_cover_intersection (flip_edge tr t1 t2 a b c d) data.
 Proof.
 move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
-move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
-move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
-have vc_abd := vertices_to_triangle_correct
+move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd
+  islo_bcd islo_abd t3 t4 t3_spl t4_spl p int3p int4p.
+move:(tr_d) => [_ [_ [_ [nci_tr_d [_ [tne_tr_d or_tr_d]]]]]].
+have [a_abd [b_abd d_abd]] := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_abd).
-have vc_bcd := vertices_to_triangle_correct
+have [b_bcd [c_bcd d_bcd]] := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_bcd).
-move : (vc_abd) => [a_abd [b_abd d_abd]].
-move : (vc_bcd) => [b_bcd [c_bcd d_bcd]].
-move => t3 t4 t3_spl t4_spl p int3p int4p.
 have not_in_both_triangles:in_triangle (vertices_to_triangle a b d) p ->
-       in_triangle (vertices_to_triangle b c d) p -> false.
-  move => p_abd p_bcd.
+       ~ in_triangle (vertices_to_triangle b c d) p.
   rewrite /in_triangle /vertex1 /vertex2 /vertex3
-  -a_abd -b_abd -d_abd in p_abd.
-  move:p_abd => /andP [/andP[islo_abp islo_pbd] islo_apd].
-  rewrite /in_triangle /vertex1 /vertex2 /vertex3
-  -b_bcd -c_bcd -d_bcd in p_bcd.
-  move:p_bcd => /andP [/andP[islo_bcp islo_pcd] islo_bpd].
-  rewrite  is_left_of_change in islo_bpd.
-  apply is_lof_imply_is_lor_on_line in islo_pbd.
-  by rewrite islo_pbd in islo_bpd.
-have vc_abc := vertices_to_triangle_correct
+  -a_abd -b_abd -d_abd -b_bcd -c_bcd -d_bcd.
+  move => /andP [/andP[islo_abp islo_pbd] islo_apd].
+  move => /andP [/andP[islo_bcp islo_pcd] ].
+  rewrite  is_left_of_change => /negP; apply.
+  by apply/is_lof_imply_is_lor_on_line: islo_pbd.
+have [a_abc [b_abc c_abc]] := vertices_to_triangle_correct
                        (is_lof_imply_is_lor_on_line oriented_abc).
-have vc_acd := vertices_to_triangle_correct
+have [a_acd [c_acd d_acd]] := vertices_to_triangle_correct
                        (is_lof_imply_is_lor_on_line oriented_acd).
-move : (vc_abc) => [a_abc [b_abc c_abc]].
-move : (vc_acd) => [a_acd [c_acd d_acd]].
 have infl := in_flip_edge_aux tr_d t1_nt2 t1_tr t2_tr a_nc a_t1 a_t2 c_t1 c_t2
 b_t1 b_na b_nc oriented_abc d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
 move:t3_spl => /fsetUP [Ht3 | /fsetD1P [t3_nt2 /fsetD1P [t3_nt1 t3_tr]]];
 move:t4_spl => /fsetUP [Ht4 | /fsetD1P [t4_nt2 /fsetD1P [t4_nt1 t4_tr]]].
 move:Ht3 => /fset2P [Ht3|Ht3];move:Ht4=>/fset2P [Ht4|Ht4];
-    (try by rewrite Ht3 Ht4); rewrite Ht3 in int3p;rewrite Ht4 in int4p.
-        by have:false by apply not_in_both_triangles.
-      by have temp:=(not_in_both_triangles int4p int3p).
-    have temp := infl t3 Ht3 p int3p.
-    move:temp => [Htp|[Htp|Htp]];
+    (try by rewrite Ht3 Ht4); rewrite Ht3 in int3p;rewrite Ht4 in int4p;
+     try by case: not_in_both_triangles.
+    move:(infl t3 Ht3 p int3p) => [Htp|[Htp|Htp]];
     try have intxp := (in_vert_to_triangle_in_triangle oriented_abc
                       a_t1 (or_tr_d t1 t1_tr) b_t1 c_t1 Htp);
     try have intxp := (in_vert_to_triangle_in_triangle oriented_acd
                       a_t2 (or_tr_d t2 t2_tr) c_t2 d_t2 Htp);
     try have abst1 := nci_tr_d t1 t4 t1_tr t4_tr p intxp int4p;
     try have abst2 := nci_tr_d t2 t4 t2_tr t4_tr p intxp int4p;
-    [move:t4_nt1|move:t4_nt2|move];try rewrite -abst1;try rewrite -abst2;
-    try move /eqP => //=.
-    have ac_edge_t1 := vertex_set_edge_triangle a_t1 c_t1 a_nc.
-    have temp := in_triangle_on_edge int4p (tne_tr_d t1 t1_tr) ac_edge_t1 Htp.
-    move:temp => [q [int4q int1q]].
-    have abs := nci_tr_d t1 t4 t1_tr t4_tr q int1q int4q.
-    by move:t4_nt1;rewrite abs;move => /eqP.
-  have temp := infl t4 Ht4 p int4p.
-  move:temp => [Htp|[Htp|Htp]];
+    [move:t4_nt1|move:t4_nt2|]; rewrite -?abst1 -?abst2 ?eqxx //.
+    have ac_edge_1 := vertex_set_edge_triangle a_t1 c_t1 a_nc.
+    move: (in_triangle_on_edge int4p (tne_tr_d t1 t1_tr) ac_edge_1 Htp) t4_nt1.
+    move => [q [int4q int1q]].
+    by rewrite (nci_tr_d t1 t4 t1_tr t4_tr q int1q int4q) eqxx.
+  move: (infl t4 Ht4 p int4p) => [Htp|[Htp|Htp]];
   try have intxp := (in_vert_to_triangle_in_triangle oriented_abc
                       a_t1 (or_tr_d t1 t1_tr) b_t1 c_t1 Htp);
   try have intxp := (in_vert_to_triangle_in_triangle oriented_acd
                       a_t2 (or_tr_d t2 t2_tr) c_t2 d_t2 Htp);
   try have abst1 := nci_tr_d t1 t3 t1_tr t3_tr p intxp int3p;
   try have abst2 := nci_tr_d t2 t3 t2_tr t3_tr p intxp int3p;
-  [move:t3_nt1|move:t3_nt2|move];try rewrite -abst1;try rewrite -abst2;
-  try move /eqP => //=.
-  have ac_edge_t1 := vertex_set_edge_triangle a_t1 c_t1 a_nc.
-  have temp := in_triangle_on_edge int3p (tne_tr_d t1 t1_tr) ac_edge_t1 Htp.
-  move:temp => [q [int3q int1q]].
+  [move:t3_nt1|move:t3_nt2|]; rewrite -?abst1 -?abst2 ?eqxx //.
+  have ac_edge_1 := vertex_set_edge_triangle a_t1 c_t1 a_nc.
+  move: (in_triangle_on_edge int3p (tne_tr_d t1 t1_tr) ac_edge_1 Htp) t3_nt1.
+  move => [q [int3q int1q]].
   have abs := nci_tr_d t1 t3 t1_tr t3_tr q int1q int3q.
-  by move:t3_nt1;rewrite abs;move => /eqP.
-apply:nci_tr_d => //=.
-apply int3p => //=.
-by [].
+  by rewrite (nci_tr_d t1 t3 t1_tr t3_tr q int1q int3q) eqxx.
+by apply:(nci_tr_d t3 t4 _ _ p).
 Qed.
 
 Lemma flip_edge_nps tr data : triangulation tr data ->
-                                forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
-                                forall a, forall c, a != c -> a \in vertex_set t1 ->
-                                a \in vertex_set t2 ->
-                                c \in vertex_set t1 -> c \in vertex_set t2 ->
-                                forall b, b \in vertex_set t1 -> b != a -> b != c ->
-                                 is_left_of a b c ->
-                                 forall d, d \in vertex_set t2 -> d != a -> d != c ->
-                                 is_left_of a c d -> is_left_of b c d ->
-                                 is_left_of a b d ->
-                       no_point_on_segment (flip_edge tr t1 t2 a b c d) data.
+                forall t1, forall t2, t1 != t2 -> t1 \in tr->t2 \in tr ->
+                forall a, forall c, a != c -> a \in vertex_set t1 ->
+                a \in vertex_set t2 ->
+                c \in vertex_set t1 -> c \in vertex_set t2 ->
+                forall b, b \in vertex_set t1 -> b != a -> b != c ->
+                 is_left_of a b c ->
+                 forall d, d \in vertex_set t2 -> d != a -> d != c ->
+                 is_left_of a c d -> is_left_of b c d ->
+                 is_left_of a b d ->
+       no_point_on_segment (flip_edge tr t1 t2 a b c d) data.
 Proof.
-move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2.
-move => b b_t1 b_na b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd.
-move:(tr_d) => [tr3v_tr_d [cvh_tr_d [cvv_tr_d [nci_tr_d [nps_tr_d [tne_tr_d or_tr_d]]]]]].
-have vc_abd := vertices_to_triangle_correct
+move => tr_d t1 t2 t1_nt2 t1_tr t2_tr a c a_nc a_t1 a_t2 c_t1 c_t2 b b_t1 b_na
+   b_nc oriented_abc d d_t2 d_na d_nc oriented_acd islo_bcd islo_abd
+   t3 t4 t3_fl t4_fl p p_t3 int4p.
+move:(tr_d) => [tr3v_tr_d [_ [_ [_ [nps_tr_d [_ or_tr_d]]]]]].
+have [a_abd [b_abd d_abd]] := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_abd).
-have vc_bcd := vertices_to_triangle_correct
+have [b_bcd [c_bcd d_bcd]] := vertices_to_triangle_correct
                          (is_lof_imply_is_lor_on_line islo_bcd).
-move : (vc_abd) => [a_abd [b_abd d_abd]].
-move : (vc_bcd) => [b_bcd [c_bcd d_bcd]].
-move => t3 t4 t3_fl t4_fl p p_t3 int4p.
 move:t3_fl => /fsetUP [Ht3 | /fsetD1P [t3_nt2 /fsetD1P [t3_nt1 t3_tr]]];
 move:t4_fl => /fsetUP [Ht4 | /fsetD1P [t4_nt2 /fsetD1P [t4_nt1 t4_tr]]];
 last first.
       by apply:(nps_tr_d t3 t4 t3_tr t4_tr p).
-    have intp := in_flip_edge_aux_we tr_d t1_nt2 t1_tr t2_tr
+    have intp' := in_flip_edge_aux_we tr_d t1_nt2 t1_tr t2_tr
       a_nc a_t1 a_t2 c_t1 c_t2 b_t1 b_na b_nc oriented_abc
       d_t2 d_na d_nc oriented_acd islo_bcd islo_abd Ht4 int4p.
     have v_abc_t1 :  vertex_set (vertices_to_triangle a b c)= vertex_set t1.
       rewrite vertex_set_vertices_to_triangle.
-      apply /eqP.
       have card_fset3 : #|` [fset a; b; c] | = 3%N.
         have card_fset2 : #|` [fset a; b] | = 2%N.
-          rewrite cardfs2.
-          move:b_na => /negP. rewrite eq_sym. by move => /negP -> .
+          by rewrite cardfs2 eq_sym b_na.
         have abIc0: [fset a; b] `&` [fset c] = fset0.
             apply disjoint_fsetI0.
-            rewrite fdisjointX1.
-            apply /negP.
-            case abs:(c \in [fset a;b])=> //=.
-            move:abs => /fset2P [abs|abs];
-            [rewrite abs in a_nc|rewrite abs in b_nc];
-            [move:a_nc => /negP |move:b_nc => /negP] => //=.
+            by rewrite fdisjointX1 !inE negb_or !(eq_sym c) a_nc b_nc.
         have card_abIc0:#|` [fset a; b] `&` [fset c]| = 0%N.
-          rewrite abIc0.
-          by apply cardfs0.
+          by rewrite abIc0; apply cardfs0.
         by rewrite cardfsU card_fset2 cardfs1 card_abIc0.
-      have injvt1 := tr3v_tr_d t1 t1_tr.
-      have cardvt1 : (#|` [fset (vertex t1) x | x in 'I_3]| = #|` finset 'I_3|).
-        apply:card_in_imfset.
-        move => x y px py.
-        apply:injvt1.
+      have cardvt1 : (#|` vertex_set t1 | = #|` finset 'I_3|).
+        by apply/card_in_imfset => x y px py; apply/(tr3v_tr_d t1).
       have card_eq : #|` [fset a; b; c] | = #|` vertex_set t1 |.
         by rewrite card_fset3 cardvt1 card_finset card_ord.
-      have fsubset_cardvt1P := (fsubset_cardP card_eq).
-      apply /eqP. apply fsetP.
-      apply /fsubset_cardvt1P.
-      apply /fsubsetP.
-      move => x.
-      by move=>/fsetUP [/fset2P [->|->]|/fset1P ->  //=].
+      apply/fsetP/(fsubset_cardP card_eq)/fsubsetP => x.
+      by move=>/fsetUP [/fset2P [->|->]|/fset1P ->].
     have v_acd_t2 :  vertex_set (vertices_to_triangle a c d)= vertex_set t2.
       rewrite vertex_set_vertices_to_triangle.
-      apply /eqP.
       have card_fset3 : #|` [fset a; c; d] | = 3%N.
         have card_fset2 : #|` [fset a; c] | = 2%N.
-          rewrite cardfs2.
-          move:a_nc => /negP. rewrite eq_sym. by move => /negP -> .
-        have abIc0: [fset a; c] `&` [fset d] = fset0.
+          by rewrite cardfs2 a_nc.
+        have acId0: [fset a; c] `&` [fset d] = fset0.
             apply disjoint_fsetI0.
-            rewrite fdisjointX1.
-            apply /negP.
-            case abs:(d \in [fset a;c])=> //=.
-            move:abs => /fset2P [abs|abs];
-            [rewrite abs in d_na|rewrite abs in d_nc];
-            [move:d_na => /negP |move:d_nc => /negP] => //=.
-        have card_abIc0:#|` [fset a; c] `&` [fset d]| = 0%N.
-          rewrite abIc0.
-          by apply cardfs0.
-        by rewrite cardfsU card_fset2 cardfs1 card_abIc0.
-      have injvt2 := tr3v_tr_d t2 t2_tr.
-      have cardvt2 : (#|` [fset (vertex t2) x | x in 'I_3]| = #|` finset 'I_3|).
-        apply:card_in_imfset.
-        move => x y px py.
-        apply:injvt2.
+            by rewrite fdisjointX1 !inE negb_or d_na d_nc.
+          have card_acId0:#|` [fset a; c] `&` [fset d]| = 0%N.
+            by rewrite acId0 cardfs0.
+        by rewrite cardfsU card_fset2 cardfs1 card_acId0.
+      have cardvt2 : (#|` vertex_set t2| = #|` finset 'I_3|).
+        by apply/card_in_imfset => x y px py; apply (tr3v_tr_d t2).
       have card_eq : #|` [fset a; c; d] | = #|` vertex_set t2 |.
         by rewrite card_fset3 cardvt2 card_finset card_ord.
-      have fsubset_cardvt2P := (fsubset_cardP card_eq).
-      apply /eqP. apply fsetP.
-      apply /fsubset_cardvt2P.
-      apply /fsubsetP.
-      move => x.
-      by move=>/fsetUP [/fset2P [->|->]|/fset1P ->  //=].
+      apply/fsetP/(fsubset_cardP card_eq)/fsubsetP => x.
+      by move=>/fsetUP [/fset2P [->|->]|/fset1P ->].
     have otstabc : oriented_triangle_strict (vertices_to_triangle a b c).
       by rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
           vertex2_vertices_to_triangle // vertex3_vertices_to_triangle.
     have otstacd : oriented_triangle_strict (vertices_to_triangle a c d).
       by rewrite /oriented_triangle_strict vertex1_vertices_to_triangle //
           vertex2_vertices_to_triangle // vertex3_vertices_to_triangle.
-    by move:intp => [Hintp|Hintp];
-    [have intp : in_triangle_w_edges t1 p|have intp : in_triangle_w_edges t2 p];
-      [by apply:(vertex_set_eq_in_triangle_w_edges otstabc
-       (or_tr_d t1 t1_tr) v_abc_t1)|
-       move|by apply:(vertex_set_eq_in_triangle_w_edges otstacd
-                      (or_tr_d t2 t2_tr) v_acd_t2)| ];
-    [have p_t := nps_tr_d t3 t1 t3_tr t1_tr p p_t3 intp|
-     have p_t := nps_tr_d t3 t2 t3_tr t2_tr p p_t3 intp];
+    have intp : in_triangle_w_edges t1 p \/ in_triangle_w_edges t2 p.
+      case: intp'=>[ Hintp | Hintp];[left | right].
+        by apply: (vertex_set_eq_in_triangle_w_edges _ (or_tr_d t1 t1_tr) _ Hintp).
+      by apply: (vertex_set_eq_in_triangle_w_edges _ (or_tr_d t2 t2_tr) _ Hintp).
+    have : (p \in vertex_set t1 \/ p \in vertex_set t2).
+     by  case: intp => [intp | intp];
+      [left; have p_t := nps_tr_d t3 t1 t3_tr t1_tr p p_t3 intp => {intp}|
+       right; have p_t := nps_tr_d t3 t2 t3_tr t2_tr p p_t3 intp => {intp}].
+    by case => [p_t | p_t];
     [rewrite -v_abc_t1 in p_t|rewrite -v_acd_t2 in p_t];
     apply in_vertex_set in p_t;move:p_t => [/eqP Hp|[/eqP Hp|/eqP Hp]];
     rewrite Hp;
