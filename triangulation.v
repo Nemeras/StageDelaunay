@@ -24,6 +24,85 @@ have tA : t \in A by rewrite (finmempredE p).
 by exists [` tA] => //; apply/val_inj.
 Qed.
 
+
+Lemma all_diffs_card3 (T U : choiceType) (a b c : T) :
+(#|` [fset a; b ; c] | == 3)%N = ((a != b) && (a != c) && (b != c)).
+Proof.
+case ab : (a == b).
+  by rewrite andFb (eqP ab) fsetUid cardfs2; case (b == c).
+case bc : (b == c).
+  by rewrite andbF (eqP bc) -fsetUA fsetUid cardfs2; case (a == c).
+case ac : (a == c).
+  by rewrite andbF andFb fsetUC fsetUA (eqP ac) fsetUid cardfs2 (eq_sym c) bc.
+rewrite (cardfsD1 a) !inE eqxx !orTb -fsetUA fsetU1K ?inE ?ab ?ac //.
+by rewrite cardfs2 bc.
+Qed.
+
+Section CardFunImage.
+
+Variables aT rT : choiceType.
+Variables (f : aT -> rT) (D : {fset aT}).
+
+Section experiment_draft.
+Variable d1 : D.
+
+Check f (val d1).
+Check [finType of (f @` D)].
+
+Definition fd : D -> [finType of (f @` D)].
+Proof. 
+move => d; exists (f (val d)); apply: in_imfset; case: d; move => e e_in; exact e_in.
+Defined.
+
+End experiment_draft.
+
+Lemma imfset_injP :
+  reflect{in D &, injective f} (#|` f @` D | == #|` D |).
+Proof.
+have : ( #|` f @` D | = #| [set fd x | x : D in predT] |).
+Check @image_injP [finType of D] [finType of (f @` D)] fd predT.
+case: [fset f x | x in D].
+rewrite image_injP.
+have : ( #|` f @` D | = #| [set (FSetSub (in_imfset f _ (fsvalP x))) | x : D in predT] |).
+
+Check  [set (FSetSub (in_imfset f _ (fsvalP x))) | x : D in predT].
+have vP (x:D)  : predT (val x) by done.
+
+  rewrite [X in (_ == X)](_ : _  #| [set  fd x | x : D in predT]
+Check  (fun M : finmempred (mem D) D=>
+         [set (in_imfset f M (fsvalP x)) | x : D in predT] :
+          {set f @` D}).
+rewrite cardfsE.
+case a :  (#|` [fset f x | x in D]| == #|` D|).
+  apply ReflectT.
+  move => x y xd yd.
+  move: a.
+   rewrite (_ : #|` [fset f x0 | x0 in D] | =
+                #| [set 
+  Check (imset_injP a).
+  move): a.
+  apply: in_imfset.
+  rewrite //=.
+   apply/fsvalP.
+exact px.
+Show Proof.
+Check fsval.
+
+Set Printing All.
+Check imfsetP.
+have
+Check (fun x : [finType of D] => FSetSub (in_imfset f)).
+
+
+Check (@imset_injP [finType of D] [finType of (f @` D)] _ predT).
+
+apply (@image_injP [finType of D] [finType of (f @`D)] _ predT).
+apply: imset_injP.
+
+Lemma all_diffs_card3 (T U : choiceType) (a b c : T) (f : T -> U):
+  reflect {in predT &, injective f} (#|` [fset a; b ; c] | == 3).
+Proof.
+
 Section Triangulation.
 
 Open Scope fset_scope.
